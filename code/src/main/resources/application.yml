@@ -1,0 +1,30 @@
+server:
+  port: 9093
+spring:
+  profiles:
+    active: dev
+  datasource:
+    druid:
+      max-wait: 10000
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:sqlserver://yhocn.cn;DatabaseName=wellJin
+    username: sa
+    password: Lyh07910_001
+#    url: jdbc:sqlserver://82.157.194.210;DatabaseName=wellJin
+#    username: sa
+#    password: Biii2010_2022
+
+  mvc:
+    view:
+      suffix: .html
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations: file:${web.upload-path},classpath:/templates/,classpath:/static/
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+    spring.thymeleaf.cache=false:
+
