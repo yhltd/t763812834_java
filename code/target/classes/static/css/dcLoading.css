@@ -1,0 +1,40 @@
+.dc-loding{
+    width: 150px;
+    height: 150px;
+    border: 1px solid #f2f2f2;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dc-loding-item{
+    height: 50%;
+    width: 10px;
+    background-color: #409EFF;
+    margin: 0 2px;
+}
+.dc-loding-item:nth-of-type(1){
+    animation: dc-loding-anima 1s infinite ease-in-out;
+}
+.dc-loding-item:nth-of-type(2){
+    animation: dc-loding-anima 1s linear 0.1s infinite;
+}
+.dc-loding-item:nth-of-type(3){
+    animation: dc-loding-anima 1s linear 0.2s infinite;
+}
+.dc-loding-item:nth-of-type(4){
+    animation: dc-loding-anima 1s linear 0.3s infinite;
+}
+.dc-loding-item:nth-of-type(5){
+    animation: dc-loding-anima 1s linear 0.4s infinite;
+}
+@keyframes dc-loding-anima {
+    0%, 40%, 100% {
+        transform: scaleY(0.4);
+        -webkit-transform: scaleY(0.4);
+    }
+    20% {
+        transform: scaleY(1);
+        -webkit-transform: scaleY(1);
+    }
+}

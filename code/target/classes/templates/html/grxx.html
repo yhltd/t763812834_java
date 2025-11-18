@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap-table.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+
+    <link rel="stylesheet" href="../css/sweetalert.css">
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+
+    <link rel="stylesheet" href="../css/main.css">
+    <script type="text/javascript" src="../js/main.js"></script>
+    <script type="text/javascript" src="../js/grxx.js"></script>
+</head>
+
+<body class="pt-2">
+<div class="background-image">
+    <img src="../img/时间.png" class="img1">
+    <span style="color: black; font-size: 20px;margin-left: 20px" id="now_time" ></span>
+    <span style="margin-left: 50px;font-size: 20px"><img src="../img/个人.png" style="height: 30px;">  您 好 <b><span id="dlm" style="color: black"></span></b> , 欢 迎 您 登 录 !</span>
+    <img src="../img/重金属.png" class="img1" style="margin-left: 30px">
+    <img src="../img/金属.png" class="img1"style="margin-left: 30px">
+    <img src="../img/钻石.png" class="img1"style="margin-left: 30px">
+    <div class="menu">
+        <button class="btn2"><img src="../img/个人信息.png" class="img1"></button>
+        <div class="content">
+            <div>
+                <img src="../img/img_1.png">
+            </div>
+            <div style="margin-left: 60px">
+                <a href="grxx.html" class="link-dark rounded">个人信息</a>
+            </div>
+            <div style="margin-left: 60px">
+                <a href="http://localhost:9093/index.html" target="_top">退出登录</a>
+            </div>
+        </div>
+    </div>
+    <a href="main.html" target="_top"><img src="../img/首页.png" class="img1"></a>
+    <img src="../img/地球仪.png" class="img1" style="margin-left: 20px;">
+</div>
+
+<div id="table-toolbar">
+    <div class="btn-group" role="group">
+        <button id="refresh-btn" class="btn btn-primary" style="border-radius:5px;">
+            <i class="bi bi-arrow-clockwise icon"></i>
+            刷新
+        </button>
+        <span style="border-right: 20px solid white"></span>
+<!--        <button id="add-btn" class="btn btn-primary" style="border-radius:5px;">-->
+<!--            <i class="bi bi-plus-square icon"></i>-->
+<!--            新增-->
+<!--        </button>-->
+<!--        <span style="border-right: 20px solid white"></span>-->
+<!--        <button id="update-btn" class="btn btn-primary" style="border-radius:5px;">-->
+<!--            <i class="bi bi-pencil-square icon"></i>-->
+<!--            修改-->
+<!--        </button>-->
+<!--        <span style="border-right: 20px solid white"></span>-->
+<!--        <button id="delete-btn" class="btn btn-primary" style="border-radius:5px;background-color: red">-->
+<!--            <i class="bi bi-trash icon"></i>-->
+<!--            删除-->
+<!--        </button>-->
+<!--        <span style="border-right: 20px solid white"></span>-->
+        <a class="btn btn-primary" style="color: white;padding-top: 8px;border-radius:5px;">当前页：个人信息</a>
+    </div>
+</div>
+
+<div class="table-div border-top" style="width: 230px;height: 555px">
+    <form action="" method="post">
+        <div>
+            <img src="" id="pic" style="width: 100px;height: 100px;border-radius: 50%;margin-left: 60px">
+            <div class="form-group">
+                <input id="pid" name="pid" type="hidden">
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <p id="dlm1" style="text-align: center;"></p>
+        </div>
+        <div>
+            <p style="margin-left: 20px">基本资料</p>
+        </div>
+        <hr>
+        <div>
+            <div style="margin-left: 10px"><img src="../img/学历.png" style="width: 25px;height: 25px"><span style="text-align: center;margin-left: 10px">学历</span></div>
+            <input type="text" id="p1" style="margin-left: 10px;border: none"></p>
+        </div>
+        <hr>
+        <div>
+            <div style="margin-left: 10px"><img src="../img/电话1.png" style="width: 25px;height: 25px"><span style="text-align: center;margin-left: 10px">电话</span></div>
+            <input type="text" id="p2" style="margin-left: 10px;border: none"></p>
+        </div>
+        <hr>
+        <div>
+            <div style="margin-left: 10px"><img src="../img/地址.png" style="width: 25px;height: 25px"><span style="text-align: center;margin-left: 10px">地址</span></div>
+            <input type="text" id="p3" style="margin-left: 10px;border: none"></p>
+        </div>
+        <hr>
+        <div>
+            <div style="margin-left: 10px"><img src="../img/签名.png" style="width: 25px;height: 25px"><span style="text-align: center;margin-left: 10px">签名</span></div>
+            <input type="text" id="p4" style="margin-left: 10px;border: none"></input>
+        </div>
+    </form>
+</div>
+
+<div class="table-div border-top" style="position: absolute;top: 100px;left: 260px;width: 780px;height: 555px">
+    <form style="margin-left: 30px;margin-top: -10px" method="post" enctype="multipart/form-data" action="${ctx}/pic/upload?no=1">
+        <div class="form-group">
+            <input id="id" name="id" type="hidden">
+        </div>
+        <div><b><span>用户名</span><span style="margin-left: 279px;">电话</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="username" style="width: 300px;height: 30px" autocomplete="off"><input style="margin-left: 30px;width: 300px;height: 30px" type="text" id="phone" autocomplete="off"></div>
+        <div style="margin-top: 5px;"><b><span>真实姓名</span><span style="margin-left: 266px;">昵称</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="name" style="width: 300px;height: 30px" autocomplete="off"><input style="margin-left: 30px;width: 300px;height: 30px" type="text" id="nc" autocomplete="off"></div>
+        <div style="margin-top: 5px;"><b><span>Email</span><span style="margin-left: 290px;">地址</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="yx" style="width: 300px;height: 30px" autocomplete="off"><input style="margin-left: 30px;width: 300px;height: 30px" type="text" id="address" autocomplete="off"></div>
+        <div style="margin-top: 5px;"><b><span>学历</span><span style="margin-left: 297px;">毕业院校</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="xl" style="width: 300px;height: 30px" autocomplete="off"><input style="margin-left: 30px;width: 300px;height: 30px" type="text" id="byyx" autocomplete="off"></div>
+        <div style="margin-top: 5px;"><b><span>性别</span><span style="margin-left: 300px;">生日</span></b></div>
+        <div style="margin-top: 5px;">
+<!--            <input type="text" id="xb" style="width: 300px;height: 30px" autocomplete="off">-->
+            <select id="xb" autocomplete="off" data-required="1" style="width: 300px;height: 30px">
+                <option>--请选择性别--</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+            </select>
+            <input style="margin-left: 30px;width: 300px;height: 30px" type="text" id="sr" autocomplete="off">
+        </div>
+        <div style="margin-top: 5px;"><b><span>签名</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="qm" style="width: 300px;height: 30px" autocomplete="off"></div>
+        <div style="margin-top: 5px;"><b><span>密码</span></b></div>
+        <div style="margin-top: 5px;"><input type="text" id="password" style="width: 300px;height: 30px" autocomplete="off"></div>
+    </form>
+
+<!--    <div style="margin-left: 30px;margin-top: 15px">-->
+<!--        <input type="file" id="upload" name="upload" />-->
+<!--        <button type="button" id="download">下载</button>-->
+<!--    </div>-->
+
+    <button id="save-btn" class="btn btn-primary" style="border-radius:5px;margin-left: 30px;margin-top: 10px">
+        保存
+    </button>
+
+</div>
+
+<div class="background-image2 flex-container" style="margin-top: 600px">
+    <div class="info-box" style="width: 500px;margin-left: 10px">
+        <span>主办单位：坤鑫金属有限公司</span><br>
+        <!--        <span>技术专线：123456</span><br>-->
+        <span>备案/许可证编号为：xxxxxx</span>
+    </div>
+    <div class="info-box" style="width: 600px;">
+        <span>最佳使用效果：谷歌浏览器</span><br>
+        <span>联系地址：xxxxxx</span><br>
+
+    </div>
+    <div class="info-box" style="width: 300px;">
+        <img src="../img/电话.png" class="img2">12720988902<br>
+        <span>关于我们</span><img src="../img/关于我们.png" style="margin-left: 20px" class="img2">
+    </div>
+</div>
+
+</body>
+</html>

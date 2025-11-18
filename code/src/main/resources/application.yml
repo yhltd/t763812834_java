@@ -8,10 +8,10 @@ spring:
       max-wait: 10000
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:sqlserver://yhocn.cn;DatabaseName=wellJin
+    url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
     username: sa
     password: Lyh07910_001
-#    url: jdbc:sqlserver://82.157.194.210;DatabaseName=wellJin
+#    url: jdbc:sqlserver://82.157.194.210;DatabaseName=t763812834_20251118
 #    username: sa
 #    password: Biii2010_2022
 
