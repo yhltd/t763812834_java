@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>签回单</title>
+    <title>配置表</title>
     <link rel="shortcut icon" href="#"/>
 
     <script type="text/javascript" src="../js/Jquery.js"></script>
@@ -18,87 +18,125 @@
     <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
     <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
     <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+    <script type="text/javascript" src="../js/xlsx.full.min.js"></script>
 
     <link rel="stylesheet" href="../css/sweetalert.css">
     <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
 
     <link rel="stylesheet" href="../css/main.css">
     <script type="text/javascript" src="../js/main.js"></script>
-    <script type="text/javascript" src="../js/qhd.js"></script>
+    <script type="text/javascript" src="../js/Pzb.js"></script>
+
+    <style>
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+
+        .editable-cell:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .editable-cell.editing {
+            background-color: #fff3cd !important;
+            padding: 0 !important;
+        }
+
+        .cell-edit-input {
+            border: 2px solid #007bff !important;
+            outline: none !important;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5) !important;
+        }
+
+        .table-div {
+            margin-top: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 200px;
+        }
+
+        /* 确保表格单元格有合适的padding */
+        .table td, .table th {
+            padding: 8px;
+            vertical-align: middle;
+        }
+    </style>
+
 </head>
 
-<body class="pt-2">
-<div class="background-image">
-    <img src="../img/时间.png" class="img1">
-    <span style="color: black; font-size: 20px;margin-left: 20px" id="now_time" ></span>
-    <span style="margin-left: 50px;font-size: 20px"><img src="../img/个人.png" style="height: 30px;">  您 好 <b><span id="dlm" style="color: black"></span></b> , 欢 迎 您 登 录 !</span>
-    <img src="../img/重金属.png" class="img1" style="margin-left: 30px">
-    <img src="../img/金属.png" class="img1"style="margin-left: 30px">
-    <img src="../img/钻石.png" class="img1"style="margin-left: 30px">
-    <div class="menu">
-        <button class="btn2"><img src="../img/个人信息.png" class="img1"></button>
-        <div class="content">
-            <div>
-                <img src="../img/img_1.png">
-            </div>
-            <div style="margin-left: 60px">
-                <a href="grxx.html" class="link-dark rounded">个人信息</a>
-            </div>
-            <div style="margin-left: 60px">
-                <a href="http://localhost:9093/index.html" target="_top">退出登录</a>
-            </div>
+<body  class=" body-yangshi">
+<div class="top-zujian">
+    <div class="time-bar">
+        <div class="time-display">
+            <i class="bi bi-calendar tubiao "></i>
+            <span class="time-text" id="current-date">2025年8月15日 星期五</span>
+            <i class="bi bi-clock tubiao "></i>
+            <span class="time-text" id="current-time">14:31:33</span>
+        </div>
+        <span style="margin-left: 50px;font-size: 20px">  您 好 <b><span
+                id="dlm" style="color:white "></span></b> , 欢 迎 您 登 录 !</span>
+        <div class="session-time">
+            <i class="bi bi-person-circle tubiao" ></i>
+            <a href="grxx.html" class="link-dark rounded dingbu">个人中心</a>
+            <i class="bi bi-box-arrow-right tubiao" ></i>
+            <a href="http://localhost:9093/index.html" target="_top" class="dingbu">退出登录</a>
         </div>
     </div>
-    <a href="main.html" target="_top"><img src="../img/首页.png" class="img1"></a>
-    <img src="../img/地球仪.png" class="img1" style="margin-left: 20px;">
+    <div class="top-toolbar row">
+        <div class="col-md-3 mb-2">
+            <input id="gsm" type="text" class="form-control" placeholder="负责人姓名" autocomplete="off">
+        </div>
+        <div class="col-md-2 mb-2">
+            <button id="select-btn" class="btn btn-color" style="color: white">
+                <i class="bi bi-search icon"></i>
+                查询
+            </button>
+        </div>
+
+        <div class="btn-group" role="group">
+            <button id="refresh-btn" class="btn btn-color" style="border-radius:5px;">
+                <i class="bi bi-arrow-clockwise icon"></i>
+                刷新
+            </button>
+            <span style="border-right: 20px solid white"></span>
+
+            <button id="add-btn" class="btn btn-color" style="border-radius:5px;">
+                <i class="bi bi-plus-square icon"></i>
+                新增一行
+            </button>
+            <span style="border-right: 20px solid white"></span>
+            <!--        <button id="update-btn" class="btn btn-primary" style="border-radius:5px;">-->
+            <!--            <i class="bi bi-pencil-square icon"></i>-->
+            <!--            修改-->
+            <!--        </button>-->
+            <!--        <span style="border-right: 20px solid white"></span>-->
+            <button id="delete-btn" class="btn btn-color" style="border-radius:5px;background-color: red">
+                <i class="bi bi-trash icon"></i>
+                删除
+            </button>
+            <span style="border-right: 20px solid white"></span>
+            <a class="btn btn-color" style="color: white;padding-top: 8px;border-radius:5px;">当前页：配置表</a>
+        </div>
+    </div>
 </div>
 
-<div class="top-toolbar row">
-    <div class="col-md-3 mb-2">
-        <input id="ksrq" type="date" class="form-control" placeholder="开始日期" autocomplete="off">
-    </div>
-    <div class="col-md-3 mb-2">
-        <input id="jsrq" type="date" class="form-control" placeholder="结束日期" autocomplete="off">
-    </div>
-    <div class="col-md-3 mb-2">
-        <input id="gsm" type="text" class="form-control" placeholder="客户公司名" autocomplete="off">
-    </div>
-    <div class="col-md-2 mb-2">
-        <button id="select-btn" class="btn" style="background-color: limegreen;color: white">
-            <i class="bi bi-search icon"></i>
-            查询
-        </button>
-    </div>
-</div>
+
 
 <div id="table-toolbar">
-    <div class="btn-group" role="group">
-        <button id="refresh-btn" class="btn btn-primary" style="border-radius:5px;">
-            <i class="bi bi-arrow-clockwise icon"></i>
-            刷新
-        </button>
-        <span style="border-right: 20px solid white"></span>
-<!--        <button id="add-btn" class="btn btn-primary" style="border-radius:5px;">-->
-<!--            <i class="bi bi-plus-square icon"></i>-->
-<!--            新增-->
-<!--        </button>-->
-<!--        <span style="border-right: 20px solid white"></span>-->
-<!--        <button id="update-btn" class="btn btn-primary" style="border-radius:5px;">-->
-<!--            <i class="bi bi-pencil-square icon"></i>-->
-<!--            修改-->
-<!--        </button>-->
-<!--        <span style="border-right: 20px solid white"></span>-->
-        <button id="delete-btn" class="btn btn-primary" style="border-radius:5px;background-color: red">
-            <i class="bi bi-trash icon"></i>
-            删除
-        </button>
-        <span style="border-right: 20px solid white"></span>
-        <a class="btn btn-primary" style="color: white;padding-top: 8px;border-radius:5px;">当前页：签回单</a>
-    </div>
+
 </div>
 
 <div class="table-div border-top">
-    <table id="qhdTable"></table>
+    <table id="qhdTable" class="gradient-table"></table>
 </div>
 
 <div id="add-modal" class="modal fade" tabindex="-1">
@@ -289,22 +327,19 @@
     </div>
 </div>
 
-<div class="background-image2 flex-container" style="margin-top: 600px">
-    <div class="info-box" style="width: 500px;margin-left: 10px">
-        <span>主办单位：坤鑫金属有限公司</span><br>
-        <!--        <span>技术专线：123456</span><br>-->
-        <span>备案/许可证编号为：xxxxxx</span>
-    </div>
-    <div class="info-box" style="width: 600px;">
-        <span>最佳使用效果：谷歌浏览器</span><br>
-        <span>联系地址：xxxxxx</span><br>
-
-    </div>
-    <div class="info-box" style="width: 300px;">
-        <img src="../img/电话.png" class="img2">12720988902<br>
-        <span>关于我们</span><img src="../img/关于我们.png" style="margin-left: 20px" class="img2">
-    </div>
-</div>
-
 </body>
+<script>
+    // 初始化时间显示
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('current-date').textContent =
+            `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+        document.getElementById('current-time').textContent =
+            `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    }
+    // 启动定时器
+    updateTime();
+    setInterval(updateTime, 1000);
+
+</script>
 </html>

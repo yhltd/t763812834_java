@@ -1,7 +1,5 @@
 
 package com.example.demo.util;
-
-import com.example.demo.entity.UserInfo;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpSession;
@@ -42,16 +40,14 @@ public class SessionUtil {
         session.setAttribute("token", data);
     }
 
-    public static void setUserName(HttpSession session, List<UserInfo> UserInfo) {
-        //设置session过期时间
+    public static void setD(HttpSession session, String data) {
         session.setMaxInactiveInterval(MAX_INTERVAL);
-        session.setAttribute("username", UserInfo);
+        session.setAttribute("D", data);
     }
 
-    public static void setPower(HttpSession session, List<UserInfo> UserInfo){
-        //设置session过期时间
+    public static void setC(HttpSession session, String data) {
         session.setMaxInactiveInterval(MAX_INTERVAL);
-        session.setAttribute("power", UserInfo);
+        session.setAttribute("C", data);
     }
 
     /**
@@ -63,16 +59,12 @@ public class SessionUtil {
         return checkToken(session) ? session.getAttribute("token").toString() : StringUtils.EMPTY;
     }
 
-    public static List<UserInfo> getPower(HttpSession session){
-        return StringUtils.cast(session.getAttribute("power"));
+    public static String getD(HttpSession session) {
+        return session.getAttribute("D") != null ? session.getAttribute("D").toString() : "";
     }
 
-    public static List<UserInfo> getUserName(HttpSession session){
-        return StringUtils.cast(session.getAttribute("username"));
-    }
-
-    public static List<UserInfo> getCaozuoquanxian(HttpSession session){
-        return StringUtils.cast(session.getAttribute("caozuoquanxian"));
+    public static String getC(HttpSession session) {
+        return session.getAttribute("C") != null ? session.getAttribute("C").toString() : "";
     }
 
     /**

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>客户信息</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap-table.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+    <script type="text/javascript" src="../js/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="../css/sweetalert.css">
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+
+    <link rel="stylesheet" href="../css/main.css">
+    <script type="text/javascript" src="../js/main.js"></script>
+    <script type="text/javascript" src="../js/khxx.js"></script>
+</head>
+
+<body  class=" body-yangshi">
+    <div class="top-zujian">
+        <div class="time-bar">
+        <div class="time-display">
+            <i class="bi bi-calendar tubiao "></i>
+            <span class="time-text" id="current-date">2025年8月15日 星期五</span>
+            <i class="bi bi-clock tubiao "></i>
+            <span class="time-text" id="current-time">14:31:33</span>
+        </div>
+        <span style="margin-left: 50px;font-size: 20px">  您 好 <b><span
+                id="dlm" style="color:white "></span></b> , 欢 迎 您 登 录 !</span>
+        <div class="session-time">
+            <i class="bi bi-person-circle tubiao" ></i>
+            <a href="grxx.html" class="link-dark rounded dingbu">个人中心</a>
+            <i class="bi bi-box-arrow-right tubiao" ></i>
+            <a href="http://localhost:9093/index.html" target="_top" class="dingbu">退出登录</a>
+        </div>
+        </div>
+
+        <!-- 查询条件区域 -->
+        <div class="top-toolbar row">
+            <div class="col-md-3 mb-2">
+                <input id="khmc" type="text" class="form-control" placeholder="客户名称" autocomplete="off">
+            </div>
+            <div class="col-md-3 mb-2">
+                <input id="fzr" type="text" class="form-control" placeholder="负责人" autocomplete="off">
+            </div>
+            <!--    <div class="col-md-2 mb-2">-->
+            <!--        <input id="jdrqStart" type="date" class="form-control" placeholder="建档开始日期">-->
+            <!--    </div>-->
+            <!--    <div class="col-md-2 mb-2">-->
+            <!--        <input id="jdrqEnd" type="date" class="form-control" placeholder="建档结束日期">-->
+            <!--    </div>-->
+            <div class="col-md-2 mb-2">
+                <input id="lxr1" type="text" class="form-control" placeholder="客户代表人" autocomplete="off">
+            </div>
+            <div class="col-md-2 mb-2">
+                <button id="select-btn" class="btn btn-color" style="color: white">
+                    <i class="bi bi-search icon"></i>
+                    查询
+                </button>
+            </div>
+        </div>
+
+        <div id="table-toolbar">
+            <div class="btn-group" role="group">
+                <button id="refresh-btn" class="btn btn-color" style="border-radius:5px;">
+                    <i class="bi bi-arrow-clockwise icon"></i>
+                    刷新
+                </button>
+                <span style="border-right: 20px solid white"></span>
+                <button id="add-btn" class="btn btn-color" style="border-radius:5px;">
+                    <i class="bi bi-plus-square icon"></i>
+                    新增
+                </button>
+                <span style="border-right: 20px solid white"></span>
+                <button id="update-btn" class="btn btn-color" style="border-radius:5px;">
+                    <i class="bi bi-pencil-square icon"></i>
+                    修改
+                </button>
+                <span style="border-right: 20px solid white"></span>
+                <button id="delete-btn" class="btn btn-color" style="border-radius:5px;background-color: red;">
+                    <i class="bi bi-trash icon"></i>
+                    删除
+                </button>
+                <span style="border-right: 20px solid white"></span>
+                <button id="export-btn" class="btn btn-color" style="border-radius:5px;">
+                    <i class="bi bi-file-earmark-excel icon"></i>
+                    导出Excel
+                </button>
+                <span style="border-right: 20px solid white"></span>
+                <a class="btn btn-color" style="color: white;padding-top: 8px;border-radius:5px;">当前页：客户信息</a>
+            </div>
+        </div>
+    </div>
+
+
+
+<div class="table-div border-top">
+    <table id="khzlTable" class="gradient-table" ></table>
+</div>
+
+<!-- 新增/修改模态框 -->
+<div class="modal fade" id="khxxModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">新增客户信息</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="khxx-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>客户编号</label>
+                                <input type="text" class="form-control" name="khbh" placeholder="请输入客户编号">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>客户简称</label>
+                                <input type="text" class="form-control" name="khjc" placeholder="请输入客户简称">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>客户名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="khmc" placeholder="请输入客户名称" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>建档日期</label>
+                                <input type="date" class="form-control" name="jdrq">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>负责人</label>
+                                <input type="text" class="form-control" name="fzr" placeholder="请输入负责人">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>开行户</label>
+                                <input type="text" class="form-control" name="khh" placeholder="请输入开行户">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>账号</label>
+                                <input type="text" class="form-control" name="zh" placeholder="请输入账号">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>税号</label>
+                                <input type="text" class="form-control" name="sh" placeholder="请输入税号">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>付款方式</label>
+                                <select name="fkfs" class="form-control">
+                                    <option value="">请选择付款方式</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>地址</label>
+                        <input type="text" class="form-control" name="dz" placeholder="请输入地址">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>购方代表人</label>
+                                <input type="text" class="form-control" name="lxr1" placeholder="请输入代表人">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>购方联系电话</label>
+                                <input type="text" class="form-control" name="lxdh1" placeholder="请输入联系电话">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>收货地址1</label>
+                                <input type="text" class="form-control" name="dz1" placeholder="请输入收货地址1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>收货地址2</label>
+                                <input type="text" class="form-control" name="dz2" placeholder="请输入收货地址2">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>收货地址3</label>
+                                <input type="text" class="form-control" name="dz3" placeholder="请输入收货地址3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>收货地址4</label>
+                                <input type="text" class="form-control" name="dz4" placeholder="请输入收货地址4">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>收货地址5</label>
+                                <input type="text" class="form-control" name="dz5" placeholder="请输入收货地址5">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>购方要求</label>
+                        <textarea class="form-control" name="yq" placeholder="请输入购方要求" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>客户注意</label>
+                        <textarea class="form-control" name="khzy" placeholder="请输入客户注意" rows="3"></textarea>
+                    </div>
+                    <input type="hidden" name="id" id="editId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveKhxxBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div id="delete-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">提示</div>
+            </div>
+            <div id="delete-modal-body" class="modal-body">
+                确定删除吗？
+            </div>
+            <div class="border-top" style="padding: 15px;">
+                <button id="delete-submit-btn" type="button" class="btn">
+                    <i class="bi bi-arrow-bar-up icon"></i>
+                    确定
+                </button>
+                <button id="delete-close-btn" type="button" class="btn left-margin">
+                    <i class="bi bi-x-circle icon"></i>
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    // 初始化时间显示
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('current-date').textContent =
+            `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+        document.getElementById('current-time').textContent =
+            `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    }
+    // 启动定时器
+    updateTime();
+    setInterval(updateTime, 1000);
+
+</script>
+
+</html>

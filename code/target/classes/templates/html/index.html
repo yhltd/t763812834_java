@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登陆页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <script type="text/javascript" src="js/Jquery.js"></script>
+    <script type="text/javascript" src="js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/sweetalert.css">
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/sweetalert-dev.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 500px;
+            margin: auto;
+        }
+
+        .login-card {
+            background: white;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+
+        /* 卡片2: 毛玻璃效果 */
+        .card-2 {
+            background: rgb(255 255 255 / 0%);
+
+        }
+
+        .card-2 .card-header {
+            display: flex;
+            padding: 0;
+            text-align: center;
+            justify-content: center;
+            height: 60px;
+            background: transparent;
+            overflow: auto;
+            border: 0;
+        }
+
+        .card-2 .card-body {
+            padding: 80px 30px 30px 30px;
+            background: linear-gradient(0deg, #0000004a, #ffffff9c);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            }
+
+            .card-2 .avatar {
+                position: absolute;
+                z-index: 90;
+                justify-content: center;
+                width: 120px;
+                box-shadow: inset 0px 0px 5px 0px #3f3f3f61;
+                height: 120px;
+                overflow: hidden;
+                border-radius: 50%;
+                background: white;
+                margin: 0 auto 20px;
+                display: flex;
+                align-items: center;
+                color: white;
+                font-size: 2rem;
+                }
+
+                .card-2 h2 {
+                    color: var(--dark);
+                    font-size: 1.8rem;
+                    margin-bottom: 10px;
+                }
+
+                .card-2 .subtitle {
+                    color: var(--gray);
+                    font-size: 0.95rem;
+                }
+
+
+
+                /* 表单通用样式 */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 10px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .card-2 .form-input {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-size: 1.2rem;
+        }
+
+
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            accent-color: var(--primary);
+        }
+
+        .card-3 .checkbox {
+            accent-color: var(--success);
+        }
+
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .card-3 .forgot-password {
+            color: var(--success);
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .card-2 .login-button {
+            background: rgb(89 98 221);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .card-3 .login-button {
+            background: linear-gradient(135deg, var(--success), #3a86ff);
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--gray);
+        }
+
+        .card-3 .divider {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .card-3 .divider::before, .card-3 .divider::after {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .divider span {
+            padding: 0 15px;
+            font-size: 0.9rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .card-2 .social-button {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--dark);
+        }
+
+        .card-3 .social-button {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .social-button i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .social-button.google:hover {
+            border-color: #DB4437;
+            color: #DB4437;
+        }
+
+        .social-button.facebook:hover {
+            border-color: #4267B2;
+            color: #4267B2;
+        }
+
+        .social-button.twitter:hover {
+            border-color: #1DA1F2;
+            color: #1DA1F2;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 25px;
+            color: var(--gray);
+        }
+
+        .card-3 .signup-link {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .signup-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .card-3 .signup-link a {
+            color: var(--success);
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .card-3 .error-message {
+            color: #ff6b6b;
+        }
+
+        .success-message {
+            color: #2ecc71;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
+
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .forgot-password {
+                margin-top: 10px;
+            }
+        }
+
+        /* 加载动画 */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="log-image" style="padding-top: 60px;margin: 0">
+<!--    <div class="row justify-content-center">-->
+<!--        <div class="col-md-7" style="margin: 0;font-weight: bold;text-align: center;color: rgb(192,155,69);font-size: 3rem;">-->
+<!--            坤鑫金属-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <div class="row justify-content-center" style="margin-top: 50px">-->
+<!--        <div class="panel col-md-5" style="background-color: rgba(178,163,163,0.8);">-->
+<!--            <div class="panel-main">-->
+<!--                <form id="login-form">-->
+<!--                    <div class="form-group">-->
+<!--                        <label for="username">账号</label>-->
+<!--                        <input id="username" name="username" type="text" class="form-control" autocomplete="off" required>-->
+<!--                        <div class="invalid-feedback">-->
+<!--                            请输入账号！-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="form-group">-->
+<!--                        <label for="password">密码</label>-->
+<!--                        <input id="password" name="password" type="password" class="form-control" autocomplete="off" required>-->
+<!--                        <div class="invalid-feedback">-->
+<!--                            请输入密码！-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </form>-->
+<!--                <button id="submit-btn" class="btn btn-primary" style="width: 90px">-->
+<!--                    <i class="bi bi-person-fill icon"></i>-->
+<!--                    登陆-->
+<!--                </button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<div class="container">
+    <!-- 卡片2: 毛玻璃效果 -->
+    <div class="login-card card-2">
+        <div class="card-header">
+            <div class="avatar">
+                <img src="img/logo-dinghan.png" style="width: 80px; height: 80px">
+            </div>
+
+        </div>
+        <div class="card-body">
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="username">账号</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user input-icon"></i>
+                        <input id="username" name="username" type="text" class="form-input" placeholder="请输入账号" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">密码</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input id="password" name="password" type="password" class="form-input" placeholder="请输入密码" required>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </form>
+            <button id="submit-btn" class="login-button">
+                <span class="button-text">登录</span>
+                <div class="spinner"></div>
+            </button>
+
+        </div>
+    </div>
+
+</div>
+<div style="font-size: 18px;color: white;position: absolute; top: 0; right: 0;">V 1.0.9</div>
+</body>
+</html>

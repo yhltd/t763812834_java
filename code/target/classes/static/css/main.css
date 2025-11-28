@@ -1,7 +1,7 @@
 html,body,#main{
     width: 100%;
     height: 100%;
-    background-color: #f2f2f2;
+    /*background-color: #f2f2f2;*/
 }
 /*@media (max-width: 1919px) {*/
 /*    html {*/
@@ -27,6 +27,7 @@ table tbody tr td{
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 13px;
+    color: black;
 }
 a{
     cursor: pointer;
@@ -86,7 +87,6 @@ a{
     align-items: center;
     background-color: #fff;
     margin: 0;
-    border-radius: 2px;
     box-shadow: 0 0 2px rgba(0,0,0,.5);
     padding-top: .5rem;
 }
@@ -106,7 +106,7 @@ a{
     justify-content: space-between;
 }
 table{
-    table-layout: fixed;
+    table-layout: auto;
     transition: .3s;
     white-space: nowrap;
 }
@@ -149,7 +149,7 @@ table{
     background-size: cover;
 }
 .log-image{
-    background: url("../img/login.png") center fixed;
+    background: url("../img/bg-zhuye.jpg") center fixed;
     background-size: cover;
 }
 .stamp-a{
@@ -315,5 +315,509 @@ table{
 
 .image-small{
     height: 20px;
-    width: 25px;
+    width: 20px;
+}
+
+
+/*================================时间栏容器====================================*/
+.time-bar {
+    width: 100%;
+    height: 60px;
+    background: linear-gradient(135deg,  #4361ee,  #3a0ca3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    /*box-shadow: 0px 3px 3px 0px rgba(4, 0, 255, 0.46);*/
+    box-shadow: 0 0 2px rgba(0, 0, 0, .5);
+    color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.time-bar::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+.time-display, .session-time {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 1;
+}
+
+.time-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/*============================普通按钮样式=====================================*/
+.btn-color{
+    color: #FFF;
+    background-color: #303031;
+    border-color:#303031;
+}
+/*======悬停效果=========*/
+.btn-color:hover{
+    color: #fff;
+    background-color: #525252;
+    border-color:  #525252;
+}
+.btn-dangqian{
+    color: #FFF;
+    background-color: #303031;
+    border-color:#303031;
+}
+
+/* ====================== 退出和删除按钮颜色方案 ====================== */
+/* 基础状态样式 - 按钮默认外观 */
+.btn-color-delete{
+    color:#fff;
+    background-color: #ce3030;
+    border-color: #ce3030;
+}
+/* 悬停状态样式 - 鼠标悬停时的交互反馈 */
+.btn-color-delete:hover {
+    color: #fff;
+    background-color: #ff6d6d;
+    border-color: #ff6d6d;
+}
+/* ====================== 个人中心和退出登录样式====================== */
+.tubiao{
+    font-size: 25px;
+    line-height: 22px;
+    color: white;
+}
+
+.dingbu{
+    color: white;
+    margin-right: 15px;
+    margin-left: 5px;
+}
+
+.dingbu:hover{
+    color: #ffcb53;
+text-decoration: underline;
+}
+
+/* ====================== 分页控件样式====================== */
+.pagination-container {
+    margin: 20px 0;
+    padding: 15px;
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    color: #000000;
+    font-size: 14px;
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #435eeb;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #303031;
+    border-color:#303031;
+    color: white;
+}
+
+.pagination-btn:disabled {
+    background: #435eeb;
+    color: #b2b2b2;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.page-number {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #4361ee;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+    min-width: 40px;
+}
+
+.page-number.active {
+    background: #ce3030;
+    color: white;
+    border-color: #ce3030;
+}
+
+.page-number:hover:not(.active) {
+    background:#303031;
+    color: white;
+}
+
+.page-size-selector select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+    background: #4361ee;
+    color: white;
+}
+
+.page-jump {
+    display: flex;
+    gap: 5px;
+}
+
+.page-jump-input {
+    width: 60px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 14px;
+    background: #435eeb;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+}
+
+/* ============================ 渐变表格样式 =========================== */
+.gradient-table {
+    /* 布局属性 */
+    width: 100%;            /* 占满父容器宽度 */
+    border-collapse: collapse; /* 合并单元格边框 */
+    overflow: hidden;       /* 隐藏溢出内容保证圆角效果 */
+
+    /* 视觉样式 */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); /* 柔和阴影 */
+
+    /* 背景 */
+    /*background: rgba(129, 73, 73, 0.85);*/
+    /*background: rgb(36 201 134);*/
+    background: rgb(197 197 197 / 85%);
+}
+
+/* ====表头样式 ===== */
+.gradient-table thead {
+    /* 渐变背景（比主体更浓） */
+    background: linear-gradient(135deg,  #4361ee,  #3a0ca3);
+
+    /* 文字效果 */
+    color: white;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2); /* 文字阴影 */
+}
+
+/* ===== 单元格基础样式 ===== */
+.gradient-table th,
+.gradient-table td {
+    padding: 1rem 1.5rem;
+    text-align: center;       /* 左对齐文本 */
+    border-bottom: 1px solid white; /* 半透明分割线 */
+
+}
+
+.gradient-table tr {
+   color: white;
+
+}
+
+/* ===== 悬停交互效果 ===== */
+.gradient-table tbody tr:hover {
+    /* 视觉变化 */
+    background: rgb(120 117 255) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;        /* 手型光标*/
+    transition: background 0.4s ease; /* 平滑过渡效果 */
+}
+
+/* 悬停时文字变化 */
+.gradient-table tbody tr:hover td {
+    color: #000000;
+        /* 加粗 */
+}
+
+.table-waiceng{
+    overflow: auto;
+    width: 100%;
+    max-height: 600px;
+    background-color: #ffffff;
+    margin-top: .5rem;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.selected-row {
+    background: rgb(120 117 255) !important;
+    color: #000000 !important;
+}
+/*==============================顶部容器===================================*/
+.html{
+    padding: 0;
+}
+
+.body-yangshi{
+    padding: 190px 10px 0 10px;
+    background-image: url("../img/biaoge_bg.png") ;
+    background-size: cover;
+}
+.top-zujian{
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    max-height: 170px;
+    box-shadow: 0px 4px 11px 1px #4d4d4d;
+}
+
+.top-btn{
+    background: white;
+    height: 55px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+.top-btn-group{
+    margin-bottom: 10px;
+    margin-left: 15px;
+}
+
+/*==============================侧边栏容器===================================*/
+/*侧边栏样式*/
+.sidebar {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background:linear-gradient(145deg, #081325, #415b72);
+    color: white;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    transition: all 0.3s ease;
+}
+
+/* 可折叠按钮基础样式 */
+.btn-toggle {
+    /* 基础样式 */
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    position: relative;
+
+    /* 动画效果 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 贝塞尔曲线过渡动画 */
+}
+
+/* 悬停状态 */
+.btn-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+.link-item:hover{
+    background: linear-gradient(135deg, #3044b4, #2b096c);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+/* 展开状态指示器（通常配合下拉菜单使用） */
+.btn-toggle[aria-expanded="true"]::after {
+    transform: translateY(-50%) rotate(45deg); /* 旋转45度形成展开箭头 */
+}  /*====================================================*/
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100% !important;
+        height: auto;
+    }
+}
+
+/*=======链接按钮容器=======*/
+.link-item {
+    background: linear-gradient(135deg, #425ae8, #3b13a9);
+    box-shadow: 0 0 0 ;
+    overflow: hidden;
+    position: relative;
+    margin-top: 20px;
+    height: 41px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    /*两侧三角形按钮*/
+    clip-path: polygon(
+            15% 0%,  /* 左上角内凹点 */
+            85% 0%,   /* 右上角内凹点 */
+            100% 50%, /* 右侧三角形顶点 */
+            85% 100%, /* 右下角内凹点 */
+            15% 100%, /* 左下角内凹点 */
+            0% 50%    /* 左侧三角形顶点 */
+    );
+}
+.link-left{
+    color: white;
+}
+.left-tubiao{
+    line-height: 0;
+}
+
+
+/*============================首页字体和按钮 ===================*/
+.shouye {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    background-color: rgba(255,255,255,0);
+    position: absolute;
+    top: 0; /* 垂直居中 */
+    left: 0; /* 水平偏移 */
+    z-index: 10; /* 高值确保在上层 */
+}
+/*标题容器*/
+.title-container {
+    height: 33.33vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+/*字体格式*/
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+}
+/*按钮容器*/
+.link-group{
+    display: flex;
+    gap: 30px;
+    text-align: center;
+    margin-top: 50px;
+}
+/*按钮样式*/
+.circle-link {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #081325, #34495e);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 90px;
+    line-height: 150px;
+}
+/*按钮悬停效果*/
+.circle-link:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.slide:nth-child(1) {
+    background-image: url("../img/lunbo1.jpg");
+}
+.slide:nth-child(2) {
+    background-image: url("../img/caiwu_biaoge_bg3.jpg")
+}
+.slide:nth-child(3) {
+    background-image: url("../img/lunbo3.jpg")
+}
+.slide:nth-child(4) {
+    background-image: url("../img/lunbo1.jpg");
+}
+
+.page-jump-input::placeholder {
+    color: #e0e0e0;
+    opacity: 1; /* Firefox需要这个 */
+}
+
+/*===============================新增修改页面==================================*/
+.new-modal-content{
+    background: #6062bd;
+    color: white;
+}
+.new-modal-footer{
+    justify-content: center;
+}
+.btn-add-baocun{
+    color: #fff;
+    background-color: #ff7916;
+    border-color: #ff7916;
+}
+.btn-add-quxiao{
+    color: #fff;
+    background-color: #454545;
+    border-color:#454545;
+}
+
+.daochu{
+    margin-left: 10px;
+    margin-bottom: .5rem !important;
+}
+.chaxun{
+    margin-bottom: .5rem !important;
+}
+
+.body-yangshi-yjbb{
+    padding: 130px 10px 0 10px;
+    background-image: url(../img/biaoge_bg.png);
+    background-size: cover;
 }

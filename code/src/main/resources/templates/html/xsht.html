@@ -1,0 +1,2682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售合同</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap-table.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+    <script type="text/javascript" src="../js/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="../css/sweetalert.css">
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .invoice-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .invoice-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .invoice-info {
+            flex: 1;
+            text-align: right;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .client-info, .invoice-meta {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .items-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .items-table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .summary-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+
+        .summary-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .summary-table tr:last-child {
+            font-weight: bold;
+            background-color: #f1f8ff;
+        }
+
+        .notes {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .notes p {
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row .form-group {
+            flex: 1;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .item-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .item-row .form-group:first-child {
+            flex: 2;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .signature-table td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            height: 30px;
+        }
+
+        .contract-title {
+            color: red;
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .page-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 印章悬浮样式 */
+        .seal-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .seal-container {
+            position: relative;
+        }
+
+        /* 打印样式 - 修复版 */
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 12pt !important;
+                line-height: 1.4 !important;
+                color: black !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .invoice-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                background: white !important;
+            }
+
+            .action-buttons, .header h1, .form-section {
+                display: none !important;
+            }
+
+            .invoice-header {
+                margin-bottom: 20px !important;
+                border-bottom: 2px solid #3498db !important;
+            }
+
+            /* 确保在打印时分页 */
+            .invoice-container {
+                page-break-after: always !important;
+            }
+
+            .invoice-container:last-child {
+                page-break-after: avoid !important;
+            }
+
+            /* 打印时印章显示 - 修复 */
+            .seal-overlay {
+                opacity: 1 !important;
+                display: block !important;
+                visibility: visible !important;
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                z-index: 1000 !important;
+            }
+
+            .seal-overlay img {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 180px !important;
+                height: auto !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* 确保footer在打印时正确显示 */
+            .footer {
+                display: flex !important;
+                justify-content: space-between !important;
+                margin-top: 30px !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .footer-left, .footer-right {
+                width: 48% !important;
+                position: relative !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* 表格样式调整 */
+            .signature-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 11pt !important;
+            }
+
+            .signature-table td {
+                padding: 4px 8px !important;
+                border: 1px solid #000 !important;
+                height: 25px !important;
+                vertical-align: middle !important;
+            }
+
+            /* 确保内容不会在奇怪的位置分页 */
+            .invoice-details, .items-table, .summary, .notes {
+                page-break-inside: avoid !important;
+            }
+
+            /* 调整产品表格的打印样式 */
+            .items-table {
+                font-size: 10pt !important;
+            }
+
+            .items-table th, .items-table td {
+                padding: 4px 6px !important;
+                border: 1px solid #000 !important;
+            }
+
+            .items-table th {
+                background-color: #3498db !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* 调整其他元素的打印样式 */
+            .client-info, .invoice-meta {
+                background: #f8f9fa !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            .summary-table tr:last-child {
+                background-color: #f1f8ff !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            .contract-title {
+                color: red !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* 强制所有元素在打印时正确显示 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* 隐藏不必要的元素 */
+            .seal-container::before, .seal-container::after {
+                display: none !important;
+            }
+
+            /* 确保图片和背景在打印时显示 */
+            img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+
+            .company-info img {
+                display: block !important;
+                visibility: visible !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>销售合同</h1>
+    </div>
+
+    <div class="form-section">
+        <h3>填写合同信息</h3>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label for="contractNumber">合同编号</label>
+                <input type="text" id="contractNumber" class="form-control" placeholder="例如: GXDD0120251120">
+            </div>
+            <div class="form-group">
+                <label for="contractDate">签约日期</label>
+                <input type="date" id="contractDate" class="form-control">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label for="clientCompany">乙方公司名称</label>
+                <select id="clientCompany" class="form-control">
+                    <option value="">请选择乙方公司</option>
+                    <option value="其他">其他（请在下框中填写）</option>
+                </select>
+                <input type="text" id="clientCompanyOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
+            </div>
+            <div class="form-group">
+                <label for="clientAddress">乙方地址</label>
+                <select id="clientAddress" class="form-control">
+                    <option value="">请选择乙方地址</option>
+                    <option value="其他">其他（请在下框中填写）</option>
+                </select>
+                <input type="text" id="clientAddressOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label for="deliveryAddress">收货地址</label>
+                <select id="deliveryAddress" class="form-control">
+                    <option value="">请选择收货地址</option>
+                    <option value="其他">其他（请在下框中填写）</option>
+                </select>
+                <input type="text" id="deliveryAddressOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
+            </div>
+            <div class="form-group">
+                <label for="clientRequirements">乙方要求</label>
+                <input type="text" id="clientRequirements" class="form-control" placeholder="乙方要求">
+            </div>
+        </div>
+
+        <!-- 新增：付款方式和增值税率选择 -->
+        <div class="input-row">
+            <div class="form-group">
+                <label for="paymentMethod">甲方</label>
+                <select id="paymentMethod" class="form-control">
+                </select>
+                <input type="text" id="paymentMethodOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
+            </div>
+            <div class="form-group">
+                <label for="taxRate">税务</label>
+                <select id="taxRate" class="form-control">
+                    <option value="1">以上报价含税</option>
+                    <option value="2">以上报价未税</option>
+                    <option value="其他">其他（请在下框中填写）</option>
+                </select>
+                <input type="text" id="taxRateOther" class="form-control" placeholder="如选择其他，请在此填写税率" style="margin-top: 5px; display: none;">
+            </div>
+        </div>
+        <div class="input-row">
+            <div class="form-group">
+                <label for="khzyField">客户注意</label>
+                <textarea id="khzyField" class="form-control" style="height: 100px; background-color: #f8f9fa;" placeholder="选择乙方后自动显示客户注意信息" readonly></textarea>
+            </div>
+        </div>
+        <div id="itemsContainer">
+            <div class="item-row">
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <input type="text" class="form-control item-name" placeholder="产品名称">
+                </div>
+                <div class="form-group">
+                    <label>产品型号</label>
+                    <input type="text" class="form-control item-model" placeholder="产品型号">
+                </div>
+                <div class="form-group">
+                    <label>订购数量</label>
+                    <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>单价 (元)</label>
+                    <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <input type="text" class="form-control item-remark" placeholder="备注">
+                </div>
+                <div class="form-group">
+                    <label>货期</label>
+                    <input type="text" class="form-control item-delivery" placeholder="货期">
+                </div>
+                <div class="form-group">
+                    <label>品牌</label>
+                    <input type="text" class="form-control item-brand" placeholder="品牌" value="SHAC">
+                </div>
+                <div class="form-group">
+                    <label>操作</label>
+                    <button type="button" class="btn btn-danger remove-item">删除</button>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="addItem" class="btn btn-primary">添加产品</button>
+
+        <div class="action-buttons">
+            <button id="generateInvoice" class="btn btn-success">生成合同</button>
+        </div>
+    </div>
+
+    <div class="invoice-container" id="invoicePreview">
+        <div class="invoice-header">
+            <div class="company-info">
+                <img src="../img/khlogo.png" style="width: 15%;" alt="公司logo">
+            </div>
+            <div class="invoice-title">
+                <h2 class="contract-title">加工定制合同</h2>
+            </div>
+            <div class="invoice-info">
+                <p class="page-info"><span id="previewPageNumber">第1页</span></p>
+                <p class="page-info"><span id="previewTotalPages">共1页</span></p>
+            </div>
+        </div>
+
+        <div class="invoice-details">
+            <div class="client-info">
+                <p>甲方(供货方): 昆山翰元星传动科技有限公司</p>
+                <p>乙方(购货方): <span id="previewClientCompany"></span></p>
+            </div>
+            <div class="invoice-meta">
+                <p>合同编号: <span id="previewContractNumber">GXDD0120251120</span></p>
+                <p>签约地点: 江苏省昆山市 <span id="previewContractDate"></span></p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <p><strong>一、以下为货物名称、数量、单价及总金额及乙方要求和收货地址：</strong></p>
+        </div>
+
+        <table class="items-table">
+            <thead>
+            <tr>
+                <th>序号</th>
+                <th>产品名称</th>
+                <th>产品型号</th>
+                <th>订购数量</th>
+                <th>单价</th>
+                <th>合计</th>
+                <th>备注</th>
+                <th>货期</th>
+                <th>品牌</th>
+            </tr>
+            </thead>
+            <tbody id="previewItems">
+            <!-- 动态生成的内容 -->
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <table class="summary-table">
+                <tr>
+                    <td>总计:</td>
+                    <td id="previewTotal">0.00 元</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <p><strong>乙方要求：</strong><span id="previewClientRequirements"></span></p>
+            <p><strong>收货地址：</strong><span id="previewDeliveryAddress"></span></p>
+        </div>
+
+        <div class="notes">
+            <p><span id="previewTaxRate">13%</span></p>
+            <p><strong>二、甲方收款资料如下</strong> 账号：554739970698 开户行：中国银行股份有限公司昆山综合保税区支行。</p>
+            <p><strong>三、合同履行，付款方式及期限，交货方式。</strong></p>
+            <p> 1.本合同请乙方于3个工作日内加盖合同章或公章向甲方回传，双方盖章（签字）后合同生效。</p>
+            <p> 2.交货地点：甲方负责将货物交付到乙方指定的国内交货地点，并承担运输费用；由乙方负责货物卸车。</p>
+            <p> 3.付款方式：<span id="previewPaymentMethod"></span></p>
+            <p> 4.交货方式：乙方应在甲方完成加工入库并收到甲方通知（不限书面，微信QQ等亦可）提货后7日内提完相应货物，若乙方未在约定时间内提完，甲方有权自行处置本合同产品，由此给乙方造成的全部损失，由乙方自行承担。</p>
+            <p><strong>四、质保期：</strong>本合同项下货物，自乙方收到之日起保修期为一年。在质保期内，如果因产品质量问题，由甲方负责维修；非产品质量问题，经协商一致，甲方可以提供维修服务，由此产生的费用，由乙方承担。</p>
+            <p><strong>五、货物验收：</strong>乙方收到货物后，应于3日内进行验收确认，如果有质量问题，须以书面形式通知甲方。如逾期未提出任何异议的，视为验收合格。</p>
+            <p><strong>六、其他条款：</strong>本合同产品为加工定制品，不支持加工途中取消或者变更型号，非质量问题不支持退换货。</p>
+            <p><strong>七、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
+        </div>
+
+        <div class="footer" style="display: flex; justify-content: space-between; margin-top: 50px;">
+            <div class="footer-left seal-container" style="width: 45%; position: relative;">
+                <h4>供货方签字盖章</h4>
+                <!-- 印章悬浮效果 -->
+                <div class="seal-overlay">
+                    <img src="../img/yinzhang.png" style="width: 200px; max-width: 200px;" alt="公司印章" onerror="this.style.display='none'">
+                </div>
+                <table class="signature-table">
+                    <tr>
+                        <td style="width: 30%;">甲方：</td>
+                        <td>昆山翰元星传动科技有限公司</td>
+                    </tr>
+                    <tr>
+                        <td>开户行：</td>
+                        <td>91320583MABWDA32XA</td>
+                    </tr>
+                    <tr>
+                        <td>账号：</td>
+                        <td>中国银行股份有限公司昆山综合保税区支行</td>
+                    </tr>
+                    <tr>
+                        <td>税号：</td>
+                        <td>554739970698</td>
+                    </tr>
+                    <tr>
+                        <td>地址：</td>
+                        <td>昆山市张浦镇同舟路188号3号房</td>
+                    </tr>
+                    <tr>
+                        <td>电话：</td>
+                        <td id="previewPhone"></td>
+                    </tr>
+                    <tr>
+                        <td>代表人：</td>
+                        <td id="previewRepresentative"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="footer-right" style="width: 45%;">
+                <h4>购货方签字盖章</h4>
+                <table class="signature-table">
+                    <tr>
+                        <td style="width: 30%;">乙方：</td>
+                        <td id="previewSignatureClientCompany"></td>
+                    </tr>
+                    <tr>
+                        <td>开户行：</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>账号：</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>税号：</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>地址：</td>
+                        <td id="previewSignatureClientAddress"></td>
+                    </tr>
+                    <tr>
+                        <td>电话：</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>代表人：</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="saveData" class="btn btn-primary">保存数据</button>
+            <button id="printInvoice" class="btn btn-primary">打印合同</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置默认日期为今天
+        const today = new Date();
+        const formattedDate = today.getFullYear() + '/' +
+            (today.getMonth() + 1).toString().padStart(2, '0') + '/' +
+            today.getDate().toString().padStart(2, '0');
+
+        document.getElementById('contractDate').value = today.toISOString().split('T')[0];
+        document.getElementById('previewContractDate').textContent = formattedDate;
+
+        // 设置默认增值税率为13%
+        document.getElementById('taxRate').value = '1';
+
+        // 修改位置：设置合同编号默认值为当前日期
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const dateString = year + month + day;
+        document.getElementById('contractNumber').value = 'GXDD01' + dateString;
+
+        // 下拉选择框事件处理
+        setupSelectHandlers();
+
+        // 添加商品行
+        document.getElementById('addItem').addEventListener('click', function() {
+            const itemsContainer = document.getElementById('itemsContainer');
+            const newItemRow = document.createElement('div');
+            newItemRow.className = 'item-row';
+
+            // 构建产品名称下拉框的HTML
+            let productNameHtml = '';
+            if (productList.length > 0) {
+                // 如果有产品数据，创建下拉框
+                productNameHtml = `
+            <div class="form-group">
+                <label>产品名称</label>
+                <select class="form-control item-name">
+                    <option value="">请选择产品名称</option>
+                    ${productList.map(product => `<option value="${product}">${product}</option>`).join('')}
+                    <option value="其他">其他（手动输入）</option>
+                </select>
+            </div>`;
+            } else {
+                // 如果没有产品数据，保持原来的输入框
+                productNameHtml = `
+            <div class="form-group">
+                <label>产品名称</label>
+                <input type="text" class="form-control item-name" placeholder="产品名称">
+            </div>`;
+            }
+
+            newItemRow.innerHTML = `
+        ${productNameHtml}
+        <div class="form-group">
+            <label>产品型号</label>
+            <input type="text" class="form-control item-model" placeholder="产品型号">
+        </div>
+        <div class="form-group">
+            <label>订购数量</label>
+            <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
+        </div>
+        <div class="form-group">
+            <label>单价 (元)</label>
+            <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-group">
+            <label>备注</label>
+            <input type="text" class="form-control item-remark" placeholder="备注">
+        </div>
+        <div class="form-group">
+            <label>货期</label>
+            <input type="text" class="form-control item-delivery" placeholder="货期">
+        </div>
+        <div class="form-group">
+            <label>品牌</label>
+            <input type="text" class="form-control item-brand" placeholder="品牌" value="SHAC">
+        </div>
+        <div class="form-group">
+            <label>操作</label>
+            <button type="button" class="btn btn-danger remove-item">删除</button>
+        </div>
+    `;
+            itemsContainer.appendChild(newItemRow);
+
+            // 为新添加的产品名称下拉框添加事件监听
+            const newProductSelect = newItemRow.querySelector('.item-name');
+            if (newProductSelect && newProductSelect.tagName === 'SELECT') {
+                newProductSelect.addEventListener('change', function() {
+                    if (this.value === '其他') {
+                        showProductNameInput(this);
+                    }
+                });
+            }
+
+            // 添加删除事件
+            newItemRow.querySelector('.remove-item').addEventListener('click', function() {
+                itemsContainer.removeChild(newItemRow);
+            });
+        });
+
+        // 设置初始商品行的品牌默认值
+        document.querySelector('.item-brand').value = 'SHAC';
+
+        // 初始商品行的删除事件
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemRow = this.closest('.item-row');
+                document.getElementById('itemsContainer').removeChild(itemRow);
+            });
+        });
+
+        // 生成合同
+        document.getElementById('generateInvoice').addEventListener('click', function() {
+            // 更新基本信息
+            document.getElementById('previewContractNumber').textContent =
+                document.getElementById('contractNumber').value || 'GXDD0120251120';
+
+            const contractDate = new Date(document.getElementById('contractDate').value);
+            const formattedContractDate = contractDate.getFullYear() + '/' +
+                (contractDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                contractDate.getDate().toString().padStart(2, '0');
+            document.getElementById('previewContractDate').textContent = formattedContractDate;
+
+            // 获取乙方公司名称（处理其他选项）
+            let clientCompany = document.getElementById('clientCompany').value;
+            if (clientCompany === '其他') {
+                clientCompany = document.getElementById('clientCompanyOther').value || '_______________';
+            }
+            document.getElementById('previewClientCompany').textContent = clientCompany || '_______________';
+            document.getElementById('previewSignatureClientCompany').textContent = clientCompany || '_______________';
+
+            // 获取乙方地址（处理其他选项）
+            let clientAddress = document.getElementById('clientAddress').value;
+            if (clientAddress === '其他') {
+                clientAddress = document.getElementById('clientAddressOther').value || '_______________';
+            }
+            document.getElementById('previewSignatureClientAddress').textContent = clientAddress || '_______________';
+
+            // 获取收货地址（处理其他选项和"同乙方地址"选项）
+            let deliveryAddress = document.getElementById('deliveryAddress').value;
+            if (deliveryAddress === '其他') {
+                deliveryAddress = document.getElementById('deliveryAddressOther').value || '_______________';
+            } else if (deliveryAddress === '同乙方地址') {
+                deliveryAddress = clientAddress || '同乙方地址';
+            }
+            document.getElementById('previewDeliveryAddress').textContent = deliveryAddress || '_______________';
+
+            // 获取乙方要求（处理其他选项）
+            let clientRequirements = document.getElementById('clientRequirements').value;
+            if (clientRequirements === '其他') {
+                clientRequirements = document.getElementById('clientRequirementsOther').value || '_______________';
+            }
+            document.getElementById('previewClientRequirements').textContent = clientRequirements || '_______________';
+
+            // 修改位置：获取付款方式 - 优先使用客户数据中的fkfs字段
+            let paymentMethod = '';
+            if (currentCustomerData && currentCustomerData.fkfs && currentCustomerData.fkfs.trim() !== '') {
+                // 如果有客户数据且fkfs字段有值，使用fkfs字段的值
+                paymentMethod = currentCustomerData.fkfs.trim();
+            } else {
+                // 否则使用下拉框选择的值
+                paymentMethod = document.getElementById('paymentMethod').value;
+                if (paymentMethod === '其他') {
+                    paymentMethod = document.getElementById('paymentMethodOther').value || '_______________';
+                }
+            }
+            document.getElementById('previewPaymentMethod').textContent = paymentMethod || '_______________';
+
+            // 修改位置：获取增值税率并更新显示文本
+            let taxRateText = '';
+            const taxRateValue = document.getElementById('taxRate').value;
+
+            if (taxRateValue === '1') {
+                taxRateText = '以上报价含税（13%增值税）';
+            } else if (taxRateValue === '2') {
+                taxRateText = '以上报价未税';
+            } else if (taxRateValue === '其他') {
+                const otherTaxRate = document.getElementById('taxRateOther').value || '13%';
+                // 确保税率格式正确
+                taxRateText = otherTaxRate.includes('%') ?
+                    `以上报价含税（${otherTaxRate}增值税）` :
+                    `以上报价含税（${otherTaxRate}%增值税）`;
+            } else {
+                taxRateText = '以上报价含税（13%增值税）'; // 默认值
+            }
+
+            document.getElementById('previewTaxRate').textContent = taxRateText;
+
+            // 更新产品明细
+            const previewItems = document.getElementById('previewItems');
+            previewItems.innerHTML = '';
+
+            let total = 0;
+            const itemRows = document.querySelectorAll('.item-row');
+
+            itemRows.forEach((row, index) => {
+                const name = row.querySelector('.item-name').value || '_______________';
+                const model = row.querySelector('.item-model').value || '_______________';
+                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = quantity * price;
+                const remark = row.querySelector('.item-remark').value || '';
+                const delivery = row.querySelector('.item-delivery').value || '_______________';
+                const brand = row.querySelector('.item-brand').value || 'SHAC';
+
+                total += amount;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${name}</td>
+            <td>${model}</td>
+            <td>${quantity}</td>
+            <td>${price.toFixed(2)}</td>
+            <td>${amount.toFixed(2)}</td>
+            <td>${remark}</td>
+            <td>${delivery}</td>
+            <td>${brand}</td>
+        `;
+                previewItems.appendChild(tr);
+            });
+
+            // 更新总计
+            document.getElementById('previewTotal').textContent = total.toFixed(2) + ' 元';
+
+            // 计算并更新页码信息
+            updatePageInfo();
+
+            // 滚动到合同预览
+            document.getElementById('invoicePreview').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 设置下拉选择框事件处理
+        function setupSelectHandlers() {
+            // 乙方公司名称选择事件
+            document.getElementById('clientCompany').addEventListener('change', function() {
+                const companyName = this.value;
+
+                if (companyName === '其他') {
+                    document.getElementById('clientCompanyOther').style.display = 'block';
+                    // 清空地址和要求
+                    resetAddressAndRequirements();
+                } else if (companyName) {
+                    document.getElementById('clientCompanyOther').style.display = 'none';
+                    updateAddressAndRequirements(companyName);
+                } else {
+                    resetAddressAndRequirements();
+                }
+            });
+
+            // 乙方地址
+            document.getElementById('clientAddress').addEventListener('change', function() {
+                document.getElementById('clientAddressOther').style.display =
+                    this.value === '其他' ? 'block' : 'none';
+            });
+
+            // 收货地址
+            document.getElementById('deliveryAddress').addEventListener('change', function() {
+                document.getElementById('deliveryAddressOther').style.display =
+                    this.value === '其他' ? 'block' : 'none';
+
+                // 如果选择"同乙方地址"，自动填充乙方地址
+                if (this.value === '同乙方地址' && currentCustomerData) {
+                    const clientAddressSelect = document.getElementById('clientAddress');
+                    if (clientAddressSelect.value && clientAddressSelect.value !== '其他') {
+                        // 这里可以根据需要设置值
+                    }
+                }
+            });
+
+            // // 付款方式
+            // document.getElementById('paymentMethod').addEventListener('change', function() {
+            //     document.getElementById('paymentMethodOther').style.display =
+            //         this.value === '其他' ? 'block' : 'none';
+            // });
+
+            // 修改甲方下拉框的选择事件，处理选择后的电话和代表人更新
+            document.getElementById('paymentMethod').addEventListener('change', function() {
+                const selectedValue = this.value;
+
+                // 如果选择了来自 xialagl 的选项，更新电话和代表人
+                if (selectedValue) {
+                    updatePhoneAndRepresentativeFromGL(selectedValue);
+                }
+
+                // 隐藏"其他"输入框
+                document.getElementById('paymentMethodOther').style.display = 'none';
+            });
+
+
+            // 增值税率
+            document.getElementById('taxRate').addEventListener('change', function() {
+                document.getElementById('taxRateOther').style.display =
+                    this.value === '其他' ? 'block' : 'none';
+            });
+        }
+
+        // 更新页码信息函数
+        function updatePageInfo() {
+            const invoicePreview = document.getElementById('invoicePreview');
+            if (!invoicePreview) {
+                console.error('未找到合同预览容器');
+                return;
+            }
+
+            // 获取实际内容高度
+            const contentHeight = invoicePreview.scrollHeight;
+
+            // A4纸张在96DPI下的实际像素高度（考虑边距）
+            const pageHeight = 1123; // 297mm * (96 / 25.4) ≈ 1123px
+
+            // 计算总页数
+            let totalPages = Math.ceil(contentHeight / pageHeight);
+            totalPages = Math.max(1, totalPages); // 至少1页
+
+            // 更新页面显示
+            const pageNumberElement = document.getElementById('previewPageNumber');
+            const totalPagesElement = document.getElementById('previewTotalPages');
+
+            if (pageNumberElement) {
+                pageNumberElement.textContent = `第1页`;
+            }
+            if (totalPagesElement) {
+                totalPagesElement.textContent = `共${totalPages}页`;
+            }
+
+            console.log("页码信息已更新:", {
+                contentHeight: contentHeight,
+                pageHeight: pageHeight,
+                totalPages: totalPages
+            });
+
+            return totalPages;
+        }
+
+        // 打印合同
+        document.getElementById('printInvoice').addEventListener('click', function() {
+            updatePageInfo();
+            window.print();
+        });
+
+        // // 付款方式
+        // document.getElementById('paymentMethod').addEventListener('change', function() {
+        //     document.getElementById('paymentMethodOther').style.display =
+        //         this.value === '其他' ? 'block' : 'none';
+        // });
+
+        // 修改甲方下拉框的选择事件，处理选择后的电话和代表人更新
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            const selectedValue = this.value;
+
+            // 如果选择了来自 xialagl 的选项，更新电话和代表人
+            if (selectedValue) {
+                updatePhoneAndRepresentativeFromGL(selectedValue);
+            }
+
+            // 隐藏"其他"输入框
+            document.getElementById('paymentMethodOther').style.display = 'none';
+        });
+
+
+        // 增值税率
+        document.getElementById('taxRate').addEventListener('change', function() {
+            document.getElementById('taxRateOther').style.display =
+                this.value === '其他' ? 'block' : 'none';
+        });
+
+        // 保存数据按钮事件
+        document.getElementById('saveData').addEventListener('click', function() {
+            // 先验证必要数据
+            if (!validateSaveData()) {
+                return;
+            }
+
+            // 确认保存
+            if (confirm('确定要保存销售订单数据吗？')) {
+                saveDataToDatabase();
+            }
+        });
+
+        window.addEventListener('resize', updatePageInfo);
+    });
+
+    // 重置地址、要求和联系方式
+    function resetAddressAndRequirements() {
+        // 重置乙方地址
+        const clientAddressSelect = document.getElementById('clientAddress');
+        clientAddressSelect.innerHTML = '<option value="">请选择乙方地址</option><option value="其他">其他（请在下框中填写）</option>';
+        document.getElementById('clientAddressOther').style.display = 'none';
+
+        // 重置收货地址
+        const deliveryAddressSelect = document.getElementById('deliveryAddress');
+        deliveryAddressSelect.innerHTML = '<option value="">请选择收货地址</option><option value="同乙方地址">同乙方地址</option><option value="其他">其他（请在下框中填写）</option>';
+        document.getElementById('deliveryAddressOther').style.display = 'none';
+
+        // 重置乙方要求
+        const clientRequirementsInput = document.getElementById('clientRequirements');
+        if (clientRequirementsInput) {
+            clientRequirementsInput.value = '';
+        }
+
+        // 重置购货方联系方式
+        resetClientContactInfo();
+
+        // 新增：重置 khzy 字段
+        document.getElementById('khzyField').value = '';
+    }
+
+    // 重置购货方联系方式
+    function resetClientContactInfo() {
+        // 重置电话
+        const clientPhoneTd = document.querySelector('.footer-right .signature-table tr:nth-child(6) td:last-child');
+        if (clientPhoneTd) {
+            clientPhoneTd.textContent = '';
+        }
+
+        // 重置代表人
+        const clientRepresentativeTd = document.querySelector('.footer-right .signature-table tr:nth-child(7) td:last-child');
+        if (clientRepresentativeTd) {
+            clientRepresentativeTd.textContent = '';
+        }
+    }
+
+
+    function getList() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/list',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
+
+                    // 修改位置：如果有数据，使用第一条数据填充字段
+                    if (res.data && res.data.length > 0) {
+                        const firstData = res.data[0];
+
+                        // 填充代表人字段 - 使用 fuzeren 字段
+                        if (firstData.fuzeren) {
+                            document.getElementById('previewRepresentative').textContent = firstData.fuzeren;
+                        }
+
+                        // 填充电话字段 - 使用 dianhua 字段
+                        if (firstData.dianhua) {
+                            document.getElementById('previewPhone').textContent = firstData.dianhua;
+                        }
+
+                        // 修改位置：使用 bianhao 字段作为合同编号前缀
+                        if (firstData.bianhao) {
+                            const currentDate = new Date();
+                            const year = currentDate.getFullYear();
+                            const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                            const day = currentDate.getDate().toString().padStart(2, '0');
+                            const dateString = year + month + day;
+
+                            // 从 bianhao 中提取编号部分（去掉"合同编号: "前缀）
+                            let contractPrefix = firstData.bianhao;
+                            if (contractPrefix.includes(':')) {
+                                contractPrefix = contractPrefix.split(':')[1].trim();
+                            }
+
+                            document.getElementById('contractNumber').value = contractPrefix + dateString;
+                        }
+
+                        // 新增：使用 fuzeren 字段填充甲方下拉框
+                        fillPaymentMethodDropdown(res.data);
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+
+                    // 处理权限错误
+                    if (res.code === 401) {
+                        alert("登录已过期，请重新登录");
+                        window.location.href = "/login.html";
+                    } else if (res.code === 403) {
+                        alert("权限不足，无法访问此功能");
+                    } else {
+                        alert("查询失败: " + res.message);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+
+    let productList = [];
+
+    function getXL() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/xiala',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
+
+                    // 修改位置：使用返回的数据填充下拉框
+                    if (res.data && res.data.length > 0) {
+                        // 存储产品名称列表
+                        productList = extractProductNames(res.data);
+
+                        // 更新现有产品名称输入框为下拉框
+                        updateExistingProductInputs();
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+
+                    // 处理权限错误
+                    if (res.code === 401) {
+                        alert("登录已过期，请重新登录");
+                        window.location.href = "/login.html";
+                    } else if (res.code === 403) {
+                        alert("权限不足，无法访问此功能");
+                    } else {
+                        alert("查询失败: " + res.message);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+    // 提取产品名称列表（去重）
+    function extractProductNames(data) {
+        const uniqueProducts = new Set();
+
+        data.forEach(item => {
+            if (item.chanpinmingcheng && item.chanpinmingcheng.trim() !== '') {
+                uniqueProducts.add(item.chanpinmingcheng.trim());
+            }
+        });
+
+        return Array.from(uniqueProducts).sort(); // 排序后返回数组
+    }
+
+    // 更新现有的产品名称输入框为下拉框
+    function updateExistingProductInputs() {
+        const productInputs = document.querySelectorAll('.item-name');
+
+        productInputs.forEach(input => {
+            // 保存当前值
+            const currentValue = input.value;
+
+            // 创建下拉框
+            const select = document.createElement('select');
+            select.className = 'form-control item-name';
+
+            // 添加选项
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择产品名称';
+            select.appendChild(defaultOption);
+
+            productList.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product;
+                option.textContent = product;
+                select.appendChild(option);
+            });
+
+            // 添加其他选项
+            const otherOption = document.createElement('option');
+            otherOption.value = '其他';
+            otherOption.textContent = '其他（手动输入）';
+            select.appendChild(otherOption);
+
+            // 设置当前值
+            if (currentValue && productList.includes(currentValue)) {
+                select.value = currentValue;
+            } else if (currentValue) {
+                select.value = '其他';
+                // 可以在这里添加手动输入框逻辑
+            }
+
+            // 替换输入框
+            input.parentNode.replaceChild(select, input);
+
+            // 添加事件监听
+            select.addEventListener('change', function() {
+                if (this.value === '其他') {
+                    showProductNameInput(this);
+                }
+            });
+        });
+    }
+
+    // 显示产品名称手动输入框
+    function showProductNameInput(selectElement) {
+        // 保存当前父元素
+        const parent = selectElement.parentNode;
+
+        // 创建输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control item-name';
+        input.placeholder = '请输入产品名称';
+
+        // 替换下拉框
+        parent.replaceChild(input, selectElement);
+    }
+
+
+    // 填充付款方式下拉框
+    function fillPaymentMethodDropdown(data) {
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+
+        // 先检查是否已经有选项，如果没有才初始化
+        if (paymentMethodSelect.children.length === 0) {
+            // 添加默认选项
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择甲方';
+            paymentMethodSelect.appendChild(defaultOption);
+        }
+
+        // 使用Set去重
+        const uniqueFuzeren = new Set();
+
+        // 遍历数据，提取fuzeren字段
+        data.forEach(item => {
+            if (item.fuzeren && item.fuzeren.trim() !== '') {
+                uniqueFuzeren.add(item.fuzeren.trim());
+            }
+        });
+
+        // 添加去重后的选项
+        uniqueFuzeren.forEach(fuzeren => {
+            // 检查是否已存在该选项
+            let exists = false;
+            for (let i = 0; i < paymentMethodSelect.options.length; i++) {
+                if (paymentMethodSelect.options[i].value === fuzeren) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            // 如果不存在，添加新选项
+            if (!exists) {
+                const option = document.createElement('option');
+                option.value = fuzeren;
+                option.textContent = fuzeren;
+                paymentMethodSelect.appendChild(option);
+            }
+        });
+
+        // 设置默认值为第一个 fuzeren 选项（只有在当前没有选中值时）
+        if (uniqueFuzeren.size > 0 && !paymentMethodSelect.value) {
+            const firstFuzeren = Array.from(uniqueFuzeren)[0];
+            paymentMethodSelect.value = firstFuzeren;
+        }
+
+        console.log("甲方选项已更新:", Array.from(uniqueFuzeren));
+    }
+
+    // 全局变量存储客户数据
+    let customerList = [];
+    let currentCustomerData = null;
+
+    function getKH() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/kehu',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
+
+                    // 使用返回的数据填充客户相关下拉框
+                    if (res.data && res.data.length > 0) {
+                        customerList = res.data;
+                        fillCustomerCompanyDropdown(res.data);
+
+                        // 初始化乙方要求为文本框
+                        initClientRequirementsAsInput();
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+
+                    // 处理权限错误
+                    if (res.code === 401) {
+                        alert("登录已过期，请重新登录");
+                        window.location.href = "/login.html";
+                    } else if (res.code === 403) {
+                        alert("权限不足，无法访问此功能");
+                    } else {
+                        alert("查询失败: " + res.message);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+
+    // 填充乙方公司名称下拉框
+    function fillCustomerCompanyDropdown(data) {
+        const clientCompanySelect = document.getElementById('clientCompany');
+
+        // 清空现有选项（保留第一个"请选择乙方公司"选项）
+        while (clientCompanySelect.children.length > 1) {
+            clientCompanySelect.removeChild(clientCompanySelect.lastChild);
+        }
+
+        // 使用Set去重
+        const uniqueCompanies = new Set();
+
+        // 遍历数据，提取khmc字段
+        data.forEach(item => {
+            if (item.khmc && item.khmc.trim() !== '') {
+                uniqueCompanies.add(item.khmc.trim());
+            }
+        });
+
+        // 添加去重后的选项
+        uniqueCompanies.forEach(company => {
+            const option = document.createElement('option');
+            option.value = company;
+            option.textContent = company;
+            clientCompanySelect.appendChild(option);
+        });
+
+        // 添加"其他"选项
+        const otherOption = document.createElement('option');
+        otherOption.value = '其他';
+        otherOption.textContent = '其他（请在下框中填写）';
+        clientCompanySelect.appendChild(otherOption);
+
+        console.log("乙方公司名称选项已更新:", Array.from(uniqueCompanies));
+    }
+
+    // 根据选择的公司名称更新地址和要求
+    function updateAddressAndRequirements(companyName) {
+        // 查找对应的客户数据
+        const customerData = customerList.find(item => item.khmc === companyName);
+        currentCustomerData = customerData;
+
+        if (customerData) {
+            // 更新乙方地址下拉框
+            updateClientAddressDropdown(customerData);
+
+            // 更新收货地址下拉框
+            updateDeliveryAddressDropdown(customerData);
+
+            // 更新乙方要求输入框
+            updateClientRequirements(customerData);
+
+            // 更新购货方联系方式
+            updateClientContactInfo(customerData);
+
+            // 更新购货方签字盖章部分的银行信息
+            updateClientBankInfo(customerData);
+
+            // 新增：更新 khzy 字段到文本框
+            updateKhzyField(customerData);
+        } else {
+            // 如果没有找到客户数据，清空 khzy 字段
+            document.getElementById('khzyField').value = '';
+        }
+    }
+
+    // 新增函数：更新 khzy 字段到文本框
+    function updateKhzyField(customerData) {
+        const khzyField = document.getElementById('khzyField');
+
+        if (customerData.khzy && customerData.khzy.trim() !== '') {
+            khzyField.value = customerData.khzy.trim();
+        } else {
+            khzyField.value = '';
+        }
+    }
+
+    //更新购货方银行信息
+    function updateClientBankInfo(customerData) {
+        // 更新开户行（使用 khh 字段）
+        if (customerData.khh && customerData.khh.trim() !== '') {
+            const clientBankTd = document.querySelector('.footer-right .signature-table tr:nth-child(2) td:last-child');
+            if (clientBankTd) {
+                clientBankTd.textContent = customerData.khh.trim();
+            }
+        }
+
+        // 更新账号（使用 zh 字段）
+        if (customerData.zh && customerData.zh.trim() !== '') {
+            const clientAccountTd = document.querySelector('.footer-right .signature-table tr:nth-child(3) td:last-child');
+            if (clientAccountTd) {
+                clientAccountTd.textContent = customerData.zh.trim();
+            }
+        }
+
+        // 更新税号（使用 sh 字段）
+        if (customerData.sh && customerData.sh.trim() !== '') {
+            const clientTaxTd = document.querySelector('.footer-right .signature-table tr:nth-child(4) td:last-child');
+            if (clientTaxTd) {
+                clientTaxTd.textContent = customerData.sh.trim();
+            }
+        }
+
+        // 更新地址（使用 dz 字段）
+        if (customerData.dz && customerData.dz.trim() !== '') {
+            const clientAddressTd = document.querySelector('.footer-right .signature-table tr:nth-child(5) td:last-child');
+            if (clientAddressTd) {
+                clientAddressTd.textContent = customerData.dz.trim();
+            }
+        }
+
+        // 更新电话（使用 lxdh1 字段）
+        if (customerData.lxdh1 && customerData.lxdh1.trim() !== '') {
+            const clientPhoneTd = document.querySelector('.footer-right .signature-table tr:nth-child(6) td:last-child');
+            if (clientPhoneTd) {
+                clientPhoneTd.textContent = customerData.lxdh1.trim();
+            }
+        }
+
+        // 更新代表人（使用 lxr1 字段）
+        if (customerData.lxr1 && customerData.lxr1.trim() !== '') {
+            const clientRepresentativeTd = document.querySelector('.footer-right .signature-table tr:nth-child(7) td:last-child');
+            if (clientRepresentativeTd) {
+                clientRepresentativeTd.textContent = customerData.lxr1.trim();
+            }
+        }
+    }
+
+    // 初始化乙方要求为文本框
+    function initClientRequirementsAsInput() {
+        const clientRequirementsElement = document.getElementById('clientRequirements');
+
+        // 如果当前是select元素，替换为input
+        if (clientRequirementsElement && clientRequirementsElement.tagName === 'SELECT') {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'clientRequirements';
+            input.className = 'form-control';
+            input.placeholder = '乙方要求';
+
+            // 替换元素
+            clientRequirementsElement.parentNode.replaceChild(input, clientRequirementsElement);
+        }
+
+        // 隐藏"其他"输入框
+        const clientRequirementsOther = document.getElementById('clientRequirementsOther');
+        if (clientRequirementsOther) {
+            clientRequirementsOther.style.display = 'none';
+        }
+    }
+
+    // 更新购货方联系方式（电话和代表人）
+    function updateClientContactInfo(customerData) {
+        // 更新电话（使用 lxdh1 字段）
+        if (customerData.lxdh1 && customerData.lxdh1.trim() !== '') {
+            // 找到购货方签字盖章部分的电话td
+            const clientPhoneTd = document.querySelector('.footer-right .signature-table tr:nth-child(6) td:last-child');
+            if (clientPhoneTd) {
+                clientPhoneTd.textContent = customerData.lxdh1.trim();
+            }
+        }
+
+        // 更新代表人（使用 lxr1 字段）
+        if (customerData.lxr1 && customerData.lxr1.trim() !== '') {
+            // 找到购货方签字盖章部分的代表人td
+            const clientRepresentativeTd = document.querySelector('.footer-right .signature-table tr:nth-child(7) td:last-child');
+            if (clientRepresentativeTd) {
+                clientRepresentativeTd.textContent = customerData.lxr1.trim();
+            }
+        }
+    }
+
+    // 更新乙方地址下拉框
+    function updateClientAddressDropdown(customerData) {
+        const clientAddressSelect = document.getElementById('clientAddress');
+
+        // 清空现有选项（保留第一个"请选择乙方地址"选项）
+        while (clientAddressSelect.children.length > 1) {
+            clientAddressSelect.removeChild(clientAddressSelect.lastChild);
+        }
+
+        // 首先添加 dz 字段作为第一个选项
+        if (customerData.dz && customerData.dz.trim() !== '') {
+            const dzOption = document.createElement('option');
+            dzOption.value = customerData.dz.trim();
+            dzOption.textContent = customerData.dz.trim();
+            clientAddressSelect.appendChild(dzOption);
+        }
+
+        // 然后添加 dz1-dz5 字段作为其他选项
+        const addresses = [];
+        for (let i = 1; i <= 5; i++) {
+            const addressField = `dz${i}`;
+            if (customerData[addressField] && customerData[addressField].trim() !== '') {
+                addresses.push(customerData[addressField].trim());
+            }
+        }
+
+        // 添加地址选项
+        addresses.forEach(address => {
+            const option = document.createElement('option');
+            option.value = address;
+            option.textContent = address;
+            clientAddressSelect.appendChild(option);
+        });
+
+        // 添加"其他"选项
+        const otherOption = document.createElement('option');
+        otherOption.value = '其他';
+        otherOption.textContent = '其他（请在下框中填写）';
+        clientAddressSelect.appendChild(otherOption);
+
+        // 设置默认值为 dz 字段
+        if (customerData.dz && customerData.dz.trim() !== '') {
+            clientAddressSelect.value = customerData.dz.trim();
+        } else if (addresses.length > 0) {
+            clientAddressSelect.value = addresses[0];
+        }
+    }
+
+
+    // 更新收货地址下拉框
+    function updateDeliveryAddressDropdown(customerData) {
+        const deliveryAddressSelect = document.getElementById('deliveryAddress');
+
+        // 清空现有选项（保留第一个"请选择收货地址"选项）
+        while (deliveryAddressSelect.children.length > 1) {
+            deliveryAddressSelect.removeChild(deliveryAddressSelect.lastChild);
+        }
+
+        // 添加"同乙方地址"选项
+        const sameAddressOption = document.createElement('option');
+        sameAddressOption.value = '同乙方地址';
+        sameAddressOption.textContent = '同乙方地址';
+        deliveryAddressSelect.appendChild(sameAddressOption);
+
+        // 首先添加 dz 字段作为第一个选项
+        if (customerData.dz && customerData.dz.trim() !== '') {
+            const dzOption = document.createElement('option');
+            dzOption.value = customerData.dz.trim();
+            dzOption.textContent = customerData.dz.trim();
+            deliveryAddressSelect.appendChild(dzOption);
+        }
+
+        // 然后添加 dz1-dz5 字段作为其他选项
+        const addresses = [];
+        for (let i = 1; i <= 5; i++) {
+            const addressField = `dz${i}`;
+            if (customerData[addressField] && customerData[addressField].trim() !== '') {
+                addresses.push(customerData[addressField].trim());
+            }
+        }
+
+        // 添加地址选项
+        addresses.forEach(address => {
+            const option = document.createElement('option');
+            option.value = address;
+            option.textContent = address;
+            deliveryAddressSelect.appendChild(option);
+        });
+
+        // 添加"其他"选项
+        const otherOption = document.createElement('option');
+        otherOption.value = '其他';
+        otherOption.textContent = '其他（请在下框中填写）';
+        deliveryAddressSelect.appendChild(otherOption);
+
+        // 设置默认值为 dz 字段
+        if (customerData.dz && customerData.dz.trim() !== '') {
+            deliveryAddressSelect.value = customerData.dz.trim();
+        } else if (addresses.length > 0) {
+            deliveryAddressSelect.value = addresses[0];
+        }
+    }
+
+    // 更新乙方要求输入框
+    function updateClientRequirements(customerData) {
+        const clientRequirementsInput = document.getElementById('clientRequirements');
+
+        if (clientRequirementsInput) {
+            // 设置yq字段的值
+            if (customerData.yq && customerData.yq.trim() !== '') {
+                clientRequirementsInput.value = customerData.yq.trim();
+            } else {
+                clientRequirementsInput.value = '';
+            }
+        }
+    }
+
+    // 保存数据到数据库
+    function saveDataToDatabase() {
+        // 收集表单数据
+        const formData = {
+            khcm: document.getElementById('clientCompany').value, // 客户名称
+            lxr: getClientRepresentative(), // 联系人（代表人）
+            lxdh: getClientPhone(), // 联系电话
+            ddrq: document.getElementById('contractDate').value, // 订单日期
+            pp: getProductNames(), // 产品名称（多个用逗号分隔）
+            cpxh: getProductModels(), // 产品型号（多个用逗号分隔）
+            sl: getProductQuantities(), // 订购数量（多个用逗号分隔）
+            dj: getProductPrices(), // 含税单价（多个用逗号分隔）
+            hj: calculateTotalAmount(), // 合计总金额
+            fzr: document.getElementById('previewRepresentative').textContent, // 负责人
+            htbh: document.getElementById('contractNumber').value, // 合同编号
+            zt: '待处理', // 状态
+            bz: getRemarks(), // 备注（多个用逗号分隔）
+            // 新增的两个字段
+            yq: getClientRequirements(), // 乙方要求
+            kpzt: getInvoiceStatus() // 开票状态
+        };
+
+        console.log("保存的数据:", formData); // 调试用
+
+        // 发送AJAX请求保存数据
+        $.ajax({
+            type: 'post',
+            url: '/hetong/saveScgd', // 后端接口地址
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    alert('数据保存成功！');
+                    console.log('保存成功:', res);
+                } else {
+                    console.error("保存失败:", res.message);
+                    alert("保存失败: " + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("保存失败，请检查网络连接");
+            }
+        });
+    }
+
+    // 获取购货方代表人
+    function getClientRepresentative() {
+        const representativeTd = document.querySelector('.footer-right .signature-table tr:nth-child(7) td:last-child');
+        return representativeTd ? representativeTd.textContent.trim() : '';
+    }
+
+    // 获取购货方电话
+    function getClientPhone() {
+        const phoneTd = document.querySelector('.footer-right .signature-table tr:nth-child(6) td:last-child');
+        return phoneTd ? phoneTd.textContent.trim() : '';
+    }
+
+    // 获取所有产品名称（逗号分隔）
+    function getProductNames() {
+        const productNames = [];
+        document.querySelectorAll('.item-name').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                productNames.push(input.value.trim());
+            }
+        });
+        return productNames.join(',');
+    }
+
+    // 获取所有产品型号（逗号分隔）
+    function getProductModels() {
+        const productModels = [];
+        document.querySelectorAll('.item-model').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                productModels.push(input.value.trim());
+            }
+        });
+        return productModels.join(',');
+    }
+
+    // 获取所有订购数量（逗号分隔）
+    function getProductQuantities() {
+        const quantities = [];
+        document.querySelectorAll('.item-quantity').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                quantities.push(input.value.trim());
+            }
+        });
+        return quantities.join(',');
+    }
+
+    // 获取所有含税单价（逗号分隔）
+    function getProductPrices() {
+        const prices = [];
+        document.querySelectorAll('.item-price').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                prices.push(input.value.trim());
+            }
+        });
+        return prices.join(',');
+    }
+
+    // 计算合计总金额
+    function calculateTotalAmount() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            total += quantity * price;
+        });
+        return total.toFixed(2);
+    }
+
+    // 获取所有备注（逗号分隔）
+    function getRemarks() {
+        const remarks = [];
+        document.querySelectorAll('.item-remark').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                remarks.push(input.value.trim());
+            }
+        });
+        return remarks.join(',');
+    }
+
+    // 验证保存数据
+    function validateSaveData() {
+        const clientCompany = document.getElementById('clientCompany').value;
+        const contractNumber = document.getElementById('contractNumber').value;
+
+        if (!clientCompany || clientCompany === '') {
+            alert('请选择乙方公司名称');
+            return false;
+        }
+
+        if (!contractNumber || contractNumber === '') {
+            alert('请输入合同编号');
+            return false;
+        }
+
+        // 检查是否有产品信息
+        const hasProducts = document.querySelectorAll('.item-name').length > 0;
+        if (!hasProducts) {
+            alert('请至少添加一个产品');
+            return false;
+        }
+
+        return true;
+    }
+
+
+    function returnlist() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/returnlist',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
+
+                    // 检查返回的数组长度
+                    if (res.data && res.data.length > 0) {
+                        // 显示弹窗
+                        showRejectedAlert(res.data.length);
+                    }
+
+                } else {
+                    console.error("查询失败:", res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+    // 显示驳回数据弹窗
+    function showRejectedAlert(dataLength) {
+        // 创建弹窗HTML
+        var alertHtml = `
+    <div class="modal fade" id="rejectedAlertModal" tabindex="-1" aria-labelledby="rejectedAlertLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectedAlertLabel">驳回通知</h5>
+                    <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>有 <strong style="color: #ff6b35;">${dataLength}</strong> 条数据被驳回，是否立即查看？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmViewBtn">确定查看</button>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+        // 移除已存在的弹窗并添加新的
+        $('#rejectedAlertModal').remove();
+        $('body').append(alertHtml);
+
+        // 获取modal元素
+        var modalElement = document.getElementById('rejectedAlertModal');
+        var modal = new bootstrap.Modal(modalElement);
+
+        // 显示弹窗
+        modal.show();
+
+        // 绑定事件 - 使用事件委托
+        $(document).off('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn').on('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn', function(e) {
+            var targetId = e.target.id;
+
+            if (targetId === 'confirmViewBtn') {
+                // 确定查看 - 获取驳回数据并填充
+                loadRejectedData();
+                modal.hide();
+            } else if (targetId === 'cancelBtn' || targetId === 'closeModalBtn') {
+                // 取消或关闭
+                modal.hide();
+            }
+        });
+
+        // 弹窗关闭时清理
+        $(modalElement).on('hidden.bs.modal', function () {
+            $(this).remove();
+            // 移除事件绑定
+            $(document).off('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn');
+        });
+    }
+
+    // 加载驳回数据
+    function loadRejectedData() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/returnlist',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success && res.data && res.data.length > 0) {
+                    // 获取第一条驳回数据
+                    const rejectedData = res.data[0];
+                    console.log("驳回数据:", rejectedData);
+
+                    // 填充数据到表单
+                    fillFormWithRejectedData(rejectedData);
+
+                    // 只修改打印单上的按钮状态
+                    updatePrintButtonsState(rejectedData.id);
+
+                } else {
+                    alert("没有找到驳回数据");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("获取驳回数据失败:", error);
+                alert("获取驳回数据失败，请检查网络连接");
+            }
+        });
+    }
+
+
+    // 填充驳回数据到表单
+    function fillFormWithRejectedData(data) {
+        // 填充基础信息
+        if (data.khcm) {
+            document.getElementById('clientCompany').value = data.khcm;
+
+            // 手动查找并设置客户数据
+            const customerData = customerList.find(item => item.khmc === data.khcm);
+            if (customerData) {
+                currentCustomerData = customerData;
+                // 手动更新地址和要求
+                updateAddressAndRequirements(data.khcm);
+            }
+        }
+
+        if (data.htbh) {
+            document.getElementById('contractNumber').value = data.htbh;
+        }
+
+        if (data.ddrq) {
+            document.getElementById('contractDate').value = data.ddrq;
+        }
+
+        if (data.yq) {
+            document.getElementById('clientRequirements').value = data.yq;
+        }
+
+        if (data.fzr) {
+            document.getElementById('paymentMethod').value = data.fzr;
+            // 触发付款方式变化事件，更新电话和代表人
+            setTimeout(() => {
+                const paymentSelect = document.getElementById('paymentMethod');
+                if (paymentSelect) {
+                    const event = new Event('change');
+                    paymentSelect.dispatchEvent(event);
+                }
+            }, 200);
+        }
+
+        // 填充产品信息
+        fillProductItems(data);
+
+        // 生成合同预览
+        setTimeout(() => {
+            document.getElementById('generateInvoice').click();
+        }, 1000);
+    }
+
+
+    // 填充产品信息
+    function fillProductItems(data) {
+        // 清空现有产品行
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.innerHTML = '';
+
+        // 解析产品数据
+        const productNames = data.pp ? data.pp.split(',') : [];
+        const productModels = data.cpxh ? data.cpxh.split(',') : [];
+        const quantities = data.sl ? data.sl.split(',') : [];
+        const prices = data.dj ? data.dj.split(',') : [];
+        const remarks = data.bz ? data.bz.split(',') : [];
+
+        // 添加产品行
+        const maxLength = Math.max(
+            productNames.length,
+            productModels.length,
+            quantities.length,
+            prices.length,
+            remarks.length
+        );
+
+        for (let i = 0; i < maxLength; i++) {
+            addProductItem(
+                productNames[i] || '',
+                productModels[i] || '',
+                quantities[i] || '1',
+                prices[i] || '0',
+                remarks[i] || '',
+                'SHAC' // 默认品牌
+            );
+        }
+
+        // 如果没有产品，添加一个空行
+        if (maxLength === 0) {
+            document.getElementById('addItem').click();
+        }
+    }
+
+    // 添加产品行（带数据）
+    function addProductItem(name, model, quantity, price, remark, brand) {
+        const itemsContainer = document.getElementById('itemsContainer');
+        const newItemRow = document.createElement('div');
+        newItemRow.className = 'item-row';
+
+        // 构建产品名称下拉框的HTML
+        let productNameHtml = '';
+        if (productList.length > 0) {
+            productNameHtml = `
+        <div class="form-group">
+            <label>产品名称</label>
+            <select class="form-control item-name">
+                <option value="">请选择产品名称</option>
+                ${productList.map(product => `<option value="${product}" ${product === name ? 'selected' : ''}>${product}</option>`).join('')}
+                <option value="其他" ${name && !productList.includes(name) ? 'selected' : ''}>其他（手动输入）</option>
+            </select>
+        </div>`;
+        } else {
+            productNameHtml = `
+        <div class="form-group">
+            <label>产品名称</label>
+            <input type="text" class="form-control item-name" placeholder="产品名称" value="${name || ''}">
+        </div>`;
+        }
+
+        newItemRow.innerHTML = `
+    ${productNameHtml}
+    <div class="form-group">
+        <label>产品型号</label>
+        <input type="text" class="form-control item-model" placeholder="产品型号" value="${model || ''}">
+    </div>
+    <div class="form-group">
+        <label>订购数量</label>
+        <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="${quantity || '1'}">
+    </div>
+    <div class="form-group">
+        <label>单价 (元)</label>
+        <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="${price || '0'}">
+    </div>
+    <div class="form-group">
+        <label>备注</label>
+        <input type="text" class="form-control item-remark" placeholder="备注" value="${remark || ''}">
+    </div>
+    <div class="form-group">
+        <label>货期</label>
+        <input type="text" class="form-control item-delivery" placeholder="货期">
+    </div>
+    <div class="form-group">
+        <label>品牌</label>
+        <input type="text" class="form-control item-brand" placeholder="品牌" value="${brand || 'SHAC'}">
+    </div>
+    <div class="form-group">
+        <label>操作</label>
+        <button type="button" class="btn btn-danger remove-item">删除</button>
+    </div>
+`;
+
+        itemsContainer.appendChild(newItemRow);
+
+        // 如果选择了"其他"，显示输入框
+        const productSelect = newItemRow.querySelector('.item-name');
+        if (productSelect && productSelect.tagName === 'SELECT' && productSelect.value === '其他') {
+            showProductNameInput(productSelect);
+        }
+
+        // 添加删除事件
+        newItemRow.querySelector('.remove-item').addEventListener('click', function() {
+            itemsContainer.removeChild(newItemRow);
+        });
+    }
+
+
+    // 修改按钮状态
+    function updateButtonState(dataId) {
+        const actionButtons = document.querySelector('.action-buttons');
+
+        // 保存原始ID到全局变量
+        window.currentRejectedDataId = dataId;
+
+        // 修改按钮HTML
+        actionButtons.innerHTML = `
+        <button id="updateData" class="btn btn-warning">修改数据</button>
+        <button id="deleteData" class="btn btn-danger">删除数据</button>
+        <button id="printInvoice" class="btn btn-primary">打印合同</button>
+    `;
+
+        // 绑定修改数据事件
+        document.getElementById('updateData').addEventListener('click', function() {
+            updateRejectedData(dataId);
+        });
+
+        // 绑定删除数据事件
+        document.getElementById('deleteData').addEventListener('click', function() {
+            deleteRejectedData(dataId);
+        });
+
+        // 绑定打印事件
+        document.getElementById('printInvoice').addEventListener('click', function() {
+            updatePageInfo();
+            window.print();
+        });
+    }
+
+    function updatePrintButtonsState(dataId) {
+        const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
+
+        // 保存原始ID到全局变量
+        window.currentRejectedDataId = dataId;
+
+        // 修改打印单上的按钮HTML
+        printActionButtons.innerHTML = `
+        <button id="updateData" class="btn btn-warning">修改数据</button>
+        <button id="deleteData" class="btn btn-danger">删除数据</button>
+        <button id="printInvoiceBtn" class="btn btn-primary">打印合同</button>
+    `;
+
+        // 使用事件委托绑定所有按钮事件
+        printActionButtons.addEventListener('click', function(e) {
+            if (e.target.id === 'updateData') {
+                updateRejectedData(dataId);
+            } else if (e.target.id === 'deleteData') {
+                deleteRejectedData(dataId);
+            } else if (e.target.id === 'printInvoiceBtn') {
+                handlePrintContract();
+            }
+        });
+
+        console.log("打印单按钮已更新为修改模式");
+    }
+
+    // 处理打印合同
+    function handlePrintContract() {
+        // 确保页面信息已更新
+        updatePageInfo();
+
+        // 延迟一下确保DOM更新完成
+        setTimeout(() => {
+            try {
+                window.print();
+                console.log("打印功能已调用");
+            } catch (error) {
+                console.error("打印失败:", error);
+                alert("打印失败，请检查浏览器打印设置");
+            }
+        }, 100);
+    }
+
+    // 修改驳回数据
+    function updateRejectedData(dataId) {
+        // 先验证必要数据
+        if (!validateSaveData()) {
+            return;
+        }
+
+        // 收集表单数据
+        const formData = {
+            id: dataId, // 包含ID用于更新
+            khcm: document.getElementById('clientCompany').value,
+            lxr: getClientRepresentative(),
+            lxdh: getClientPhone(),
+            ddrq: document.getElementById('contractDate').value,
+            pp: getProductNames(),
+            cpxh: getProductModels(),
+            sl: getProductQuantities(),
+            dj: getProductPrices(),
+            hj: calculateTotalAmount(),
+            fzr: document.getElementById('previewRepresentative').textContent,
+            htbh: document.getElementById('contractNumber').value,
+            zt: '待处理', // 重新设置为待处理状态
+            bz: getRemarks(),
+            yq: getClientRequirements(),
+            kpzt: getInvoiceStatus()
+        };
+
+        console.log("修改的数据:", formData);
+
+        // 确认修改
+        if (confirm('确定要修改这条驳回数据吗？')) {
+            $.ajax({
+                type: 'post',
+                url: '/hetong/updateScgd', // 需要后端提供更新接口
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        alert('数据修改成功！');
+                        console.log('修改成功:', res);
+                        // 恢复打印单原始按钮状态
+                        resetPrintButtonsState();
+                        // 刷新页面数据
+                        refreshPageData();
+                    } else {
+                        console.error("修改失败:", res.message);
+                        alert("修改失败: " + res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX请求失败:", error);
+                    alert("修改失败，请检查网络连接");
+                }
+            });
+        }
+    }
+
+
+
+    // 删除驳回数据
+    function deleteRejectedData(dataId) {
+        if (confirm('确定要删除这条驳回数据吗？此操作不可恢复！')) {
+            $.ajax({
+                type: 'post',
+                url: '/hetong/deleteScgd', // 需要后端提供删除接口
+                contentType: 'application/json',
+                data: JSON.stringify({ id: dataId }),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        alert('数据删除成功！');
+                        console.log('删除成功:', res);
+                        // 恢复打印单原始按钮状态
+                        resetPrintButtonsState();
+                        // 清空表单
+                        clearForm();
+                        // 刷新页面数据
+                        refreshPageData();
+                    } else {
+                        console.error("删除失败:", res.message);
+                        alert("删除失败: " + res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX请求失败:", error);
+                    alert("删除失败，请检查网络连接");
+                }
+            });
+        }
+    }
+
+    // 刷新页面数据
+    function refreshPageData() {
+        console.log('刷新页面数据...');
+
+        // 重新获取客户数据
+        getKH();
+
+        // 重新获取产品数据
+        getXL();
+
+        // 重新获取列表数据
+        getList();
+
+        // 重新获取驳回数据列表
+        returnlist();
+
+        // 重新获取甲方数据
+        setTimeout(function() {
+            getXLGL();
+        }, 100);
+
+        // 重置表单状态
+        resetFormState();
+    }
+
+    // 重置表单状态
+    function resetFormState() {
+        console.log('重置表单状态...');
+
+        // 设置默认日期为今天
+        const today = new Date();
+        const formattedDate = today.getFullYear() + '/' +
+            (today.getMonth() + 1).toString().padStart(2, '0') + '/' +
+            today.getDate().toString().padStart(2, '0');
+
+        document.getElementById('contractDate').value = today.toISOString().split('T')[0];
+        document.getElementById('previewContractDate').textContent = formattedDate;
+
+        // 设置默认增值税率为13%
+        document.getElementById('taxRate').value = '1';
+
+        // 设置合同编号默认值为当前日期
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const dateString = year + month + day;
+        document.getElementById('contractNumber').value = 'GXDD01' + dateString;
+
+        // 重置地址和要求
+        resetAddressAndRequirements();
+
+        // 重置产品列表（保留一个空行）
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.innerHTML = '';
+        document.getElementById('addItem').click();
+
+        // 重新生成合同预览
+        setTimeout(() => {
+            document.getElementById('generateInvoice').click();
+        }, 500);
+
+        console.log('表单状态重置完成');
+    }
+
+    // 恢复打印单原始按钮状态
+    function resetPrintButtonsState() {
+        const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
+        if (printActionButtons) {
+            printActionButtons.innerHTML = `
+            <button id="saveData" class="btn btn-primary">保存数据</button>
+            <button id="printInvoice" class="btn btn-primary">打印合同</button>
+        `;
+
+            // 使用事件委托重新绑定事件
+            printActionButtons.addEventListener('click', function(e) {
+                if (e.target.id === 'saveData') {
+                    if (!validateSaveData()) {
+                        return;
+                    }
+                    if (confirm('确定要保存销售订单数据吗？')) {
+                        saveDataToDatabase();
+                    }
+                } else if (e.target.id === 'printInvoice') {
+                    handlePrintContract();
+                }
+            });
+        }
+
+        // 清除全局ID
+        window.currentRejectedDataId = null;
+
+        console.log("打印单按钮已恢复为原始状态");
+    }
+
+    // 恢复原始按钮状态
+    function resetButtonState() {
+        const actionButtons = document.querySelector('.action-buttons');
+        actionButtons.innerHTML = `
+        <button id="saveData" class="btn btn-primary">保存数据</button>
+        <button id="printInvoice" class="btn btn-primary">打印合同</button>
+    `;
+
+        // 重新绑定保存数据事件
+        document.getElementById('saveData').addEventListener('click', function() {
+            if (!validateSaveData()) {
+                return;
+            }
+            if (confirm('确定要保存销售订单数据吗？')) {
+                saveDataToDatabase();
+            }
+        });
+
+        // 重新绑定打印事件
+        document.getElementById('printInvoice').addEventListener('click', function() {
+            updatePageInfo();
+            window.print();
+        });
+
+        // 清除全局ID
+        window.currentRejectedDataId = null;
+    }
+
+    // 更新页码信息函数
+    function updatePageInfo() {
+        const contentHeight = document.getElementById('invoicePreview').scrollHeight;
+        const pageHeight = 1123; // A4纸张高度约1123px (297mm)
+
+        let totalPages = Math.ceil(contentHeight / pageHeight);
+        totalPages = Math.max(1, totalPages);
+
+        if (document.getElementById('previewPageNumber')) {
+            document.getElementById('previewPageNumber').textContent = `第1页`;
+        }
+        if (document.getElementById('previewTotalPages')) {
+            document.getElementById('previewTotalPages').textContent = `共${totalPages}页`;
+        }
+
+        console.log("页码信息已更新:", totalPages);
+    }
+
+
+    // 清空表单
+    function clearForm() {
+        document.getElementById('contractNumber').value = '';
+        document.getElementById('clientCompany').value = '';
+        document.getElementById('clientRequirements').value = '';
+
+        // 清空产品列表
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.innerHTML = '';
+
+        // 添加一个空的产品行
+        document.getElementById('addItem').click();
+    }
+
+
+
+
+    // 新增函数：更新预览中的购货方签字盖章信息
+    function updatePreviewClientSignature(customerData) {
+        // 更新开户行
+        if (customerData.khh && customerData.khh.trim() !== '') {
+            const previewBankTd = document.querySelector('#invoicePreview .footer-right .signature-table tr:nth-child(2) td:last-child');
+            if (previewBankTd) {
+                previewBankTd.textContent = customerData.khh.trim();
+            }
+        }
+
+        // 更新账号
+        if (customerData.zh && customerData.zh.trim() !== '') {
+            const previewAccountTd = document.querySelector('#invoicePreview .footer-right .signature-table tr:nth-child(3) td:last-child');
+            if (previewAccountTd) {
+                previewAccountTd.textContent = customerData.zh.trim();
+            }
+        }
+
+        // 更新税号
+        if (customerData.sh && customerData.sh.trim() !== '') {
+            const previewTaxTd = document.querySelector('#invoicePreview .footer-right .signature-table tr:nth-child(4) td:last-child');
+            if (previewTaxTd) {
+                previewTaxTd.textContent = customerData.sh.trim();
+            }
+        }
+
+        // 更新电话
+        if (customerData.lxdh1 && customerData.lxdh1.trim() !== '') {
+            const previewPhoneTd = document.querySelector('#invoicePreview .footer-right .signature-table tr:nth-child(6) td:last-child');
+            if (previewPhoneTd) {
+                previewPhoneTd.textContent = customerData.lxdh1.trim();
+            }
+        }
+
+        // 更新代表人
+        if (customerData.lxr1 && customerData.lxr1.trim() !== '') {
+            const previewRepresentativeTd = document.querySelector('#invoicePreview .footer-right .signature-table tr:nth-child(7) td:last-child');
+            if (previewRepresentativeTd) {
+                previewRepresentativeTd.textContent = customerData.lxr1.trim();
+            }
+        }
+    }
+
+    let xlglData = null;
+
+    function getXLGL() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/xialagl',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
+                    xlglData = res.data; // 缓存数据
+
+                    // 修改位置：使用返回的数据填充下拉框
+                    if (res.data && res.data.length > 0) {
+                        // 使用 fuzeren 字段填充甲方下拉框，保持原有选项不变
+                        fillPaymentMethodWithGLData(res.data);
+                    }
+                } else {
+                }
+            },
+            error: function(xhr, status, error) {
+
+            }
+        });
+    }
+
+    function fillPaymentMethodWithGLData(data) {
+        // 检查数据是否有效
+        if (!data || !Array.isArray(data)) {
+            console.error("无效的数据:", data);
+            return;
+        }
+
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+
+        // 检查下拉框元素是否存在
+        if (!paymentMethodSelect) {
+            console.error("未找到甲方下拉框元素");
+            return;
+        }
+
+        // 保存当前选中的值
+        const currentValue = paymentMethodSelect.value;
+
+        // 使用Set去重
+        const uniqueFuzeren = new Set();
+
+        // 遍历数据，提取fuzeren字段（过滤null值）
+        data.forEach(item => {
+            // 检查item是否为有效对象且包含fuzeren字段
+            if (item && typeof item === 'object' && item.fuzeren && item.fuzeren.trim() !== '') {
+                uniqueFuzeren.add(item.fuzeren.trim());
+            }
+        });
+
+        console.log("从xialagl获取的有效fuzeren数据:", Array.from(uniqueFuzeren));
+
+        // 添加去重后的选项到现有下拉框中
+        uniqueFuzeren.forEach(fuzeren => {
+            // 检查是否已存在该选项
+            let exists = false;
+            for (let i = 0; i < paymentMethodSelect.options.length; i++) {
+                if (paymentMethodSelect.options[i].value === fuzeren) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            // 如果不存在，添加新选项
+            if (!exists) {
+                const option = document.createElement('option');
+                option.value = fuzeren;
+                option.textContent = fuzeren;
+                option.setAttribute('data-gl', 'true'); // 标记为来自 xialagl 的数据
+                paymentMethodSelect.appendChild(option);
+            }
+        });
+
+        // 恢复之前选中的值
+        if (currentValue) {
+            paymentMethodSelect.value = currentValue;
+        }
+
+        console.log("甲方选项已更新，新增了:", Array.from(uniqueFuzeren));
+    }
+
+
+
+    // 新增函数：根据选择的甲方更新电话和代表人
+    function updatePhoneAndRepresentativeFromGL(selectedFuzeren) {
+        if (!xlglData || xlglData.length === 0) {
+            console.log("没有xialagl数据");
+            return;
+        }
+
+        // 查找匹配的 fuzeren
+        const matchedData = xlglData.find(item =>
+            item.fuzeren && item.fuzeren.trim() === selectedFuzeren
+        );
+
+        if (matchedData) {
+            // 更新电话字段
+            if (matchedData.dianhua && matchedData.dianhua.trim() !== '') {
+                document.getElementById('previewPhone').textContent = matchedData.dianhua.trim();
+            }
+
+            // 更新代表人字段
+            if (matchedData.fuzeren && matchedData.fuzeren.trim() !== '') {
+                document.getElementById('previewRepresentative').textContent = matchedData.fuzeren.trim();
+            }
+
+            console.log("已更新电话和代表人:", matchedData);
+        } else {
+            console.log("未找到匹配的数据:", selectedFuzeren);
+        }
+    }
+
+    // 获取乙方要求
+    function getClientRequirements() {
+        const clientRequirementsInput = document.getElementById('clientRequirements');
+        return clientRequirementsInput ? clientRequirementsInput.value.trim() : '';
+    }
+
+    // 获取开票状态
+    function getInvoiceStatus() {
+        const taxRateText = document.getElementById('previewTaxRate').textContent;
+
+        // 判断逻辑：如果最终值是"以上报价未税"，则开票状态为"不开票"，其他为"未开票"
+        if (taxRateText === '以上报价未税') {
+            return '不开票';
+        } else {
+            return '未开票';
+        }
+    }
+
+    $(document).ready(function() {
+        getKH();
+        getXL();
+        getList();
+        returnlist();
+        setTimeout(function() {
+            getXLGL();
+        }, 100);
+    });
+</script>
+</body>
+</html>

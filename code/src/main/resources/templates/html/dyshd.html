@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>送货单</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 打印控制按钮区域 - 不打印 */
+        .print-controls {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .print-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+
+        .print-btn:hover {
+            background: #0056b3;
+        }
+
+        .row-controls {
+            margin-top: 15px;
+        }
+
+        .row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+            transition: background 0.3s;
+        }
+
+        .row-btn:hover {
+            background: #218838;
+        }
+
+        .row-btn.remove {
+            background: #dc3545;
+        }
+
+        .row-btn.remove:hover {
+            background: #c82333;
+        }
+
+        /* 送货单主体 - 需要打印的区域 */
+        .delivery-note {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .document-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .address {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .customer-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 15px;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .product-table th, .product-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .product-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .readonly-cell {
+            color: #495057;
+        }
+
+        .editable-cell {
+            background-color: #ffffff;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+
+        .signature-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .signature-box {
+            width: 48%;
+        }
+
+        .signature-title {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #333;
+            height: 30px;
+        }
+
+        .signature-input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #333;
+            padding: 5px 0;
+            font-size: 14px;
+            text-align: center;
+            background: transparent;
+            outline: none;
+        }
+
+        .signature-input:focus {
+            border-bottom-color: #007bff;
+        }
+
+        /* 选中行样式 */
+        .selected-row {
+            background-color: #e3f2fd !important;
+        }
+
+        .selection-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: #d4edda;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #155724;
+        }
+
+        /* 发货标签区域 */
+        .labels-section {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .labels-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .labels-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .labels-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .label-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .label-btn:hover {
+            background: #5a6268;
+        }
+
+        .label-btn.print {
+            background: #17a2b8;
+        }
+
+        .label-btn.print:hover {
+            background: #138496;
+        }
+
+        .labels-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+
+        .label {
+            width: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 12px;
+        }
+
+        .label-header {
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: bold;
+            display: flex;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+
+        .label-field {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .label-value {
+            color: #333;
+        }
+
+        .empty-labels {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+            width: 100%;
+        }
+
+        /* 打印样式 */
+        @media print {
+            /* 隐藏不打印的元素 */
+            .print-controls, .labels-section {
+                display: none !important;
+            }
+
+            /* 调整打印样式 */
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .delivery-note {
+                box-shadow: none;
+                border: 1px solid #000;
+                max-width: 100%;
+            }
+
+            /* 确保打印时黑色文字 */
+            .address, .note {
+                color: #000;
+            }
+
+            /* 打印时隐藏下拉框和日期选择框的边框及箭头 */
+            #contract-select, #fhrq {
+                /* 移除所有边框和样式 */
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+
+                /* 移除所有浏览器特定的样式 */
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                -ms-appearance: none !important;
+
+                /* 确保内容正常显示 */
+                color: #000 !important;
+                font-size: 14px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: auto !important;
+                height: auto !important;
+
+                /* 移除内边距和背景 */
+                background-color: transparent !important;
+                background-image: none !important;
+            }
+
+            /* 隐藏所有浏览器的下拉箭头 */
+            #contract-select::-ms-expand {
+                display: none !important;
+            }
+
+            #contract-select::-webkit-arrow {
+                display: none !important;
+            }
+
+            #contract-select::-webkit-inner-spin-button,
+            #contract-select::-webkit-outer-spin-button {
+                display: none !important;
+            }
+
+            /* 隐藏日期选择器的所有图标和按钮 */
+            #fhrq::-webkit-calendar-picker-indicator {
+                display: none !important;
+                -webkit-appearance: none !important;
+            }
+
+            #fhrq::-webkit-inner-spin-button,
+            #fhrq::-webkit-outer-spin-button,
+            #fhrq::-webkit-clear-button {
+                display: none !important;
+                -webkit-appearance: none !important;
+            }
+
+            #fhrq::-moz-calendar-picker-indicator {
+                display: none !important;
+            }
+
+            #fhrq::-ms-clear {
+                display: none !important;
+            }
+
+            #fhrq::-ms-reveal {
+                display: none !important;
+            }
+
+            /* 打印时签名输入框样式 */
+            .signature-input {
+                border: none;
+                border-bottom: 1px solid #333;
+            }
+
+            .signature-input:focus {
+                border-bottom-color: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- 打印控制区域 - 不会打印出来 -->
+<div class="print-controls">
+    <button class="print-btn" onclick="getshdlist()">刷新</button>
+    <button class="print-btn" onclick="window.print()">打印送货单</button>
+    <button class="print-btn" onclick="shipAll()" style="background:#28a745;">发货</button>
+    <button class="print-btn" onclick="deleteSelected()" style="background:#dc3545;">删除选中行</button>
+    <div class="selection-info">
+        <span id="selected-count">已选中 0 行</span>
+        <span id="total-count" style="margin-left: 15px;">总计 0 行</span>
+    </div>
+</div>
+
+<!-- 送货单内容 - 会打印出来 -->
+<div class="delivery-note">
+    <div class="header">
+        <div class="company-name">昆山翰元星传动科技有限公司-送货单</div>
+        <div class="address">地址：昆山市张浦镇同舟路188号3号厂房</div>
+    </div>
+
+    <div class="customer-info">
+        <div>客户：<span id="customer-name">客户</span></div>
+        <div>发货日期：<input id="fhrq" type="date" class="form-control" placeholder="发货日期" autocomplete="off"></div>
+        <div>合同编号：
+            <select id="contract-select" class="form-control" onchange="onddhChange()">
+                <option value="">请选择合同编号</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="content">
+        <table class="product-table" id="product-table">
+            <thead>
+            <tr>
+                <th>序号</th>
+                <th>品名</th>
+                <th>规格</th>
+                <th>数量</th>
+                <th>单位</th>
+                <th>备注</th>
+            </tr>
+            </thead>
+            <tbody id="table-body">
+            <tr>
+                <td>1</td>
+                <td>直线导轨</td>
+                <td>GENEOCA1R890ZDC</td>
+                <td>3</td>
+                <td>根</td>
+                <td></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr class="total-row">
+                <td colspan="3">Total</td>
+                <td id="total-quantity">3</td>
+                <td colspan="2"></td>
+            </tr>
+            </tfoot>
+        </table>
+
+        <div class="note">
+            说明：以上货品请核对数量，如有质量问题，请在3日内联系本公司，逾期恕不负责。
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                <div class="signature-title">送货单位及经手人：  <input type="text" class="signature-input" ></div>
+
+            </div>
+            <div class="signature-box">
+                <div class="signature-title">收货单位及经手人：<input type="text" class="signature-input"></div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 发货标签区域 -->
+<div class="labels-section">
+    <div class="labels-header">
+        <div class="labels-title">发货标签</div>
+        <div class="labels-controls">
+            <button class="label-btn" onclick="clearLabels()">清空标签</button>
+            <button class="label-btn print" onclick="printLabels()">打印标签</button>
+        </div>
+    </div>
+    <div class="labels-container" id="labels-container">
+        <div class="empty-labels">暂无发货标签，请点击"发货全部行"生成标签</div>
+    </div>
+</div>
+
+<script>
+    let rowCount = 1;
+    let selectedIds = [];
+    let deletedIds = []; // 存储被删除的ID，发货时排除这些ID
+
+    // 修改 addRow 函数，空行不设置data-id
+    function addRow() {
+        rowCount++;
+        const tableBody = document.getElementById('table-body');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+        <td class="readonly-cell">${rowCount}</td>
+        <td class="readonly-cell"></td>
+        <td class="readonly-cell"></td>
+        <td class="readonly-cell"></td>
+        <td class="readonly-cell"></td>
+        <td class="editable-cell">
+            <input type="text" style="border:none; width:100%; text-align:center; background:transparent;" placeholder="请输入备注">
+        </td>
+    `;
+        tableBody.appendChild(newRow);
+        updateRowCount();
+        updateTotalCount();
+    }
+
+    // 行点击选中功能
+    function setupRowSelection() {
+        const tableBody = document.getElementById('table-body');
+        tableBody.addEventListener('click', function(e) {
+            const row = e.target.closest('tr');
+            if (row && row.parentElement === tableBody) {
+                toggleRowSelection(row);
+            }
+        });
+    }
+
+    // 切换行选中状态
+    function toggleRowSelection(row) {
+        const rowId = row.getAttribute('data-id');
+
+        if (rowId) {
+            if (row.classList.contains('selected-row')) {
+                // 取消选中
+                row.classList.remove('selected-row');
+                selectedIds = selectedIds.filter(id => id !== rowId);
+            } else {
+                // 选中
+                row.classList.add('selected-row');
+                selectedIds.push(rowId);
+            }
+            updateSelectedCount();
+        }
+    }
+
+    // 更新选中行计数
+    function updateSelectedCount() {
+        const selectedCountElement = document.getElementById('selected-count');
+        if (selectedCountElement) {
+            selectedCountElement.textContent = `已选中 ${selectedIds.length} 行`;
+        }
+    }
+
+
+    function onddhChange() {
+        getshdlist();
+    }
+    // 更新行数显示
+    // 更新行数显示
+    // 更新行数显示（只更新序号）
+    function updateRowCount() {
+        // 更新所有行的序号
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1;
+        });
+    }
+
+
+    // 清空选中状态
+    function clearSelection() {
+        selectedIds = [];
+        const selectedRows = document.querySelectorAll('.selected-row');
+        selectedRows.forEach(row => {
+            row.classList.remove('selected-row');
+        });
+        updateTotalCount();
+    }
+
+    // 更新总数
+    function updateTotal() {
+        let total = 0;
+        const rows = document.querySelectorAll('#table-body tr');
+
+        rows.forEach(row => {
+            const quantityCell = row.cells[3];
+            const quantity = parseInt(quantityCell.textContent) || 0;
+            total += quantity;
+        });
+
+        document.getElementById('total-quantity').textContent = total;
+    }
+
+
+
+    function getddh() {
+        var date = new Date();
+        var jsyear = date.getFullYear();
+        var jsmonth = ('0'+(date.getMonth()+1)).slice(-2);
+        var jsday = ('0'+date.getDate()).slice(-2);
+        var js = jsyear+'-'+jsmonth+'-'+jsday
+        document.getElementById("fhrq").value = js;
+        $.ajax({
+            type: 'post',
+            url: '/dyshd/getddh',
+            contentType: 'application/json',
+            data: JSON.stringify({}),
+            dataType: 'json',
+            success: function(res) {
+                console.log("AJAX请求成功");
+                console.log("返回的乙方信息", res);
+
+                if (res.code == 200) {
+                    console.log("查询成功，数据:", res.data);
+                    fillCustomerCompanyDropdown(res.data);
+                } else {
+                    console.error("查询失败:", res.message);
+                    alert("查询失败: " + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:");
+                console.error("状态:", status);
+                console.error("错误:", error);
+                console.error("响应:", xhr.responseText);
+                alert("请求失败，请检查网络连接");
+            },
+            complete: function() {
+                console.log("AJAX请求完成");
+            }
+        });
+    }
+    function fillCustomerCompanyDropdown(data) {
+        console.log('开始填充订单号下拉框，数据:', data);
+
+        const customerSelect = document.getElementById('contract-select');
+        if (!customerSelect) {
+            console.error('未找到订单号下拉框元素');
+            return;
+        }
+
+        // 清空现有选项
+        customerSelect.innerHTML = '';
+
+        // 添加默认选项
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '请选择合同编号';
+        customerSelect.appendChild(defaultOption);
+
+        // 添加数据选项（带去重逻辑）
+        if (data && data.length > 0) {
+            // 方法四：使用 Map 去重（性能最好）
+            const uniqueData = Array.from(
+                new Map(data.map(item => [item.ddh, item])).values()
+            );
+
+            uniqueData.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.ddh;
+                option.textContent = item.ddh;
+                customerSelect.appendChild(option);
+            });
+
+            console.log('订单号下拉框填充完成，共添加', uniqueData.length, '个不重复选项');
+        } else {
+            console.warn('没有客户数据可供填充');
+        }
+    }
+    function getSelectedContract() {
+        const selectElement = document.getElementById('contract-select');
+        return selectElement.value;
+    }
+
+    // 删除选中行（前端删除，不涉及后端）
+    function deleteSelected() {
+        if (selectedIds.length === 0) {
+            alert('请先选择要删除的行！');
+            return;
+        }
+
+        if (confirm(`确定要删除选中的 ${selectedIds.length} 行数据吗？这些数据将不会发货。`)) {
+            // 将选中的ID添加到删除列表
+            deletedIds = [...deletedIds, ...selectedIds];
+
+            // 从表格中移除选中的行
+            removeSelectedRowsFromTable();
+
+            // 清空选中状态
+            clearSelection();
+
+            // 更新总计行数
+            updateTotalCount();
+
+            console.log('已删除的行ID:', selectedIds);
+            console.log('删除列表:', deletedIds);
+        }
+    }
+
+    // 更新总计行数显示
+    function updateTotalCount() {
+        const totalCountElement = document.getElementById('total-count');
+        const selectedCountElement = document.getElementById('selected-count');
+
+        if (totalCountElement) {
+            const allRows = document.querySelectorAll('#table-body tr[data-id]');
+            const validRows = Array.from(allRows).filter(row =>
+                !deletedIds.includes(row.getAttribute('data-id'))
+            );
+            totalCountElement.textContent = `总计 ${validRows.length} 行`;
+        }
+
+        if (selectedCountElement) {
+            selectedCountElement.textContent = `已选中 ${selectedIds.length} 行`;
+        }
+    }
+
+    // 从表格中移除选中的行
+    function removeSelectedRowsFromTable() {
+        const tableBody = document.getElementById('table-body');
+        const selectedRows = document.querySelectorAll('#table-body .selected-row');
+
+        selectedRows.forEach(row => {
+            tableBody.removeChild(row);
+        });
+
+        // 更新行数和序号
+        rowCount = tableBody.children.length;
+        updateRowCount();
+        updateTotal();
+
+        // 如果表格为空，添加一个空行
+        if (rowCount === 0) {
+            addRow();
+        }
+    }
+
+    // 修改 fillProductTable 函数，重置删除列表
+    function fillProductTable(data) {
+        console.log('开始填充产品表格，数据:', data);
+
+        const tableBody = document.getElementById('table-body');
+        if (!tableBody) {
+            console.error('未找到表格主体元素');
+            return;
+        }
+
+        // 清空现有表格内容
+        tableBody.innerHTML = '';
+        // 清空选中状态和删除列表
+        clearSelection();
+        deletedIds = []; // 重置删除列表
+
+        // 添加数据到表格
+        if (data && data.list && data.list.length > 0) {
+            // 更新客户信息 - 使用第一条数据的 khmc 字段
+            const firstProduct = data.list[0];
+            if (firstProduct.khmc) {
+                document.getElementById('customer-name').textContent = firstProduct.khmc;
+                console.log('更新客户名称为:', firstProduct.khmc);
+            }
+
+            data.list.forEach((product, index) => {
+                const newRow = document.createElement('tr');
+                // 添加data-id属性，设置cursor样式
+                newRow.setAttribute('data-id', product.id);
+                newRow.style.cursor = 'pointer';
+                newRow.title = '点击选中/取消选中';
+
+                newRow.innerHTML = `
+                <td class="readonly-cell">${index + 1}</td>
+                <td class="readonly-cell">${product.pm || ''}</td>
+                <td class="readonly-cell">${product.ggxh || ''}</td>
+                <td class="readonly-cell">${product.sl || 0}</td>
+                <td class="readonly-cell">${product.dw || ''}</td>
+                <td class="editable-cell">
+                    <input type="text" style="border:none; width:100%; text-align:center; background:transparent;"
+                           placeholder="请输入备注" value="${product.bz || ''}">
+                </td>
+            `;
+                tableBody.appendChild(newRow);
+            });
+
+            // 更新行数和总数
+            rowCount = data.list.length;
+            updateRowCount();
+            updateTotal();
+            updateTotalCount();
+            console.log('产品表格填充完成，共', data.list.length, '行');
+        } else {
+            console.warn('没有产品数据可供填充');
+            // 如果没有数据，添加一个空行
+            addRow();
+            updateTotalCount();
+        }
+    }
+
+    function getshdlist() {
+        const ddh = getSelectedContract();
+        $.ajax({
+            type: 'post',
+            url: '/dyshd/getshdlist',
+            contentType: 'application/json',
+            data: JSON.stringify({ ddh: ddh}),
+            dataType: 'json',
+            success: function(res) {
+                console.log("AJAX请求成功");
+                console.log("返回的乙方信息", res);
+
+                if (res.code == 200) {
+                    console.log("查询成功，数据:", res.data);
+                    fillProductTable(res.data);
+                } else {
+                    console.error("查询失败:", res.message);
+                    alert("查询失败: " + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:");
+                console.error("状态:", status);
+                console.error("错误:", error);
+                console.error("响应:", xhr.responseText);
+                alert("请求失败，请检查网络连接");
+            },
+            complete: function() {
+                console.log("AJAX请求完成");
+            }
+        });
+    }
+
+    // 生成发货标签
+    function generateLabels(rows) {
+        const labelsContainer = document.getElementById('labels-container');
+
+        // 清空现有标签
+        labelsContainer.innerHTML = '';
+
+        if (rows.length === 0) {
+            labelsContainer.innerHTML = '<div class="empty-labels">没有可生成标签的数据</div>';
+            return;
+        }
+
+        // 获取发货日期和客户信息
+        const shipDate = document.getElementById('fhrq').value;
+        const customerName = document.getElementById('customer-name').textContent;
+        const contractNumber = getSelectedContract();
+
+        // 为每一行数据生成一个标签
+        rows.forEach(row => {
+            const cells = row.cells;
+            const productName = cells[1].textContent || '';
+            const specification = cells[2].textContent || '';
+            const quantity = cells[3].textContent || '';
+            const unit = cells[4].textContent || '';
+            const remark = cells[5].querySelector('input') ? cells[5].querySelector('input').value : '';
+
+            // 创建标签元素
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.innerHTML = `
+                <div class="label-header">
+    <div class="logo-img"><img src="../img/biaoqian_logo.png" alt="SHAC" style="width: 80px;"></div>
+    <div class="company-name">鼎翰传动</div>
+</div>
+                <div class="label-row">
+                    <span class="label-field">合同编号:</span>
+                    <span class="label-value">${contractNumber}</span>
+                </div>
+
+
+                <div class="label-row">
+                    <span class="label-field">型号:</span>
+                    <span class="label-value">${specification}</span>
+                </div>
+
+                <div class="label-row">
+                    <span class="label-field">单位:</span>
+                    <span class="label-value">${unit}</span>
+                </div>
+                  <div class="label-row">
+                    <span class="label-field">数量:</span>
+                    <span class="label-value">${quantity}</span>
+                </div>
+                <div class="label-row">
+                    <span class="label-field">日期:</span>
+                    <span class="label-value">${shipDate}</span>
+                </div>
+                <div class="label-row">
+                    <span class="label-field">备注:</span>
+                    <span class="label-value">${remark || '无'}</span>
+                </div>
+            `;
+
+            labelsContainer.appendChild(label);
+        });
+    }
+
+    // 发货全部行（排除已删除的行）
+    function shipAll() {
+        // 获取表格中所有有ID的行（排除已删除的行）
+        const allRows = document.querySelectorAll('#table-body tr[data-id]');
+        const allIds = Array.from(allRows)
+            .map(row => row.getAttribute('data-id'))
+            .filter(id => !deletedIds.includes(id)); // 过滤掉已删除的ID
+
+        if (allIds.length === 0) {
+            alert('表格中没有可发货的数据！');
+            return;
+        }
+
+        // 获取发货日期
+        const shipDate = document.getElementById('fhrq').value;
+        if (!shipDate) {
+            alert('请先选择发货日期！');
+            return;
+        }
+
+        if (confirm(`确定发货吗？`)) {
+            // 生成发货标签
+            const validRows = Array.from(allRows).filter(row =>
+                !deletedIds.includes(row.getAttribute('data-id'))
+            );
+            generateLabels(validRows);
+
+            $.ajax({
+                type: 'post',
+                url: '/dyshd/shipProducts',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    ids: allIds,      // 发送所有行的ID（排除已删除的）
+                    fhrq: shipDate   // 使用fhrq字段发送发货日期
+                }),
+                dataType: 'json',
+                success: function(res) {
+                    console.log("发货全部行请求成功", res);
+                    if (res.code == 200) {
+                        alert(`全部 ${allIds.length} 行数据发货成功！`);
+                        // 发货成功后，可以清空表格或刷新数据
+                        // getshdlist();
+                    } else {
+                        alert("发货失败: " + res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("发货全部行请求失败:", error);
+                    alert("发货失败，请检查网络连接");
+                }
+            });
+        }
+    }
+
+    // 清空标签
+    function clearLabels() {
+        const labelsContainer = document.getElementById('labels-container');
+        labelsContainer.innerHTML = '<div class="empty-labels">暂无发货标签，请点击"发货"按钮生成标签</div>';
+    }
+
+    // 打印标签
+    function printLabels() {
+        const labelsContainer = document.getElementById('labels-container');
+        if (labelsContainer.querySelector('.empty-labels')) {
+            alert('没有可打印的标签！');
+            return;
+        }
+
+        // 创建打印窗口
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>打印发货标签</title>
+                <style>
+                    body {
+                        font-family: "Microsoft YaHei", sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    .labels-print-container {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                    }
+                    .label {
+                        width: 200px;
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        background: white;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                        font-size: 12px;
+                        page-break-inside: avoid;
+                    }
+                    .label-header {
+                        text-align: center;
+                        margin-bottom: 8px;
+                        padding-bottom: 5px;
+                        border-bottom: 1px solid #eaeaea;
+                        font-weight: bold;
+                    }
+                    .label-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 4px;
+                        padding-bottom: 3px;
+                        border-bottom: 1px dashed #f0f0f0;
+                    }
+                    .label-field {
+                        font-weight: bold;
+                        color: #555;
+                    }
+                    .label-value {
+                        color: #333;
+                    }
+                    @media print {
+                        body {
+                            padding: 0;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="labels-print-container">
+                    ${labelsContainer.innerHTML}
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() {
+                            window.close();
+                        }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    // 修改初始化代码
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化第一行 - 全部设为空
+        const firstRow = document.querySelector('#table-body tr');
+        if (firstRow) {
+            const cells = firstRow.cells;
+            cells[0].className = 'readonly-cell';
+            cells[0].textContent = '1';
+            cells[1].className = 'readonly-cell';
+            cells[1].textContent = '';
+            cells[2].className = 'readonly-cell';
+            cells[2].textContent = '';
+            cells[3].className = 'readonly-cell';
+            cells[3].textContent = '';
+            cells[4].className = 'readonly-cell';
+            cells[4].textContent = '';
+            cells[5].className = 'editable-cell';
+            cells[5].innerHTML = '<input type="text" style="border:none; width:100%; text-align:center; background:transparent;" placeholder="请输入备注">';
+
+            // 重置总数
+            document.getElementById('total-quantity').textContent = '0';
+        }
+
+        // 设置行选中事件
+        setupRowSelection();
+
+        // 更新总计行数
+        updateTotalCount();
+
+        // 然后调用 getddh()
+        getddh();
+    });
+</script>
+</body>
+</html>

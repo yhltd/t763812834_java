@@ -1,19 +1,23 @@
 server:
   port: 9093
+
 spring:
   profiles:
     active: dev
   datasource:
-    druid:
-      max-wait: 10000
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    type: com.alibaba.druid.pool.DruidDataSource
     url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
     username: sa
     password: Lyh07910_001
-#    url: jdbc:sqlserver://82.157.194.210;DatabaseName=wellJin
-#    username: sa
-#    password: Biii2010_2022
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
 
   mvc:
     view:
@@ -22,9 +26,22 @@ spring:
   web:
     resources:
       static-locations: file:${web.upload-path},classpath:/templates/,classpath:/static/
+
+  thymeleaf:
+    cache: false
+
 mybatis-plus:
   configuration:
+    map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-    spring.thymeleaf.cache=false:
+web:
+  upload-path: ./upload/
+  resources:
+    static-locations: classpath:/static/,file:${pdf.upload.path}
 
+pdf:
+  upload:
+    path: /data/uploads/pdf/
+    access:
+      base-url: /pdf/

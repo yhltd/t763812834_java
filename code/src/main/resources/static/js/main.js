@@ -1,118 +1,3 @@
-// function alert(msg){
-//     let $alerts = $('#alerts')
-//     if($alerts.length == 0){
-//         $alerts = $('<div id="alerts" class="alerts"></div>')
-//         $('body').append($alerts)
-//     }
-//     let $alert = $('<div class="alert alert-primary alert-dismissible fade show">'+msg+'</div>')
-//     $alerts.append($alert)
-// }
-
-$(function () {
-
-    //登陆后不是管理员隐藏账号管理
-    $ajax({
-        type: 'post',
-        url: '/user/getPower',
-    }, false, '', function (res) {
-        var this_power = res.data
-        if(this_power != '管理员' && this_power !=undefined) {
-            document.getElementById('zhgl').style.display = 'none';
-        }
-    })
-
-    var onload_url = $.session.get('onload_url');
-    if (onload_url != undefined && onload_url !=''){
-        $('#iframe').attr('src', onload_url);
-    }
-    $.session.set('onload_url', '')
-
-})
-
-$(function () {
-
-    //登陆后不是管理员隐藏账号管理
-    $ajax({
-        type: 'post',
-        url: '/user/getPower',
-    }, false, '', function (res) {
-        var this_power = res.data
-        if(this_power != '管理员' && this_power !=undefined) {
-            document.getElementById('jcxx').style.display = 'none';
-        }
-    })
-
-    var onload_url = $.session.get('onload_url');
-    if (onload_url != undefined && onload_url !=''){
-        $('#iframe').attr('src', onload_url);
-    }
-    $.session.set('onload_url', '')
-
-})
-
-$(function () {
-
-    //登陆后不是管理员隐藏账号管理
-    $ajax({
-        type: 'post',
-        url: '/user/getPower',
-    }, false, '', function (res) {
-        var this_power = res.data
-        if(this_power != '管理员' && this_power !=undefined) {
-            document.getElementById('kc').style.display = 'none';
-        }
-    })
-
-    var onload_url = $.session.get('onload_url');
-    if (onload_url != undefined && onload_url !=''){
-        $('#iframe').attr('src', onload_url);
-    }
-    $.session.set('onload_url', '')
-
-})
-
-$(function () {
-
-    //登陆后不是管理员隐藏账号管理
-    $ajax({
-        type: 'post',
-        url: '/user/getPower',
-    }, false, '', function (res) {
-        var this_power = res.data
-        if(this_power != '管理员' && this_power !=undefined) {
-            document.getElementById('zm').style.display = 'none';
-        }
-    })
-
-    var onload_url = $.session.get('onload_url');
-    if (onload_url != undefined && onload_url !=''){
-        $('#iframe').attr('src', onload_url);
-    }
-    $.session.set('onload_url', '')
-
-})
-
-$(function () {
-
-    //登陆后不是管理员隐藏账号管理
-    $ajax({
-        type: 'post',
-        url: '/user/getPower',
-    }, false, '', function (res) {
-        var this_power = res.data
-        if(this_power != '管理员' && this_power !=undefined) {
-            document.getElementById('kddz').style.display = 'none';
-        }
-    })
-
-    var onload_url = $.session.get('onload_url');
-    if (onload_url != undefined && onload_url !=''){
-        $('#iframe').attr('src', onload_url);
-    }
-    $.session.set('onload_url', '')
-
-})
-
 function $ajax(options, isLoading, loadingEl, success) {
     $.ajax({
         timeout: 1000000,
@@ -334,21 +219,21 @@ $(function () {
     // })
 })
 
-setInterval('show1()',1000);
-function show1(){
-    function p(s) {
-        return s < 10 ? '0' + s: s;
-    }
-    var myDate = new Date();
-//获取当前年
-    var year=myDate.getFullYear();
-//获取当前月
-    var month=myDate.getMonth()+1;
-//获取当前日
-    var date=myDate.getDate();
-    var h=myDate.getHours(); //获取当前小时数(0-23)
-    var m=myDate.getMinutes(); //获取当前分钟数(0-59)
-    var s=myDate.getSeconds();
-    var now=year+'-'+p(month)+"-"+p(date)+" "+p(h)+':'+p(m)+":"+p(s);
-    $('#now_time').html(now)
-}
+// setInterval('show1()',1000);
+// function show1(){
+//     function p(s) {
+//         return s < 10 ? '0' + s: s;
+//     }
+//     var myDate = new Date();
+// //获取当前年
+//     var year=myDate.getFullYear();
+// //获取当前月
+//     var month=myDate.getMonth()+1;
+// //获取当前日
+//     var date=myDate.getDate();
+//     var h=myDate.getHours(); //获取当前小时数(0-23)
+//     var m=myDate.getMinutes(); //获取当前分钟数(0-59)
+//     var s=myDate.getSeconds();
+//     var now=year+'-'+p(month)+"-"+p(date)+" "+p(h)+':'+p(m)+":"+p(s);
+//     $('#now_time').html(now)
+// }
