@@ -83,11 +83,11 @@ function initToolbarEvents() {
         console.log('打印按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要打印的订单信息');
+            swal('请选择要打印的订单信息');
             return;
         }
         // 这里可以添加打印逻辑
-        alert('打印功能待实现');
+        swal('打印功能待实现');
     });
 }
 
@@ -174,12 +174,12 @@ function getList(page, size, searchParams) {
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + (res.message || '未知错误'));
+                swal("查询失败: " + (res.message || '未知错误'));
             }
         }
     });
@@ -251,7 +251,7 @@ function updateField(ddh, fieldName, fieldValue, callback) {
             }
         } else {
             console.error(fieldName + "字段更新失败:", res.message);
-            alert(fieldName + "字段更新失败: " + (res.message || '未知错误'));
+            swal(fieldName + "字段更新失败: " + (res.message || '未知错误'));
             // 更新失败时恢复原值
             if (fieldName === 'sfkp') {
                 var $select = $('.sfkp-select[data-ddh="' + ddh + '"]');
@@ -268,26 +268,49 @@ function fillTable(data) {
 
     var tableHeader = `
         <thead>
+           <tr style="color: #eb6464; font-size: 10px">
+                <th>双击表格内特殊颜色单元格进行输入</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                                    
+                                    
+            </tr>
             <tr>
-                <th width="100">订单日期</th>
-                <th width="160">订单号</th>
-                <th width="100">客户简称</th>
-                <th width="80">负责人</th>
-                <th width="80">部门</th>
-                <th width="80">联系人</th>
-                <th width="100">联系电话</th>
-                <th width="80">提成点</th>
-                <th width="180">客户名称</th>
-                <th width="100">开票时间</th>
-                <th width="100">应付时间</th>
-                <th width="100">应付金额</th>
-                <th width="80">已付</th>
-                <th width="80">未付</th>
-                <th width="120">开票状态</th>
-                <th width="120">物流单号</th>
-                <th width="80">折扣</th>
-                <th width="160">操作</th>
-                <th width="200">PDF文件</th>
+                  <th>订单日期</th>
+                <th>订单号</th>
+                <th>客户简称</th>
+                <th>负责人</th>
+                <th>部门</th>
+                <th>联系人</th>
+                <th>联系电话</th>
+                <th>提成点</th>
+                <th>客户名称</th>
+                <th>开票时间</th>
+                <th>应付时间</th>
+                <th>应付金额</th>
+                <th>已付</th>
+                <th>未付</th>
+                <th>开票状态</th>
+                <th>物流单号</th>
+                <th>折扣</th>
+                <th>操作</th>
+                <th>PDF文件</th>
             </tr>
         </thead>
     `;
@@ -374,6 +397,8 @@ function fillTable(data) {
 
     tableBody += '</tbody>';
     $('#ddmxTable').html(tableHeader + tableBody);
+    // 添加自动调整列宽的功能
+    autoAdjustColumnWidths();
     addRowClickEvent();
     bindDetailButtonEvents();
     bindEditableEvents();
@@ -385,6 +410,39 @@ function fillTable(data) {
     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
 }
 
+// 自动调整列宽函数
+function autoAdjustColumnWidths() {
+    const table = document.getElementById('ddmxTable');
+    if (!table) return;
+
+    // 设置表格为自动布局
+    table.style.tableLayout = 'auto';
+
+    // 为每个单元格设置合适的样式
+    const cells = table.getElementsByTagName('td');
+    for (let cell of cells) {
+        cell.style.whiteSpace = 'nowrap';
+        cell.style.overflow = 'hidden';
+        cell.style.textOverflow = 'ellipsis';
+        cell.style.maxWidth = '300px'; // 防止过宽
+    }
+
+    // 为操作列和PDF列设置固定宽度
+    const actionCells = table.querySelectorAll('td.action-cell');
+    const pdfCells = table.querySelectorAll('td.pdf-upload-cell');
+
+    actionCells.forEach(cell => {
+        cell.style.width = '160px';
+        cell.style.minWidth = '160px';
+        cell.style.maxWidth = '160px';
+    });
+
+    pdfCells.forEach(cell => {
+        cell.style.width = '200px';
+        cell.style.minWidth = '200px';
+        cell.style.maxWidth = '200px';
+    });
+}
 // 绑定查看PDF事件
 function bindViewPdfEvents() {
     console.log('绑定查看PDF事件...');
@@ -399,7 +457,7 @@ function bindViewPdfEvents() {
         console.log('查看PDF按钮点击，订单号:', ddh);
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -422,7 +480,7 @@ function bindUploadPdfEvents() {
         console.log('上传PDF按钮点击，订单号:', ddh, '找到文件输入框:', $fileInput.length);
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -445,14 +503,14 @@ function bindUploadPdfEvents() {
 
         // 验证文件类型
         if (file.type !== 'application/pdf') {
-            alert('请选择PDF文件');
+            swal('请选择PDF文件');
             $(this).val('');
             return;
         }
 
         // 验证文件大小（限制为10MB）
         if (file.size > 10 * 1024 * 1024) {
-            alert('文件大小不能超过10MB');
+            swal('文件大小不能超过10MB');
             $(this).val('');
             return;
         }
@@ -474,7 +532,7 @@ function bindDeletePdfEvents() {
         var ddh = $btn.data('ddh');
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -490,7 +548,7 @@ function bindDeletePdfEvents() {
 // 删除PDF文件
 function deletePdfFile(ddh, $btn) {
     if (!ddh) {
-        alert('订单号不能为空');
+        swal('订单号不能为空');
         return;
     }
 
@@ -518,13 +576,13 @@ function deletePdfFile(ddh, $btn) {
 
         if (res.code === 200) {
             console.log("PDF文件删除成功");
-            alert('PDF文件删除成功！');
+            swal('PDF文件删除成功！');
 
             // 删除成功后刷新数据
             getList(currentPage, pageSize, getSearchParams());
         } else {
             console.error("PDF文件删除失败:", res.message);
-            alert("PDF文件删除失败: " + (res.message || '未知错误'));
+            swal("PDF文件删除失败: " + (res.message || '未知错误'));
         }
     }).fail(function(xhr, status, error) {
         hideLoading();
@@ -534,7 +592,7 @@ function deletePdfFile(ddh, $btn) {
         }
 
         console.error("删除请求失败:", error);
-        alert("删除请求失败，请检查网络连接");
+        swal("删除请求失败，请检查网络连接");
     });
 }
 
@@ -547,7 +605,7 @@ function bindWithdrawButtonEvents() {
         var ddh = $btn.data('ddh');
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -580,13 +638,13 @@ function withdrawOrder(ddh, $btn) {
 
         if (res.code === 200) {
             console.log("订单撤回成功");
-            alert('订单撤回成功！');
+            swal('订单撤回成功！');
 
             // 刷新数据
             getList(currentPage, pageSize, getSearchParams());
         } else {
             console.error("订单撤回失败:", res.message);
-            alert("订单撤回失败: " + (res.message || '未知错误'));
+            swal("订单撤回失败: " + (res.message || '未知错误'));
 
             // 恢复按钮状态
             $btn.prop('disabled', false).html('<i class="bi bi-arrow-counterclockwise"></i> 撤回');
@@ -594,7 +652,7 @@ function withdrawOrder(ddh, $btn) {
     }).fail(function(xhr, status, error) {
         hideLoading();
         console.error("撤回请求失败:", error);
-        alert("撤回请求失败，请检查网络连接");
+        swal("撤回请求失败，请检查网络连接");
 
         // 恢复按钮状态
         $btn.prop('disabled', false).html('<i class="bi bi-arrow-counterclockwise"></i> 撤回');
@@ -622,7 +680,7 @@ function bindPdfUploadEvents() {
             viewPdfFile(ddh);
         } else {
             // 如果没有PDF，显示上传提示
-            alert('请选择PDF文件进行上传');
+            swal('请选择PDF文件进行上传');
             // 或者直接触发文件选择
             var $fileInput = $btn.closest('td').find('.pdf-file-input');
             $fileInput.trigger('click');
@@ -648,14 +706,14 @@ function bindPdfUploadEvents() {
         if (file) {
             // 验证文件类型
             if (file.type !== 'application/pdf') {
-                alert('请选择PDF文件');
+                swal('请选择PDF文件');
                 $(this).val('');
                 return;
             }
 
             // 验证文件大小（限制为10MB）
             if (file.size > 10 * 1024 * 1024) {
-                alert('文件大小不能超过10MB');
+                swal('文件大小不能超过10MB');
                 $(this).val('');
                 return;
             }
@@ -671,42 +729,50 @@ function bindPdfUploadEvents() {
 
 // 绑定可编辑字段事件
 function bindEditableEvents() {
+    // 通用的输入框创建函数
+    function createEditableInput($cell, originalValue, type) {
+        // 获取单元格的实际宽度
+        var cellWidth = $cell.width();
+
+        var input = $('<input>')
+            .addClass('form-control input-sm editable-input')
+            .val(originalValue)
+            .css({
+                'width': '100%',
+                'height': '100%',
+                'min-width': '100%',
+                'max-width': '100%',
+                'border': '2px solid #409EFF',
+                'padding': '4px 6px',
+                'box-sizing': 'border-box',
+                'position': 'absolute',
+                'top': '0',
+                'left': '0',
+                'z-index': '1000',
+                'font-size': 'inherit',
+                'line-height': 'normal'
+            });
+
+        if (type === 'number') {
+            input.attr('type', 'number').attr('step', '0.01');
+        }
+
+        // 设置单元格为相对定位，以便输入框绝对定位
+        $cell.css('position', 'relative').html(input);
+
+        return input;
+    }
+
     // 提成点编辑
     $('.editable-tcd').off('dblclick').on('dblclick', function() {
         var $cell = $(this);
         var originalValue = $cell.text().trim();
         var ddh = $cell.data('ddh');
 
-        var input = $('<input type="text" class="form-control input-sm">')
-            .val(originalValue)
-            .css({
-                'width': '100%',
-                'height': '100%',
-                'border': '1px solid #409EFF',
-                'padding': '2px 4px'
-            });
+        var input = createEditableInput($cell, originalValue, 'text');
+        input.focus().select();
 
-        $cell.html(input);
-        input.focus();
-
-        input.blur(function() {
-            var newValue = input.val().trim();
-            $cell.text(newValue);
-
-            if (newValue !== originalValue) {
-                updateField(ddh, 'tcd', newValue, function() {
-                    // 更新成功后重新计算应付金额和未付金额
-                    var $row = $cell.closest('tr');
-                    updateYingfuWeifuDisplay($row);
-                });
-            }
-        });
-
-        input.keypress(function(e) {
-            if (e.which === 13) {
-                input.blur();
-            }
-        });
+        setupInputEvents(input, $cell, originalValue, ddh, 'tcd');
     });
 
     // 物流单号编辑
@@ -715,36 +781,10 @@ function bindEditableEvents() {
         var originalValue = $cell.text().trim();
         var ddh = $cell.data('ddh');
 
-        var input = $('<input type="text" class="form-control input-sm">')
-            .val(originalValue)
-            .css({
-                'width': '100%',
-                'height': '100%',
-                'border': '1px solid #409EFF',
-                'padding': '2px 4px'
-            });
+        var input = createEditableInput($cell, originalValue, 'text');
+        input.focus().select();
 
-        $cell.html(input);
-        input.focus();
-
-        input.blur(function() {
-            var newValue = input.val().trim();
-            $cell.text(newValue);
-
-            if (newValue !== originalValue) {
-                updateField(ddh, 'wldh', newValue, function() {
-                    // 更新成功后重新计算应付金额和未付金额
-                    var $row = $cell.closest('tr');
-                    updateYingfuWeifuDisplay($row);
-                });
-            }
-        });
-
-        input.keypress(function(e) {
-            if (e.which === 13) {
-                input.blur();
-            }
-        });
+        setupInputEvents(input, $cell, originalValue, ddh, 'wldh');
     });
 
     // 折扣编辑
@@ -753,36 +793,10 @@ function bindEditableEvents() {
         var originalValue = $cell.text().trim();
         var ddh = $cell.data('ddh');
 
-        var input = $('<input type="number" step="0.01" class="form-control input-sm">')
-            .val(originalValue)
-            .css({
-                'width': '100%',
-                'height': '100%',
-                'border': '1px solid #409EFF',
-                'padding': '2px 4px'
-            });
+        var input = createEditableInput($cell, originalValue, 'number');
+        input.focus().select();
 
-        $cell.html(input);
-        input.focus();
-
-        input.blur(function() {
-            var newValue = input.val().trim();
-            $cell.text(newValue);
-
-            if (newValue !== originalValue) {
-                updateField(ddh, 'zk', newValue, function() {
-                    // 更新成功后重新计算应付金额和未付金额
-                    var $row = $cell.closest('tr');
-                    updateYingfuWeifuDisplay($row);
-                });
-            }
-        });
-
-        input.keypress(function(e) {
-            if (e.which === 13) {
-                input.blur();
-            }
-        });
+        setupInputEvents(input, $cell, originalValue, ddh, 'zk');
     });
 
     // 已付金额编辑（累加模式）
@@ -792,16 +806,9 @@ function bindEditableEvents() {
         var currentDisplay = $cell.text().trim();
         var ddh = $cell.data('ddh');
 
-        var input = $('<input type="number" step="0.01" class="form-control input-sm">')
-            .attr('placeholder', '输入累加金额')
-            .css({
-                'width': '100%',
-                'height': '100%',
-                'border': '1px solid #28a745',
-                'padding': '2px 4px'
-            });
-
-        $cell.html(input);
+        var input = createEditableInput($cell, '', 'number');
+        input.attr('placeholder', '输入累加金额');
+        input.css('border-color', '#28a745');
         input.focus();
 
         input.blur(function() {
@@ -812,7 +819,6 @@ function bindEditableEvents() {
                 $cell.data('original', newValue);
 
                 updateField(ddh, 'yifu', newValue, function() {
-                    // 更新成功后重新计算未付金额
                     var $row = $cell.closest('tr');
                     updateYingfuWeifuDisplay($row);
                 });
@@ -828,23 +834,21 @@ function bindEditableEvents() {
         });
     });
 
-    // 开票状态下拉选择
+    // 开票状态下拉选择（保持不变）
     $('.sfkp-select').off('change').on('change', function() {
+        // 保持你原来的代码不变
         var $select = $(this);
         var newValue = $select.val();
         var ddh = $select.closest('td').data('ddh');
         var $kpsjCell = $select.closest('tr').find('.kpsj-cell');
         var $row = $select.closest('tr');
 
-        // 保存原始值以便恢复
         $select.data('original-value', $select.val());
 
         if (newValue === '已开票') {
-            // 自动设置开票时间为当前时间
             var currentTime = formatDateTime(new Date());
             $kpsjCell.text(currentTime);
 
-            // 使用批量更新接口，同时更新开票状态和开票时间
             $ajax({
                 type: 'post',
                 url: '/ddmx/updateMultipleByDdh',
@@ -858,25 +862,49 @@ function bindEditableEvents() {
             }, false, '', function (res) {
                 if (res.code === 200) {
                     console.log("开票状态和开票时间更新成功");
-                    // 更新应付金额和未付金额的显示
                     updateYingfuWeifuDisplay($row);
                 } else {
                     console.error("开票状态更新失败:", res.message);
-                    alert("开票状态更新失败: " + (res.message || '未知错误'));
+                    swal("开票状态更新失败: " + (res.message || '未知错误'));
                     $select.val('未开票');
                     $kpsjCell.text('');
                 }
             });
         } else {
-            // 清除开票时间
             $kpsjCell.text('');
-
             updateField(ddh, 'sfkp', newValue, function() {
-                // 更新成功后更新显示
                 updateYingfuWeifuDisplay($row);
             });
         }
     });
+
+    // 通用的输入框事件设置函数
+    function setupInputEvents(input, $cell, originalValue, ddh, field) {
+        input.blur(function() {
+            var newValue = input.val().trim();
+            $cell.text(newValue);
+
+            if (newValue !== originalValue) {
+                updateField(ddh, field, newValue, function() {
+                    var $row = $cell.closest('tr');
+                    updateYingfuWeifuDisplay($row);
+                });
+            }
+        });
+
+        input.keypress(function(e) {
+            if (e.which === 13) {
+                input.blur();
+            }
+        });
+
+        // ESC键取消编辑
+        input.keydown(function(e) {
+            if (e.keyCode === 27) {
+                $cell.text(originalValue);
+            }
+        });
+    }
 }
 
 function updateYingfuWeifuDisplay($row) {
@@ -1286,7 +1314,7 @@ function bindPaginationEvents() {
             currentPage = targetPage;
             getList(currentPage, pageSize, getSearchParams());
         } else {
-            alert('请输入有效的页码（1-' + totalPages + '）');
+            swal('请输入有效的页码（1-' + totalPages + '）');
         }
     });
 
@@ -1431,7 +1459,7 @@ function addTableStyles() {
 // 上传PDF文件
 function uploadPdfFile(ddh, file) {
     if (!ddh || !file) {
-        alert('参数错误');
+        swal('参数错误');
         return;
     }
 
@@ -1455,25 +1483,25 @@ function uploadPdfFile(ddh, file) {
             hideLoading();
             if (res.code === 200) {
                 console.log("PDF文件上传成功", res);
-                alert('PDF文件上传成功！');
+                swal('PDF文件上传成功！');
                 // 上传成功后刷新数据
                 getList(currentPage, pageSize, getSearchParams());
             } else {
                 console.error("PDF文件上传失败:", res.message);
-                alert("PDF文件上传失败: " + (res.message || '未知错误'));
+                swal("PDF文件上传失败: " + (res.message || '未知错误'));
             }
         })
         .catch(error => {
             hideLoading();
             console.error("上传请求失败:", error);
-            alert("上传请求失败，请检查网络连接");
+            swal("上传请求失败，请检查网络连接");
         });
 }
 
 // 查看PDF文件（在线预览）- 修正版
 function viewPdfFile(ddh) {
     if (!ddh) {
-        alert('订单号不能为空');
+        swal('订单号不能为空');
         return;
     }
 
@@ -1503,7 +1531,7 @@ function viewPdfFile(ddh) {
 // 下载PDF文件
 function downloadPdfFile(ddh) {
     if (!ddh) {
-        alert('订单号不能为空');
+        swal('订单号不能为空');
         return;
     }
 
@@ -1550,12 +1578,12 @@ function downloadPdfFile(ddh) {
                     URL.revokeObjectURL(url);
                 } catch (error) {
                     console.error('PDF下载错误:', error);
-                    alert('PDF下载失败');
+                    swal('PDF下载失败');
                 }
             }
         } else {
             console.error("PDF文件下载失败:", res.message);
-            alert("PDF文件下载失败: " + (res.message || '未知错误'));
+            swal("PDF文件下载失败: " + (res.message || '未知错误'));
         }
     });
 }

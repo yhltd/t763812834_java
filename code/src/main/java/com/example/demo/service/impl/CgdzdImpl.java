@@ -25,7 +25,7 @@ public class CgdzdImpl extends ServiceImpl<CgdzdMapper, Cgdzd> implements CgdzdS
 
 
     @Override
-    public PageResult<Cgmx> getCgmxPage(PageRequestDTO request) {
+    public PageResult<Cgdzd> getCgmxPage(PageRequestDTO request) {
         long startTime = System.currentTimeMillis();
         try {
             // 计算分页范围（注意：ROW_NUMBER 从1开始）
@@ -37,10 +37,10 @@ public class CgdzdImpl extends ServiceImpl<CgdzdMapper, Cgdzd> implements CgdzdS
             String ddh=request.getDdh();
             String khmc=request.getKhmc();
             // 构建查询条件
-            LambdaQueryWrapper<Cgmx> wrapper = buildQueryWrapper(request);
+            LambdaQueryWrapper<Cgdzd> wrapper = buildQueryWrapper(request);
 
             // 使用 SQL Server 分页查询数据
-            List<Cgmx> records = baseMapper.selectForPage(start, end,startdate,enddate,ddh,khmc, wrapper);
+            List<Cgdzd> records = baseMapper.selectForPage(start, end,startdate,enddate,ddh,khmc, wrapper);
 
             // 查询总记录数
             Long totalCount = baseMapper.selectCountForPage(wrapper);
@@ -55,23 +55,23 @@ public class CgdzdImpl extends ServiceImpl<CgdzdMapper, Cgdzd> implements CgdzdS
         }
     }
     @Override
-    public List<Cgmx> getDetailByDdh(String ddh) {
+    public List<Cgdzd> getDetailByDdh(String ddh) {
         return baseMapper.getDetailByDdh(ddh);
     }
 
 
-    private LambdaQueryWrapper<Cgmx> buildQueryWrapper(PageRequestDTO request) {
-        LambdaQueryWrapper<Cgmx> wrapper = Wrappers.lambdaQuery();
+    private LambdaQueryWrapper<Cgdzd> buildQueryWrapper(PageRequestDTO request) {
+        LambdaQueryWrapper<Cgdzd> wrapper = Wrappers.lambdaQuery();
 
         // 关键词搜索
         if (StringUtils.hasText(request.getKeyword())) {
             String keyword = request.getKeyword().trim();
             wrapper.and(w -> w
-                    .like(Cgmx::getCpxh, keyword)
+                    .like(Cgdzd::getCpxh, keyword)
                     .or()
-                    .like(Cgmx::getDj, keyword)
+                    .like(Cgdzd::getDj, keyword)
                     .or()
-                    .like(Cgmx::getKhcm, keyword)
+                    .like(Cgdzd::getKhcm, keyword)
             );
         }
         // 修正：返回 wrapper 而不是 null

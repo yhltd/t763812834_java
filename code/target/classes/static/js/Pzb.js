@@ -51,7 +51,8 @@ var currentEditingCell = null;
 $(document).ready(function() {
     console.log('页面加载完成，初始化配置表页面...');
     addTableStyles();
-    addPaginationStyles();
+    // addPaginationStyles();
+    addStatisticsStyles();
     initPzbPage();
     initToolbarEvents();
     getList();
@@ -101,7 +102,7 @@ function initToolbarEvents() {
         }
     });
 
-    // 删除按钮
+// 删除按钮
     $('#delete-btn').click(function () {
         let rows = getTableSelection("#qhdTable");
         if (rows.length == 0) {
@@ -114,20 +115,12 @@ function initToolbarEvents() {
         swal({
             title: "确认删除",
             text: "确定要删除配置项：" + itemNames + " 吗？此操作不可恢复！",
-            icon: "warning",
-            buttons: {
-                cancel: {
-                    text: "取消",
-                    value: null,
-                    visible: true
-                },
-                confirm: {
-                    text: "确认删除",
-                    value: true,
-                    className: "btn-danger"
-                }
-            },
-            dangerMode: true,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "确认删除",
+            cancelButtonText: "取消",
+            closeOnConfirm: true,
+            closeOnCancel: true
         }, function(willDelete) {
             if (willDelete) {
                 let idList = rows.map(row => row.id).filter(id => id);
@@ -189,16 +182,17 @@ function getList() {
         if (res.code == 200) {
             setTable(res.data);
             totalCount = res.data.length;
-            updatePagination();
+            updateStatistics();
+            // updatePagination();
         } else {
             // 处理权限错误
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + res.message);
+                swal("查询失败: " + res.message);
             }
         }
     }, function(error) {
@@ -224,6 +218,7 @@ function searchPzb() {
             console.log('查询响应:', res);
             if (res.code == 200) {
                 setTable(res.data);
+                updateStatistics();
                 showNotification("查询成功，找到 " + res.data.length + " 条记录", "success");
             } else {
                 swal("查询失败", res.msg, "error");
@@ -255,10 +250,14 @@ function setTable(data) {
         console.log('已销毁旧表格实例');
     }
 
+    // 创建统计栏
+    createStatisticsBar();
+
     // 如果没有数据，显示空表格
     if (!data || data.length === 0) {
         console.log('没有数据，显示空表格');
         $('#qhdTable').html('<tr><td colspan="10" class="text-center">暂无数据</td></tr>');
+        updateStatistics();
         return;
     }
 
@@ -267,16 +266,16 @@ function setTable(data) {
         <table class="gradient-table" style="width: 100%; table-layout: fixed;">
             <thead>
                 <tr>
-                    <th width="60"><input type="checkbox" id="selectAll"></th>
+                    <th width="80"><input type="checkbox" id="selectAll"></th>
                     <th width="100">负责人</th>
-                    <th width="120">电话</th>
-                    <th width="150">产品名称</th>
-                    <th width="120">付款方式</th>
-                    <th width="120">编号</th>
-                    <th width="100">部门</th>
+                    <th width="180">电话</th>
+                    <th width="160">产品名称</th>
+                    <th width="200">付款方式</th>
+                    <th width="130">编号</th>
+                    <th width="120">部门</th>
                     <th width="80">单位</th>
-                    <th width="100">职位</th>
-                    <th width="100">采购乙方</th>
+                    <th width="150">职位</th>
+                    <th width="180">采购乙方</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -314,6 +313,49 @@ function setTable(data) {
     bindTableEvents();
     // 绑定全选事件
     bindSelectAllEvent();
+    // 更新统计信息
+    updateStatistics();
+}
+
+// 创建统计栏
+function createStatisticsBar() {
+    // 移除已存在的统计栏
+    $('#statistics-bar').remove();
+
+    // 创建统计栏HTML
+    var statisticsHtml = `
+        <div id="statistics-bar" class="statistics-bar">
+            <div class="statistics-item">
+                <span class="statistics-label">总记录数：</span>
+                <span class="statistics-value total-count">0</span>
+            </div>
+            <div class="statistics-item">
+                <span class="statistics-label">已选中：</span>
+                <span class="statistics-value selected-count">0</span>
+            </div>
+        </div>
+    `;
+
+    // 在表格上方插入统计栏
+    $('.table-div').before(statisticsHtml);
+}
+
+// 更新统计信息
+function updateStatistics() {
+    var selectedCount = $('.row-checkbox:checked').length;
+
+    // 更新总记录数
+    $('.total-count').text(totalCount || 0);
+
+    // 更新选中数量
+    $('.selected-count').text(selectedCount);
+
+    // 如果有选中项，高亮显示
+    if (selectedCount > 0) {
+        $('.selected-count').addClass('highlight');
+    } else {
+        $('.selected-count').removeClass('highlight');
+    }
 }
 
 // 绑定表格事件
@@ -327,6 +369,11 @@ function bindTableEvents() {
             $('.editable-table tbody tr').removeClass('selected-row');
             $(this).addClass('selected-row');
         }
+    });
+
+    // 绑定复选框变化事件来更新统计
+    $('.row-checkbox').off('change').on('change', function() {
+        updateStatistics();
     });
 }
 
@@ -432,6 +479,7 @@ function bindSelectAllEvent() {
     $('#selectAll').off('change').on('change', function() {
         var isChecked = $(this).prop('checked');
         $('.row-checkbox').prop('checked', isChecked);
+        updateStatistics(); // 更新统计信息
     });
 }
 
@@ -512,6 +560,68 @@ function addPaginationStyles() {
             .pagination-info { 
                 color: #6c757d; 
                 font-size: 14px; 
+            }
+        `)
+        .appendTo('head');
+}
+
+// 添加统计栏样式
+function addStatisticsStyles() {
+    if ($('#statistics-styles').length) return;
+
+    $('<style id="statistics-styles">')
+        .prop('type', 'text/css')
+        .html(`
+            .statistics-bar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            }
+            .statistics-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+            }
+            .statistics-label {
+                font-weight: 500;
+                opacity: 0.9;
+            }
+            .statistics-value {
+                font-weight: 600;
+                font-size: 16px;
+                background: rgba(255,255,255,0.2);
+                padding: 4px 12px;
+                border-radius: 20px;
+                min-width: 40px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+            .statistics-value.highlight {
+                background: rgba(255,255,255,0.3);
+                color: #ffeb3b;
+                font-weight: 700;
+                box-shadow: 0 0 10px rgba(255,235,59,0.5);
+            }
+            .total-count {
+                background: rgba(76,175,80,0.3);
+            }
+            .selected-count {
+                background: rgba(255,193,7,0.3);
+            }
+            @media (max-width: 768px) {
+                .statistics-bar {
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: flex-start;
+                }
             }
         `)
         .appendTo('head');

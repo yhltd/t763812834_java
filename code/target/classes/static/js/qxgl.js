@@ -1,7 +1,6 @@
 var idd;
 
 function getList() {
-
     $('#name').val("");
     $ajax({
         type: 'get',
@@ -19,15 +18,17 @@ function getList() {
             if (res.data && res.data.length > 0) {
                 idd = Math.max(...res.data.map(item => item.id));
             }
+            // 更新统计信息
+            updateStatistics();
         } else {
             // 处理权限错误
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");s
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + res.message);
+                swal("查询失败: " + res.message);
             }
         }
     })
@@ -38,9 +39,120 @@ function checkPermission(callback) {
     callback(true);
 }
 
+// 创建统计栏
+function createStatisticsBar() {
+    // 移除已存在的统计栏
+    $('#statistics-bar').remove();
+
+    // 创建统计栏HTML
+    var statisticsHtml = `
+        <div id="statistics-bar" class="statistics-bar">
+            <div class="statistics-item">
+                <span class="statistics-label">总用户数：</span>
+                <span class="statistics-value total-count">0</span>
+            </div>
+            <div class="statistics-item">
+                <span class="statistics-label">已选中：</span>
+                <span class="statistics-value selected-count">0</span>
+            </div>
+        </div>
+    `;
+
+    // 在表格上方插入统计栏
+    $('.table-div').before(statisticsHtml);
+}
+
+// 更新统计信息
+function updateStatistics() {
+    var selectedCount = $('#userTable').bootstrapTable('getSelections').length;
+    var totalCount = $('#userTable').bootstrapTable('getData').length;
+
+    // 更新总记录数
+    $('.total-count').text(totalCount || 0);
+
+    // 更新选中数量
+    $('.selected-count').text(selectedCount);
+
+    // 如果有选中项，高亮显示
+    if (selectedCount > 0) {
+        $('.selected-count').addClass('highlight');
+    } else {
+        $('.selected-count').removeClass('highlight');
+    }
+}
+
+// 添加统计栏样式
+function addStatisticsStyles() {
+    if ($('#statistics-styles').length) return;
+
+    $('<style id="statistics-styles">')
+        .prop('type', 'text/css')
+        .html(`
+            .statistics-bar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            }
+            .statistics-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+            }
+            .statistics-label {
+                font-weight: 500;
+                opacity: 0.9;
+            }
+            .statistics-value {
+                font-weight: 600;
+                font-size: 16px;
+                background: rgba(255,255,255,0.2);
+                padding: 4px 12px;
+                border-radius: 20px;
+                min-width: 40px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+            .statistics-value.highlight {
+                background: rgba(255,255,255,0.3);
+                color: #ffeb3b;
+                font-weight: 700;
+                box-shadow: 0 0 10px rgba(255,235,59,0.5);
+            }
+            .total-count {
+                background: rgba(76,175,80,0.3);
+            }
+            .selected-count {
+                background: rgba(255,193,7,0.3);
+            }
+            @media (max-width: 768px) {
+                .statistics-bar {
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: flex-start;
+                }
+            }
+        `)
+        .appendTo('head');
+}
+
 $(function () {
+    // 添加统计栏样式
+    addStatisticsStyles();
+
     // 页面加载时初始化
     getList();
+
+    // 创建统计栏
+    createStatisticsBar();
+
     // 查询按钮点击事件
     $('#select-btn').click(function () {
         var name = $('#name').val();
@@ -56,6 +168,7 @@ $(function () {
             console.log('查询响应:', res);
             if (res.code == 200) {
                 setTable(res.data);
+                updateStatistics();
                 swal("查询成功", "找到 " + res.data.length + " 条记录", "success");
             } else {
                 swal("查询失败", res.msg, "error");
@@ -280,6 +393,13 @@ $(function () {
     // 实时时间显示
     updateTime();
     setInterval(updateTime, 1000);
+
+    // 绑定表格选择事件来更新统计信息
+    $('#userTable').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {
+        setTimeout(function() {
+            updateStatistics();
+        }, 100);
+    });
 });
 
 // 设置表格数据
@@ -318,11 +438,11 @@ function setTable(data) {
                 width: 100,
                 formatter: function(value) {
                     if (value === '超级管理员') {
-                        return '<span class="badge badge-dark">超级管理员</span>';
+                        return '<span class="badge badge-dark" style="font-size: 13px">超级管理员</span>';
                     } else if (value === '管理员') {
-                        return '<span class="badge badge-danger">管理员</span>';
+                        return '<span class="badge badge-danger" style="font-size: 13px">管理员</span>';
                     } else if (value === '业务员') {
-                        return '<span class="badge badge-success">业务员</span>';
+                        return '<span class="badge badge-success" style="font-size: 13px">业务员</span>';
                     }
                 }
             },
@@ -359,7 +479,10 @@ function setTable(data) {
         //         $(el).addClass('selected')
         //     }
         // }
-    })
+    });
+
+    // 初始化统计信息
+    updateStatistics();
 }
 
 

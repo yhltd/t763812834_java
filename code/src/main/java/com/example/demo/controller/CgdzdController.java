@@ -30,7 +30,7 @@ public class CgdzdController {
      * 分页查询客户信息
      */
     @PostMapping("/distinctPage")
-    public Result<PageResult<Cgmx>> getKhxxList(HttpSession session, @RequestBody PageRequestDTO request) {
+    public Result<PageResult<Cgdzd>> getKhxxList(HttpSession session, @RequestBody PageRequestDTO request) {
         try {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -39,7 +39,7 @@ public class CgdzdController {
             }
 
             // 执行查询
-            PageResult<Cgmx> result = cgdzdService.getCgmxPage(request);
+            PageResult<Cgdzd> result = cgdzdService.getCgmxPage(request);
             return Result.success(result);
 
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class CgdzdController {
                 return Result.error("订单号和订单日期不能为空");
             }
 
-            List<Cgmx> detailList = cgdzdService.getDetailByDdh(ddh);
+            List<Cgdzd> detailList = cgdzdService.getDetailByDdh(ddh);
             return Result.success(detailList);
         } catch (Exception e) {
             e.printStackTrace();

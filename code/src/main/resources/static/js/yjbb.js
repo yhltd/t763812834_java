@@ -1,7 +1,7 @@
 // yjbb.js - 修复版本的ECharts代码
 let processedData = []; // 全局变量
 // 确保DOM完全加载后再执行
-function initChart(chardata,personName){
+function initChart(chardata, personName) {
     console.log('DOM加载完成，开始初始化图表');
 
     // 检查ECharts是否可用
@@ -12,9 +12,9 @@ function initChart(chardata,personName){
 
     // 检查DOM元素是否存在
     const basicChartEl = document.getElementById('basicChart');
+    const statsContainer = document.getElementById('statsContainer');
 
-
-    if (!basicChartEl ) {
+    if (!basicChartEl) {
         console.error('找不到图表容器元素');
         return;
     }
@@ -29,22 +29,108 @@ function initChart(chardata,personName){
 
         // prettier-ignore
         let dataAxis = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-// prettier-ignore
+        // prettier-ignore
         let data = chardata;
         let yMax = 500;
         let dataShadow = [];
+
+        // 计算统计数据
+        const totalSales = data.reduce((sum, value) => sum + value, 0);
+        const averageSales = totalSales / data.length;
+        const maxSales = Math.max(...data);
+        const minSales = Math.min(...data);
+        const maxMonth = dataAxis[data.indexOf(maxSales)];
+        const minMonth = dataAxis[data.indexOf(minSales)];
+
+        // 计算同比增长（假设与上月比较）
+        const growthRates = [];
+        for (let i = 1; i < data.length; i++) {
+            if (data[i - 1] !== 0) {
+                const growth = ((data[i] - data[i - 1]) / data[i - 1] * 100).toFixed(1);
+                growthRates.push({
+                    month: dataAxis[i],
+                    rate: growth
+                });
+            }
+        }
+
+        // 创建统计信息HTML
+        const statsHTML = `
+            <div class="stats-card">
+                <h3>销售统计概览 - ${personName}</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">总销售额</div>
+                        <div class="stat-value">¥${totalSales.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">月均销售额</div>
+                        <div class="stat-value">¥${averageSales.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">最高销售额</div>
+                        <div class="stat-value">¥${maxSales.toLocaleString()} (${maxMonth})</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">最低销售额</div>
+                        <div class="stat-value">¥${minSales.toLocaleString()} (${minMonth})</div>
+                    </div>
+                </div>
+                <div class="monthly-stats">
+                    <h4>月度详细数据</h4>
+                    <div class="monthly-grid">
+                        ${data.map((value, index) => `
+                            <div class="month-item">
+                                <span class="month-name">${dataAxis[index]}:</span>
+                                <span class="month-value">¥${value.toLocaleString()}</span>
+                                ${index > 0 ? `<span class="growth-rate ${value > data[index-1] ? 'positive' : 'negative'}">
+                                    ${value > data[index-1] ? '↑' : '↓'} ${Math.abs(((value - data[index-1]) / data[index-1] * 100)).toFixed(1)}%
+                                </span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 插入统计信息到页面
+        if (statsContainer) {
+            statsContainer.innerHTML = statsHTML;
+        } else {
+            // 如果不存在统计容器，在图表上方创建一个
+            const statsDiv = document.createElement('div');
+            statsDiv.id = 'autoStatsContainer';
+            statsDiv.innerHTML = statsHTML;
+            basicChartEl.parentNode.insertBefore(statsDiv, basicChartEl);
+        }
+
         for (let i = 0; i < data.length; i++) {
             dataShadow.push(yMax);
         }
+
         option = {
             title: {
-                text: '销售额',
-                subtext:personName,
+                text: '销售额统计图表',
+                subtext: personName,
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    const dataIndex = params[0].dataIndex;
+                    let html = `${params[0].name}<br/>`;
+                    html += `${params[0].marker} 销售额: ¥${params[0].value.toLocaleString()}<br/>`;
+
+                    if (dataIndex > 0) {
+                        const growth = ((data[dataIndex] - data[dataIndex-1]) / data[dataIndex-1] * 100).toFixed(1);
+                        html += `环比: ${growth}%`;
+                    }
+                    return html;
+                }
             },
             xAxis: {
                 data: dataAxis,
                 axisLabel: {
-
                     color: '#000000'
                 },
                 axisTick: {
@@ -53,7 +139,6 @@ function initChart(chardata,personName){
                 },
                 axisLine: {
                     show: true
-
                 },
                 z: 10
             },
@@ -65,18 +150,19 @@ function initChart(chardata,personName){
                     show: false
                 },
                 axisLabel: {
-                    color: '#999'
+                    color: '#999',
+                    formatter: '¥{value}'
                 }
             },
             dataZoom: [
                 {
-                    type: 'slider', // 滑动条型数据区域缩放组件
+                    type: 'slider',
                     show: true,
                     xAxisIndex: [0],
-                    bottom: 10, // 距离容器底部的距离
-                    height: 30, // 组件高度
-                    start: 0, // 数据窗口范围的起始百分比
-                    end: 100 // 数据窗口范围的结束百分比
+                    bottom: 10,
+                    height: 30,
+                    start: 0,
+                    end: 100
                 }
             ],
             series: [
@@ -84,7 +170,7 @@ function initChart(chardata,personName){
                     type: 'bar',
                     showBackground: true,
                     backgroundStyle: {
-                        color: 'rgba(255,255,255,0)' // 设置背景条颜色
+                        color: 'rgba(255,255,255,0)'
                     },
                     itemStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -104,47 +190,135 @@ function initChart(chardata,personName){
                     },
                     data: data,
                     label: {
-                        show: true, // 显示标签
-                        position: 'top', // 标签位置：top-柱子上方，inside-柱子内部
-                        formatter: '{c}', // 显示数据值，{c} 表示数据值
-                        color: '#333', // 标签颜色
+                        show: true,
+                        position: 'top',
+                        formatter: '¥{c}',
+                        color: '#333',
                         fontSize: 12,
                         fontWeight: 'bold'
                     }
                 }
             ]
         };
-// Enable data zoom when user click bar.
+
+        // Enable data zoom when user click bar.
         const zoomSize = 6;
         basicChart.on('click', function (params) {
             console.log(dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)]);
             basicChart.dispatchAction({
                 type: 'dataZoom',
                 startValue: dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)],
-                endValue:
-                    dataAxis[Math.min(params.dataIndex + zoomSize / 2, data.length - 1)]
+                endValue: dataAxis[Math.min(params.dataIndex + zoomSize / 2, data.length - 1)]
             });
         });
 
         option && basicChart.setOption(option);
         console.log('所有图表配置应用成功');
 
-        // 窗口调整大小时重绘图表
-        // window.addEventListener('resize', function() {
-        //     basicChart.resize();
-        // });
-
     } catch (error) {
         console.error('初始化图表时出错:', error);
     }
-};
+}
+
+// 添加CSS样式
+const style = document.createElement('style');
+style.textContent = `
+.stats-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stats-card h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 4px solid #1890ff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.monthly-stats h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.monthly-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.month-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.month-name {
+    color: #666;
+}
+
+.month-value {
+    font-weight: bold;
+    color: #333;
+}
+
+.growth-rate {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+
+.growth-rate.positive {
+    background: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+}
+
+.growth-rate.negative {
+    background: #fff2f0;
+    color: #ff4d4f;
+    border: 1px solid #ffccc7;
+}
+`;
+document.head.appendChild(style);
 function onYearChange(Year) {
     getList();
-    // 年份变化时也触发人员下拉框的改变事件
-    const personSelect = document.getElementById('fzrDropdown');
-    if (personSelect && personSelect.value) {
-        onPersonChange(personSelect.value);
-    }
+
 }
 // 当下拉框选择变化时
 function onPersonChange(personName) {
@@ -220,9 +394,17 @@ function getList(page, size, keyword) {
             totalCount = processedData.length;
             totalPages  = Math.ceil(totalCount / pageSize);
             updatePagination();
+
+            // 数据加载完成后，自动更新图表（如果有选中的负责人）
+            const personSelect = document.getElementById('fzrDropdown');
+            if (personSelect && personSelect.value) {
+                setTimeout(() => {
+                    onPersonChange(personSelect.value);
+                }, 100);
+            }
         } else {
             console.error("查询失败:", res.message);
-            alert("查询失败: " + res.message);
+            swal("查询失败: " + res.message);
         }
     })
 }
@@ -242,7 +424,7 @@ function getfzr() {
             populateFzrDropdownJQuery(res.data);
         } else {
             console.error("查询失败:", res.message);
-            alert("查询失败: " + res.message);
+            swal("查询失败: " + res.message);
         }
     })
 }
@@ -383,7 +565,7 @@ function bindPaginationEvents() {
             currentPage = targetPage;
             getList(currentPage, pageSize, getCurrentKeyword());
         } else {
-            alert('请输入有效的页码（1-' + totalPages + '）');
+            swal('请输入有效的页码（1-' + totalPages + '）');
         }
     });
 
@@ -417,6 +599,22 @@ function fillTable(data) {
     // 创建表头
     var tableHeader = `
         <thead >
+         <tr style="color:#eb6464;font-size: 10px">
+                <th >表格内数据为该年每月销售额</th>
+                <th ></th>
+                <th></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+                <th ></th>
+            </tr>
             <tr>
                 <th >工号</th>
                 <th >姓名</th>
@@ -573,11 +771,6 @@ function initToolbarEvents() {
     $('#select-btn').click(function () {
 
         getList();
-        const personSelect = document.getElementById('fzrDropdown');
-        if (personSelect && personSelect.value) {
-            onPersonChange(personSelect.value);
-        }
-
     });
 
 }

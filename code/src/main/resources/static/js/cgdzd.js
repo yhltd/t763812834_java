@@ -399,7 +399,7 @@ function initToolbarEvents() {
         console.log('打印按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要打印的订单信息');
+            swal('请选择要打印的订单信息');
             return;
         }
         // 调用打印功能
@@ -411,7 +411,7 @@ function initToolbarEvents() {
         console.log('撤回对账按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要撤回对账的订单信息');
+            swal('请选择要撤回对账的订单信息');
             return;
         }
         // 调用撤回对账功能
@@ -421,7 +421,7 @@ function initToolbarEvents() {
 
 function printDzd(rowData) {
     if (!rowData || !rowData.ddh) {
-        alert('无法获取订单信息');
+        swal('无法获取订单信息');
         return;
     }
 
@@ -438,11 +438,11 @@ function printDzd(rowData) {
                     generatePrintContent(rowData, detailData);
                     // 注意：这里不需要再调用刷新，因为updateDzztStatus中已经调用了
                 } else {
-                    alert('无法获取订单详细信息');
+                    swal('无法获取订单详细信息');
                 }
             });
         } else {
-            alert('更新对账状态失败，无法打印');
+            swal('更新对账状态失败，无法打印');
         }
     });
 }
@@ -450,7 +450,7 @@ function printDzd(rowData) {
 // 撤回对账功能
 function withdrawDzd(rowData) {
     if (!rowData || !rowData.ddh) {
-        alert('无法获取订单信息');
+        swal('无法获取订单信息');
         return;
     }
 
@@ -461,9 +461,9 @@ function withdrawDzd(rowData) {
     // 更新对账状态为"未对账"
     updateDzztStatus(rowData.ddh, '未对账', function(success) {
         if (success) {
-            alert('撤回对账成功');
+            swal('撤回对账成功');
         } else {
-            alert('撤回对账失败');
+            swal('撤回对账失败');
         }
     });
 }
@@ -895,12 +895,12 @@ function getList(page, size, keyword) {
 
             // 处理权限错误
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + res.message);
+                swal("查询失败: " + res.message);
             }
         }
     });
@@ -1193,7 +1193,7 @@ function bindPaginationEvents() {
             currentPage = targetPage;
             getList(currentPage, pageSize, getSearchParams());
         } else {
-            alert('请输入有效的页码（1-' + totalPages + '）');
+            swal('请输入有效的页码（1-' + totalPages + '）');
         }
     });
 

@@ -143,7 +143,7 @@ function initDetailModalEvents() {
     // 打印按钮 - 修改为打印选中产品
     $('#detailPrintBtn').off('click').on('click', function() {
         if (selectedWorkOrders.length === 0) {
-            alert('请至少选择一个产品进行打印');
+            swal('请至少选择一个产品进行打印');
             return;
         }
 
@@ -152,7 +152,7 @@ function initDetailModalEvents() {
             // 只打印选中的产品
             printSelectedProducts(rowData, selectedWorkOrders);
         } else {
-            alert('无法获取打印数据');
+            swal('无法获取打印数据');
         }
     });
 
@@ -182,7 +182,7 @@ function initDetailModalEvents() {
 // 添加录库函数 - 保存到订单明细表
 function saveToOrderDetail() {
     if (!currentId || !currentDetailData) {
-        alert('无法获取订单数据');
+        swal('无法获取订单数据');
         return;
     }
 
@@ -200,7 +200,7 @@ function saveToOrderDetail() {
 // 删除当前订单函数
 function deleteCurrentOrder() {
     if (!currentId) {
-        alert('无法获取订单ID');
+        swal('无法获取订单ID');
         return;
     }
 
@@ -229,18 +229,18 @@ function deleteCurrentOrder() {
             $('#deleteOrderBtn').prop('disabled', false).html('<i class="bi bi-trash"></i> 删除');
 
             if (result.success) {
-                alert('订单删除成功');
+                swal('订单删除成功');
                 // 关闭模态框
                 $('#detailModal').modal('hide');
                 // 刷新数据列表
                 getList(currentPage, pageSize, getSearchParams());
             } else {
-                alert('删除失败: ' + result.message);
+                swal('删除失败: ' + result.message);
             }
         },
         error: function(xhr, status, error) {
             $('#deleteOrderBtn').prop('disabled', false).html('<i class="bi bi-trash"></i> 删除');
-            alert('请求失败: ' + error);
+            swal('请求失败: ' + error);
         }
     });
 }
@@ -249,7 +249,7 @@ function deleteCurrentOrder() {
 function checkContractNumberExists() {
     var contractNumber = currentDetailData.htbh || '';
     if (!contractNumber) {
-        alert('合同编号为空，无法进行检查');
+        swal('合同编号为空，无法进行检查');
         $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
         return;
     }
@@ -265,19 +265,19 @@ function checkContractNumberExists() {
             if (result.success) {
                 if (result.exists) {
                     // 合同号已存在，不允许录库
-                    alert('订单明细表中已存在合同编号为 "' + contractNumber + '" 的记录，不予录库');
+                    swal('订单明细表中已存在合同编号为 "' + contractNumber + '" 的记录，不予录库');
                     $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
                 } else {
                     // 合同号不存在，继续录库操作
                     proceedWithSaveToOrderDetail();
                 }
             } else {
-                alert('检查合同号失败: ' + result.message);
+                swal('检查合同号失败: ' + result.message);
                 $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
             }
         },
         error: function(xhr, status, error) {
-            alert('检查合同号请求失败: ' + error);
+            swal('检查合同号请求失败: ' + error);
             $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
         }
     });
@@ -287,7 +287,7 @@ function checkContractNumberExists() {
 function proceedWithSaveToOrderDetail() {
     // 验证产品单位数据是否已加载
     if (!chanpindanwei || chanpindanwei.length === 0) {
-        alert('产品单位数据未加载，请稍后重试');
+        swal('产品单位数据未加载，请稍后重试');
         $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
         return;
     }
@@ -299,7 +299,7 @@ function proceedWithSaveToOrderDetail() {
     console.log('产品数量:', products.length);
 
     if (products.length === 0) {
-        alert('未找到产品数据，请检查订单详情');
+        swal('未找到产品数据，请检查订单详情');
         $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
         return;
     }
@@ -368,7 +368,7 @@ function proceedWithSaveToOrderDetail() {
         var missingList = missingUnits.join('、');
         if (saveDataArray.length === 0) {
             // 所有产品都找不到单位
-            alert('以下产品未找到对应的单位：' + missingList + '\n请先添加这些产品的单位信息');
+            swal('以下产品未找到对应的单位：' + missingList + '\n请先添加这些产品的单位信息');
             $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
             return;
         } else {
@@ -381,7 +381,7 @@ function proceedWithSaveToOrderDetail() {
     }
 
     if (saveDataArray.length === 0) {
-        alert('没有有效的数据可以保存');
+        swal('没有有效的数据可以保存');
         $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
         return;
     }
@@ -400,13 +400,13 @@ function proceedWithSaveToOrderDetail() {
                 updateProductionOrderStatus();
             } else {
                 $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
-                alert('录库失败: ' + result.message);
+                swal('录库失败: ' + result.message);
                 console.error('后端返回错误:', result);
             }
         },
         error: function(xhr, status, error) {
             $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
-            alert('请求失败: ' + error);
+            swal('请求失败: ' + error);
             console.error('请求错误详情:', xhr.responseText);
         }
     });
@@ -431,7 +431,7 @@ function updateProductionOrderStatus() {
                 // 刷新数据列表
                 getList(currentPage, pageSize, getSearchParams());
             } else {
-                alert('录库成功，但下单明细数据清除失败: ' + result.message);
+                swal('录库成功，但下单明细数据清除失败: ' + result.message);
                 // 即使状态更新失败，也关闭模态框和刷新数据
                 $('#detailModal').modal('hide');
                 getList(currentPage, pageSize, getSearchParams());
@@ -439,7 +439,7 @@ function updateProductionOrderStatus() {
         },
         error: function(xhr, status, error) {
             $('#saveToOrderDetailBtn').prop('disabled', false).html('<i class="bi bi-save"></i> 录库');
-            alert('录库成功，但下单明细数据清除失败: ' + error);
+            swal('录库成功，但下单明细数据清除失败: ' + error);
             // 即使状态更新失败，也关闭模态框和刷新数据
             $('#detailModal').modal('hide');
             getList(currentPage, pageSize, getSearchParams());
@@ -632,7 +632,7 @@ function validateAndCleanProductUnitData() {
 // 添加驳回订单函数
 function rejectOrder() {
     if (!currentId) {
-        alert('无法获取订单ID');
+        swal('无法获取订单ID');
         return;
     }
 
@@ -654,18 +654,18 @@ function rejectOrder() {
             $('#rejectBtn').prop('disabled', false).html('<i class="bi bi-x-circle"></i> 驳回');
 
             if (result.success) {
-                alert('订单驳回成功');
+                swal('订单驳回成功');
                 // 关闭模态框
                 $('#detailModal').modal('hide');
                 // 刷新数据列表
                 getList(currentPage, pageSize, getSearchParams());
             } else {
-                alert('驳回失败: ' + result.message);
+                swal('驳回失败: ' + result.message);
             }
         },
         error: function(xhr, status, error) {
             $('#rejectBtn').prop('disabled', false).html('<i class="bi bi-x-circle"></i> 驳回');
-            alert('请求失败: ' + error);
+            swal('请求失败: ' + error);
         }
     });
 }
@@ -716,12 +716,12 @@ function getList(page, size, searchParams) {
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + res.message);
+                swal("查询失败: " + res.message);
             }
         }
     });
@@ -843,7 +843,7 @@ function bindDetailButtonEvents() {
 // 删除订单函数
 function deleteOrder(id, khcm) {
     if (!id) {
-        alert('无法获取订单ID');
+        swal('无法获取订单ID');
         return;
     }
 
@@ -869,16 +869,16 @@ function deleteOrder(id, khcm) {
             deleteBtn.prop('disabled', false).html(originalHtml);
 
             if (result.success) {
-                alert('订单删除成功');
+                swal('订单删除成功');
                 // 刷新数据列表
                 getList(currentPage, pageSize, getSearchParams());
             } else {
-                alert('删除失败: ' + result.message);
+                swal('删除失败: ' + result.message);
             }
         },
         error: function(xhr, status, error) {
             deleteBtn.prop('disabled', false).html(originalHtml);
-            alert('请求失败: ' + error);
+            swal('请求失败: ' + error);
         }
     });
 }
@@ -1263,7 +1263,7 @@ function getSelectedRow() {
 // 打印选中的产品
 function printSelectedProducts(rowData, selectedProductIndexes) {
     if (selectedProductIndexes.length === 0) {
-        alert('请选择一个产品进行打印');
+        swal('请选择一个产品进行打印');
         return;
     }
 
@@ -1325,11 +1325,11 @@ function printSingleProduct(rowData, productIndex) {
                     // 保存到数据库
                     saveWorkOrdersAndPrintCounts(rowData.id);
                 } else {
-                    alert('获取打印数据失败: ' + result.message);
+                    swal('获取打印数据失败: ' + result.message);
                 }
             },
             error: function(xhr, status, error) {
-                alert('请求失败: ' + error);
+                swal('请求失败: ' + error);
             }
         });
     }
@@ -1386,7 +1386,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
         var printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
 
         if (!printWindow) {
-            alert('打印窗口被浏览器拦截，请允许弹出窗口后重试。');
+            swal('打印窗口被浏览器拦截，请允许弹出窗口后重试。');
             return null;
         }
 
@@ -1490,7 +1490,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
         return printWindow;
     } catch (error) {
         console.error('生成打印内容失败:', error);
-        alert('打印失败: ' + error);
+        swal('打印失败: ' + error);
         return null;
     }
 }

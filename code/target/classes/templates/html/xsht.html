@@ -25,17 +25,36 @@
     <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
 
     <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --primary-light: #4a76c4;
+            --secondary-color: #f8f9fa;
+            --accent-color: #ff6b35;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --text-color: #333;
+            --text-light: #6c757d;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
             padding: 20px;
-            color: #333;
         }
 
         .container {
@@ -46,19 +65,42 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
+            padding: 15px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
         }
 
         .header h1 {
-            color: #2c3e50;
+            color: var(--primary-color);
             margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 35px;
         }
 
         .invoice-container {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 30px;
             margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .invoice-container:hover {
+            box-shadow: var(--shadow-hover);
         }
 
         .invoice-header {
@@ -66,7 +108,7 @@
             justify-content: space-between;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #3498db;
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .company-info {
@@ -93,13 +135,13 @@
         .client-info, .invoice-meta {
             background: #f8f9fa;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: var(--radius);
         }
 
         .section-title {
             font-weight: bold;
             margin-bottom: 10px;
-            color: #2c3e50;
+            color: var(--primary-color);
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
         }
@@ -109,14 +151,18 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 12px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border-color);
         }
 
         .items-table th {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
             padding: 8px 10px;
             text-align: center;
             border: 1px solid #ddd;
+            font-weight: 600;
         }
 
         .items-table td {
@@ -129,6 +175,10 @@
             background-color: #f8f9fa;
         }
 
+        .items-table tr:hover {
+            background-color: rgba(44, 90, 160, 0.05);
+        }
+
         .summary {
             display: flex;
             justify-content: flex-end;
@@ -138,6 +188,9 @@
         .summary-table {
             width: 300px;
             border-collapse: collapse;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border-color);
         }
 
         .summary-table td {
@@ -167,30 +220,49 @@
         }
 
         .btn {
-            padding: 10px 20px;
+            /*padding: 10px 20px;*/
             border: none;
-            border-radius: 5px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-size: 16px;
-            transition: all 0.3s;
+            transition: var(--transition);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn-primary {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: #2980b9;
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(44, 90, 160, 0.3);
         }
 
         .btn-success {
-            background-color: #2ecc71;
+            background-color: var(--success-color);
             color: white;
         }
 
         .btn-success:hover {
-            background-color: #27ae60;
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
         }
 
         .form-group {
@@ -200,14 +272,22 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-weight: bold;
+            font-weight: 600;
+            color: var(--text-color);
         }
 
         .form-control {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
         }
 
         .input-row {
@@ -221,23 +301,43 @@
 
         .form-section {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 20px;
             margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .form-section:hover {
+            box-shadow: var(--shadow-hover);
         }
 
         .form-section h3 {
             margin-bottom: 15px;
-            color: #2c3e50;
+            color: var(--primary-color);
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .form-section h4 {
+            margin: 20px 0 15px;
+            color: var(--primary-color);
+            font-weight: 600;
         }
 
         .item-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            transition: var(--transition);
+        }
+
+        .item-row:hover {
+            background: #f0f4ff;
         }
 
         .item-row .form-group {
@@ -250,12 +350,14 @@
         }
 
         .btn-danger {
-            background-color: #e74c3c;
+            background-color: var(--danger-color);
             color: white;
         }
 
         .btn-danger:hover {
             background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
         }
 
         .signature-table {
@@ -271,9 +373,10 @@
         }
 
         .contract-title {
-            color: red;
+            color: var(--primary-color);
             font-size: 24px;
             margin: 10px 0;
+            font-weight: 600;
         }
 
         .page-info {
@@ -296,167 +399,110 @@
             position: relative;
         }
 
-        /* 打印样式 - 修复版 */
+        /* 打印样式 */
         @media print {
             @page {
                 size: A4;
-                margin: 15mm;
+                margin: 20mm;
             }
 
             body {
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                font-size: 12pt !important;
-                line-height: 1.4 !important;
-                color: black !important;
+                background: white;
+                padding: 0;
             }
 
             .container {
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
+                max-width: 100%;
+                margin: 0;
             }
 
             .invoice-container {
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-                background: white !important;
+                box-shadow: none;
+                padding: 0;
             }
 
             .action-buttons, .header h1, .form-section {
-                display: none !important;
+                display: none;
             }
 
             .invoice-header {
-                margin-bottom: 20px !important;
-                border-bottom: 2px solid #3498db !important;
+                margin-bottom: 20px;
             }
 
             /* 确保在打印时分页 */
             .invoice-container {
-                page-break-after: always !important;
+                page-break-after: always;
             }
 
             .invoice-container:last-child {
-                page-break-after: avoid !important;
+                page-break-after: avoid;
             }
 
-            /* 打印时印章显示 - 修复 */
+            /* 打印时印章显示 */
             .seal-overlay {
-                opacity: 1 !important;
-                display: block !important;
-                visibility: visible !important;
-                position: absolute !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                z-index: 1000 !important;
+                opacity: 1;
             }
+        }
 
-            .seal-overlay img {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 180px !important;
-                height: auto !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
 
-            /* 确保footer在打印时正确显示 */
-            .footer {
-                display: flex !important;
-                justify-content: space-between !important;
-                margin-top: 30px !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
 
-            .footer-left, .footer-right {
-                width: 48% !important;
-                position: relative !important;
-                page-break-inside: avoid !important;
-            }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 3px;
+        }
 
-            /* 表格样式调整 */
-            .signature-table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                font-size: 11pt !important;
-            }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
 
-            .signature-table td {
-                padding: 4px 8px !important;
-                border: 1px solid #000 !important;
-                height: 25px !important;
-                vertical-align: middle !important;
-            }
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
 
-            /* 确保内容不会在奇怪的位置分页 */
-            .invoice-details, .items-table, .summary, .notes {
-                page-break-inside: avoid !important;
-            }
+        .status-draft {
+            background-color: var(--warning-color);
+        }
 
-            /* 调整产品表格的打印样式 */
-            .items-table {
-                font-size: 10pt !important;
-            }
+        .status-completed {
+            background-color: var(--success-color);
+        }
 
-            .items-table th, .items-table td {
-                padding: 4px 6px !important;
-                border: 1px solid #000 !important;
-            }
+        .status-pending {
+            background-color: var(--accent-color);
+        }
 
-            .items-table th {
-                background-color: #3498db !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
+        /* 模态框样式 */
+        .modal-content {
+            border-radius: var(--radius);
+            border: none;
+            box-shadow: var(--shadow-hover);
+        }
 
-            /* 调整其他元素的打印样式 */
-            .client-info, .invoice-meta {
-                background: #f8f9fa !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius) var(--radius) 0 0;
+            border-bottom: none;
+        }
 
-            .summary-table tr:last-child {
-                background-color: #f1f8ff !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
+        .modal-title {
+            font-weight: 600;
+        }
 
-            .contract-title {
-                color: red !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-
-            /* 强制所有元素在打印时正确显示 */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-
-            /* 隐藏不必要的元素 */
-            .seal-container::before, .seal-container::after {
-                display: none !important;
-            }
-
-            /* 确保图片和背景在打印时显示 */
-            img {
-                max-width: 100% !important;
-                height: auto !important;
-            }
-
-            .company-info img {
-                display: block !important;
-                visibility: visible !important;
-            }
+        .btn-close {
+            filter: invert(1);
         }
     </style>
 </head>
@@ -467,7 +513,7 @@
     </div>
 
     <div class="form-section">
-        <h3>填写合同信息</h3>
+        <h3><i class="bi bi-pencil-square"></i> 填写合同信息</h3>
 
         <div class="input-row">
             <div class="form-group">
@@ -570,15 +616,21 @@
                 </div>
                 <div class="form-group">
                     <label>操作</label>
-                    <button type="button" class="btn btn-danger remove-item">删除</button>
+                    <button type="button" class="btn btn-danger remove-item">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
                 </div>
             </div>
         </div>
 
-        <button type="button" id="addItem" class="btn btn-primary">添加产品</button>
+        <button type="button" id="addItem" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 添加产品
+        </button>
 
         <div class="action-buttons">
-            <button id="generateInvoice" class="btn btn-success">生成合同</button>
+            <button id="generateInvoice" class="btn btn-success">
+                <i class="bi bi-check-lg"></i> 生成合同
+            </button>
         </div>
     </div>
 

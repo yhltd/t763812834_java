@@ -20,12 +20,12 @@ public interface CgdzdService extends IService<Cgdzd> {
     /**
      * 分页查询客户信息
      */
-    PageResult<Cgmx> getCgmxPage(PageRequestDTO request);
+    PageResult<Cgdzd> getCgmxPage(PageRequestDTO request);
 
     /**
      * 根据订单号获取详细信息
      */
-    List<Cgmx> getDetailByDdh(String ddh);
+    List<Cgdzd> getDetailByDdh(String ddh);
 
 
     /**

@@ -83,7 +83,7 @@ function initToolbarEvents() {
         console.log('打印按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要打印的订单信息');
+            swal('请选择要打印的订单信息');
             return;
         }
         // 调用打印功能
@@ -95,7 +95,7 @@ function initToolbarEvents() {
         console.log('撤回对账按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要撤回对账的订单信息');
+            swal('请选择要撤回对账的订单信息');
             return;
         }
         // 调用撤回对账功能
@@ -105,7 +105,7 @@ function initToolbarEvents() {
 
 function printDzd(rowData) {
     if (!rowData || !rowData.ddh) {
-        alert('无法获取订单信息');
+        swal('无法获取订单信息');
         return;
     }
 
@@ -122,11 +122,11 @@ function printDzd(rowData) {
                     generatePrintContent(rowData, detailData);
                     // 注意：这里不需要再调用刷新，因为updateDzztStatus中已经调用了
                 } else {
-                    alert('无法获取订单详细信息');
+                    swal('无法获取订单详细信息');
                 }
             });
         } else {
-            alert('更新对账状态失败，无法打印');
+            swal('更新对账状态失败，无法打印');
         }
     });
 }
@@ -134,7 +134,7 @@ function printDzd(rowData) {
 // 撤回对账功能
 function withdrawDzd(rowData) {
     if (!rowData || !rowData.ddh) {
-        alert('无法获取订单信息');
+        swal('无法获取订单信息');
         return;
     }
 
@@ -504,12 +504,12 @@ function getList(page, size, searchParams) {
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + (res.message || '未知错误'));
+                swal("查询失败: " + (res.message || '未知错误'));
             }
         }
     });
@@ -657,7 +657,7 @@ function bindViewPdfEvents() {
         console.log('查看PDF按钮点击，订单号:', ddh);
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -680,7 +680,7 @@ function bindUploadPdfEvents() {
         console.log('上传PDF按钮点击，订单号:', ddh, '找到文件输入框:', $fileInput.length);
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -703,14 +703,14 @@ function bindUploadPdfEvents() {
 
         // 验证文件类型
         if (file.type !== 'application/pdf') {
-            alert('请选择PDF文件');
+            swal('请选择PDF文件');
             $(this).val('');
             return;
         }
 
         // 验证文件大小（限制为10MB）
         if (file.size > 10 * 1024 * 1024) {
-            alert('文件大小不能超过10MB');
+            swal('文件大小不能超过10MB');
             $(this).val('');
             return;
         }
@@ -732,7 +732,7 @@ function bindDeletePdfEvents() {
         var ddh = $btn.data('ddh');
 
         if (!ddh) {
-            alert('订单号不能为空');
+            swal('订单号不能为空');
             return;
         }
 
@@ -748,7 +748,7 @@ function bindDeletePdfEvents() {
 // 上传PDF文件
 function uploadPdfFile(ddh, file) {
     if (!ddh || !file) {
-        alert('参数错误');
+        swal('参数错误');
         return;
     }
 
@@ -772,25 +772,25 @@ function uploadPdfFile(ddh, file) {
             hideLoading();
             if (res.code === 200) {
                 console.log("PDF文件上传成功", res);
-                alert('PDF文件上传成功！');
+                swal('PDF文件上传成功！');
                 // 上传成功后刷新数据
                 getList(currentPage, pageSize, getSearchParams());
             } else {
                 console.error("PDF文件上传失败:", res.message);
-                alert("PDF文件上传失败: " + (res.message || '未知错误'));
+                swal("PDF文件上传失败: " + (res.message || '未知错误'));
             }
         })
         .catch(error => {
             hideLoading();
             console.error("上传请求失败:", error);
-            alert("上传请求失败，请检查网络连接");
+            swal("上传请求失败，请检查网络连接");
         });
 }
 
 // 查看PDF文件（在线预览）- 修正版
 function viewPdfFile(ddh) {
     if (!ddh) {
-        alert('订单号不能为空');
+        swal('订单号不能为空');
         return;
     }
 
@@ -804,7 +804,7 @@ function viewPdfFile(ddh) {
 // 删除PDF文件
 function deletePdfFile(ddh, $btn) {
     if (!ddh) {
-        alert('订单号不能为空');
+        swal('订单号不能为空');
         return;
     }
 
@@ -832,13 +832,13 @@ function deletePdfFile(ddh, $btn) {
 
         if (res.code === 200) {
             console.log("PDF文件删除成功");
-            alert('PDF文件删除成功！');
+            swal('PDF文件删除成功！');
 
             // 删除成功后刷新数据
             getList(currentPage, pageSize, getSearchParams());
         } else {
             console.error("PDF文件删除失败:", res.message);
-            alert("PDF文件删除失败: " + (res.message || '未知错误'));
+            swal("PDF文件删除失败: " + (res.message || '未知错误'));
         }
     }).fail(function(xhr, status, error) {
         hideLoading();
@@ -848,7 +848,7 @@ function deletePdfFile(ddh, $btn) {
         }
 
         console.error("删除请求失败:", error);
-        alert("删除请求失败，请检查网络连接");
+        swal("删除请求失败，请检查网络连接");
     });
 }
 
@@ -1226,7 +1226,7 @@ function bindPaginationEvents() {
             currentPage = targetPage;
             getList(currentPage, pageSize, getSearchParams());
         } else {
-            alert('请输入有效的页码（1-' + totalPages + '）');
+            swal('请输入有效的页码（1-' + totalPages + '）');
         }
     });
 

@@ -505,7 +505,7 @@
 //     $('#add-btn1').click(function () {
 //
 //         if($('#shdw').prop("disabled") == false){
-//             alert("未点击固定条件，不可以增行！")
+//             swal("未点击固定条件，不可以增行！")
 //             return;
 //         }
 //         document.getElementById("kddh").disabled = true;
@@ -601,7 +601,7 @@
 //     })
 //     $('#add-btn3').click(function () {
 //         if($('#shdw').prop("disabled") == false){
-//             alert("未点击固定条件，不可以增行！")
+//             swal("未点击固定条件，不可以增行！")
 //             return;
 //         }
 //         document.getElementById("kddh").disabled = true;
@@ -674,7 +674,7 @@
 //     })
 //     $('#add-btn4').click(function () {
 //         if($('#shdw').prop("disabled") == false){
-//             alert("未点击固定条件，不可以增行！")
+//             swal("未点击固定条件，不可以增行！")
 //             return;
 //         }
 //         document.getElementById("kddh").disabled = true;
@@ -1930,7 +1930,7 @@ $(function () {
     $('#add-btn1').click(function () {
 
         if($('#shdw').prop("disabled") == false){
-            alert("未点击固定条件，不可以增行！")
+            swal("未点击固定条件，不可以增行！")
             return;
         }
         document.getElementById("kddh").disabled = true;
@@ -2026,7 +2026,7 @@ $(function () {
     })
     $('#add-btn3').click(function () {
         if($('#shdw').prop("disabled") == false){
-            alert("未点击固定条件，不可以增行！")
+            swal("未点击固定条件，不可以增行！")
             return;
         }
         document.getElementById("kddh").disabled = true;
@@ -2099,7 +2099,7 @@ $(function () {
     })
     $('#add-btn4').click(function () {
         if($('#shdw').prop("disabled") == false){
-            alert("未点击固定条件，不可以增行！")
+            swal("未点击固定条件，不可以增行！")
             return;
         }
         document.getElementById("kddh").disabled = true;

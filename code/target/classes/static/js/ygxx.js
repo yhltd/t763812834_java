@@ -32,10 +32,113 @@ function getTableSelection(tableId) {
     return $(tableId).bootstrapTable('getSelections');
 }
 
+// 创建统计栏
+function createStatisticsBar() {
+    // 移除已存在的统计栏
+    $('#statistics-bar').remove();
+
+    // 创建统计栏HTML
+    var statisticsHtml = `
+        <div id="statistics-bar" class="statistics-bar">
+            <div class="statistics-item">
+                <span class="statistics-label">总员工数：</span>
+                <span class="statistics-value total-count">0</span>
+            </div>
+            <div class="statistics-item">
+                <span class="statistics-label">已选中：</span>
+                <span class="statistics-value selected-count">0</span>
+            </div>
+        </div>
+    `;
+
+    // 在表格上方插入统计栏
+    $('.table-div').before(statisticsHtml);
+}
+
+// 更新统计信息
+function updateStatistics() {
+    var selectedCount = $('#ygxxTable').bootstrapTable('getSelections').length;
+    var totalCount = $('#ygxxTable').bootstrapTable('getData').length;
+
+    // 更新总记录数
+    $('.total-count').text(totalCount || 0);
+
+    // 更新选中数量
+    $('.selected-count').text(selectedCount);
+
+    // 如果有选中项，高亮显示
+    if (selectedCount > 0) {
+        $('.selected-count').addClass('highlight');
+    } else {
+        $('.selected-count').removeClass('highlight');
+    }
+}
+
+// 添加统计栏样式
+function addStatisticsStyles() {
+    if ($('#statistics-styles').length) return;
+
+    $('<style id="statistics-styles">')
+        .prop('type', 'text/css')
+        .html(`
+            .statistics-bar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            }
+            .statistics-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+            }
+            .statistics-label {
+                font-weight: 500;
+                opacity: 0.9;
+            }
+            .statistics-value {
+                font-weight: 600;
+                font-size: 16px;
+                background: rgba(255,255,255,0.2);
+                padding: 4px 12px;
+                border-radius: 20px;
+                min-width: 40px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+            .statistics-value.highlight {
+                background: rgba(255,255,255,0.3);
+                color: #ffeb3b;
+                font-weight: 700;
+                box-shadow: 0 0 10px rgba(255,235,59,0.5);
+            }
+            .total-count {
+                background: rgba(76,175,80,0.3);
+            }
+            .selected-count {
+                background: rgba(255,193,7,0.3);
+            }
+            @media (max-width: 768px) {
+                .statistics-bar {
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: flex-start;
+                }
+            }
+        `)
+        .appendTo('head');
+}
+
 // 设置表格数据的函数 - 确保正确销毁
 function setTable(data) {
     console.log('设置表格数据:', data);
-
 
     // 为每条数据添加自动递增的序号
     const dataWithAutoXh = data.map((item, index) => {
@@ -46,7 +149,6 @@ function setTable(data) {
     });
 
     console.log('添加自动序号后的数据:', dataWithAutoXh);
-
 
     // 完全销毁表格
     if ($('#ygxxTable').bootstrapTable) {
@@ -70,7 +172,8 @@ function setTable(data) {
         toolbar: '#table-toolbar',
         toolbarAlign: 'left',
         theadClasses: "thead-light",
-        style: 'table-layout: fixed',        columns: [
+        style: 'table-layout: fixed',
+        columns: [
             {
                 field: 'state',
                 checkbox: true,
@@ -139,6 +242,9 @@ function setTable(data) {
             }
         }
     });
+
+    // 更新统计信息
+    updateStatistics();
 }
 
 function getList() {
@@ -155,15 +261,17 @@ function getList() {
                     draggingClass: "dragging",
                     resizeMode: 'fit'
                 });
-            }else{
+                // 更新统计信息
+                updateStatistics();
+            } else {
                 // 处理权限错误
                 if (res.code === 401) {
-                    alert("登录已过期，请重新登录");
+                    swal("登录已过期，请重新登录");
                     window.location.href = "/login.html";
                 } else if (res.code === 403) {
-                    alert("权限不足，无法访问此功能");
+                    swal("权限不足，无法访问此功能");
                 } else {
-                    alert("查询失败: " + res.message);
+                    swal("查询失败: " + res.message);
                 }
             }
         },
@@ -190,12 +298,25 @@ function updateTime() {
 }
 
 $(function () {
+    // 添加统计栏样式
+    addStatisticsStyles();
+
+    // 创建统计栏
+    createStatisticsBar();
+
     // 初始化页面
     getList();
     updateTime();
 
     // 设置定时更新时间
     setInterval(updateTime, 1000);
+
+    // 绑定表格选择事件来更新统计信息
+    $('#ygxxTable').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {
+        setTimeout(function() {
+            updateStatistics();
+        }, 100);
+    });
 
     // 查询按钮
     $('#select-btn').click(function () {
@@ -224,6 +345,7 @@ $(function () {
                         var currentData = $('#ygxxTable').bootstrapTable('getData');
                         console.log('当前表格实际数据:', currentData);
                         console.log('当前表格数据条数:', currentData.length);
+                        updateStatistics();
                     }, 100);
 
                     if (res.data.length > 0) {
@@ -242,7 +364,7 @@ $(function () {
         });
     });
 
-// 重置查询按钮
+    // 重置查询按钮
     $('#reset-btn').click(function () {
         console.log('重置查询按钮被点击');
         $('#gsm').val(''); // 清空查询条件
@@ -279,13 +401,13 @@ $(function () {
         }
     });
 
-// 修改弹窗关闭按钮
+    // 修改弹窗关闭按钮
     $('#update-close-btn').click(function () {
         $('#update-form')[0].reset();
         $('#update-modal').modal('hide');
     });
 
-// 修改提交按钮
+    // 修改提交按钮
     $('#update-submit-btn').click(function () {
         console.log('修改提交按钮被点击');
 
@@ -351,6 +473,7 @@ $(function () {
             }
         });
     });
+
     // 新增按钮
     $('#add-btn').click(function () {
         console.log('新增按钮被点击');
@@ -404,7 +527,7 @@ $(function () {
         swal("刷新成功", "数据已更新", "success");
     });
 
-    // 删除按钮
+// 删除按钮
     $('#delete-btn').click(function () {
         console.log('删除按钮被点击');
         let rows = getTableSelection("#ygxxTable");
@@ -423,19 +546,12 @@ $(function () {
             title: "确认删除",
             text: "确定要删除员工：" + itemNames + " 吗？此操作不可恢复！",
             icon: "warning",
-            buttons: {
-                cancel: {
-                    text: "取消",
-                    value: null,
-                    visible: true
-                },
-                confirm: {
-                    text: "确认删除",
-                    value: true,
-                    className: "btn-danger"
-                }
-            },
-            dangerMode: true,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "确认删除",
+            cancelButtonText: "取消",
+            closeOnConfirm: false,
+            closeOnCancel: true
         }, function(willDelete) {
             if (willDelete) {
                 let idList = [];

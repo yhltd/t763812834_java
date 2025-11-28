@@ -104,6 +104,7 @@ a{
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: white;
 }
 table{
     table-layout: auto;
@@ -334,6 +335,7 @@ table{
     font-family: 'Segoe UI', system-ui, sans-serif;
     position: relative;
     overflow: hidden;
+    z-index: 999;
 }
 
 .time-bar::before {
@@ -371,8 +373,8 @@ table{
 /*============================普通按钮样式=====================================*/
 .btn-color{
     color: #FFF;
-    background-color: #303031;
-    border-color:#303031;
+    background-color: #12db9c;
+    border-color:#12db9c;
 }
 /*======悬停效果=========*/
 .btn-color:hover{
@@ -382,9 +384,10 @@ table{
 }
 .btn-dangqian{
     color: #FFF;
-    background-color: #303031;
-    border-color:#303031;
+    background-color: #4040d1;
+    border-color:#4040d1;
 }
+
 
 /* ====================== 退出和删除按钮颜色方案 ====================== */
 /* 基础状态样式 - 按钮默认外观 */
@@ -558,8 +561,15 @@ text-decoration: underline;
 }
 
 /* ===== 单元格基础样式 ===== */
-.gradient-table th,
+
 .gradient-table td {
+    padding: 0.6rem 1.5rem;
+    text-align: center;       /* 左对齐文本 */
+    border-bottom: 1px solid white; /* 半透明分割线 */
+
+}
+
+.gradient-table th{
     padding: 1rem 1.5rem;
     text-align: center;       /* 左对齐文本 */
     border-bottom: 1px solid white; /* 半透明分割线 */
@@ -740,7 +750,7 @@ text-decoration: underline;
 .title {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #5a4dff;
     text-align: center;
 }
 /*按钮容器*/
@@ -820,4 +830,9 @@ text-decoration: underline;
     padding: 130px 10px 0 10px;
     background-image: url(../img/biaoge_bg.png);
     background-size: cover;
+}
+
+.biaoge-tishi{
+    color: red;
+    font-size:10px;
 }

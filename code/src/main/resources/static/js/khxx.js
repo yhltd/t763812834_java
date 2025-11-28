@@ -77,18 +77,18 @@ function getXL() {
 
                 // 处理权限错误
                 if (res.code === 401) {
-                    alert("登录已过期，请重新登录");
+                    swal("登录已过期，请重新登录");
                     window.location.href = "/login.html";
                 } else if (res.code === 403) {
-                    alert("权限不足，无法访问此功能");
+                    swal("权限不足，无法访问此功能");
                 } else {
-                    alert("查询失败: " + res.message);
+                    swal("查询失败: " + res.message);
                 }
             }
         },
         error: function(xhr, status, error) {
             console.error("AJAX请求失败:", error);
-            alert("请求失败，请检查网络连接");
+            swal("请求失败，请检查网络连接");
         }
     });
 }
@@ -152,18 +152,18 @@ function initToolbarEvents() {
         console.log('修改按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要修改的客户信息');
+            swal('请选择要修改的客户信息');
             return;
         }
         showKhxxModal('edit', selectedRow);
     });
 
-    // 删除按钮
+// 删除按钮
     $('#delete-btn').off('click').on('click', function() {
         console.log('删除按钮点击');
         var selectedRow = getSelectedRow();
         if (!selectedRow) {
-            alert('请选择要删除的客户信息');
+            swal('请选择要删除的客户信息');
             return;
         }
 
@@ -240,7 +240,7 @@ function showExportModal() {
         var dateFormat = $('#export-date-format').val();
 
         if (!filename) {
-            alert('请输入文件名');
+            swal('请输入文件名');
             return;
         }
 
@@ -311,7 +311,7 @@ function exportToExcel(filename) {
             console.log('获取到数据，开始导出:', res.data.list.length, '条记录');
             createExcelFile(res.data.list, filename);
         } else {
-            alert('没有数据可以导出');
+            swal('没有数据可以导出');
         }
     });
 }
@@ -321,7 +321,7 @@ function createExcelFile(data, filename) {
     try {
         // 检查 SheetJS 是否已加载
         if (typeof XLSX === 'undefined') {
-            alert('导出功能初始化失败，请刷新页面重试');
+            swal('导出功能初始化失败，请刷新页面重试');
             return;
         }
 
@@ -390,12 +390,12 @@ function createExcelFile(data, filename) {
 
         // 显示成功消息
         setTimeout(function() {
-            alert(`导出成功！\n文件名：${filename}`);
+            swal(`导出成功！\n文件名：${filename}`);
         }, 500);
 
     } catch (error) {
         console.error('创建Excel文件错误:', error);
-        alert('导出失败: ' + error.message);
+        swal('导出失败: ' + error.message);
     }
 }
 
@@ -453,12 +453,12 @@ function getList(page, size, queryParams) {
 
             // 处理权限错误
             if (res.code === 401) {
-                alert("登录已过期，请重新登录");
+                swal("登录已过期，请重新登录");
                 window.location.href = "/login.html";
             } else if (res.code === 403) {
-                alert("权限不足，无法访问此功能");
+                swal("权限不足，无法访问此功能");
             } else {
-                alert("查询失败: " + res.message);
+                swal("查询失败: " + res.message);
             }
         }
     });
@@ -685,7 +685,7 @@ function saveKhxx() {
     };
 
     if (!formData.khmc || formData.khmc.trim() === '') {
-        alert('客户名称不能为空');
+        swal('客户名称不能为空');
         return;
     }
 
@@ -709,7 +709,7 @@ function saveKhxx() {
         data: JSON.stringify(formData),
         success: function(result) {
             if (result.success) {
-                alert(result.data || '操作成功');
+                swal(result.data || '操作成功');
                 $('#khxxModal').modal('hide');
 
                 // 保存成功后刷新列表，获取最新的 version 值
@@ -729,12 +729,12 @@ function saveKhxx() {
                         $('#khxxModal').modal('hide');
                     }
                 } else {
-                    alert('操作失败: ' + result.message);
+                    swal('操作失败: ' + result.message);
                 }
             }
         },
         error: function(xhr, status, error) {
-            alert('请求失败: ' + error);
+            swal('请求失败: ' + error);
         }
     });
 }
@@ -755,7 +755,7 @@ function deleteKhxx(id, version) {
         data: JSON.stringify(deleteData),
         success: function(result) {
             if (result.success) {
-                alert(result.data || '删除成功');
+                swal(result.data || '删除成功');
                 getList(currentPage, pageSize, getQueryParams());
 
                 // 清除选中状态
@@ -770,12 +770,12 @@ function deleteKhxx(id, version) {
                         getList(currentPage, pageSize, getQueryParams());
                     }
                 } else {
-                    alert('删除失败: ' + result.message);
+                    swal('删除失败: ' + result.message);
                 }
             }
         },
         error: function(xhr, status, error) {
-            alert('删除请求失败: ' + error);
+            swal('删除请求失败: ' + error);
         }
     });
 }
@@ -879,7 +879,7 @@ function bindPaginationEvents() {
             currentPage = targetPage;
             getList(currentPage, pageSize, getQueryParams());
         } else {
-            alert('请输入有效的页码（1-' + totalPages + '）');
+            swal('请输入有效的页码（1-' + totalPages + '）');
         }
     });
 

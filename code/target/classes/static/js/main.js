@@ -9,7 +9,7 @@ function $ajax(options, isLoading, loadingEl, success) {
         },
         success: res => {
             if (res.code == 401) {
-                alert(res.msg);
+                swal(res.msg);
                 return;
             }
             success(res);
@@ -17,15 +17,15 @@ function $ajax(options, isLoading, loadingEl, success) {
         error: err => {
             console.log(err)
             if(err.responseText == 'loseToken'){
-                alert('身份验证已过期，请重新登录');
+                swal('身份验证已过期，请重新登录');
                 window.location.href = '/';
                 return;
             }
 
             if (err.status == 'timeout') {
-                alert('网络超时，请稍后再试。')
+                swal('网络超时，请稍后再试。')
             } else {
-                alert('网络错误，请稍后再试。')
+                swal('网络错误，请稍后再试。')
             }
         },
         complete: res => {
@@ -191,7 +191,7 @@ $(function () {
     //     if(checkForm('#updPwdForm')) {
     //         let params = formToJson('#updPwdForm')
     //         if (params.newPwd != params.newPwdAgain) {
-    //             alert('两次新密码不相同')
+    //             swal('两次新密码不相同')
     //             return;
     //         }
     //
@@ -206,7 +206,7 @@ $(function () {
     //             dataType: 'json'
     //         }, false, '', function (res) {
     //             if (res.code == 200) {
-    //                 alert(res.msg)
+    //                 swal(res.msg)
     //                 $('#update-modal').modal('hide');
     //                 $('#updPwdForm')[0].reset();
     //             }

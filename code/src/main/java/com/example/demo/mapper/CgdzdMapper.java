@@ -42,13 +42,13 @@ public interface CgdzdMapper extends BaseMapper<Cgdzd> {
             ") as temp " +
             "WHERE row_num BETWEEN #{start} AND #{end}" +
             "</script>")
-    List<Cgmx> selectForPage(@Param("start") long start,
+    List<Cgdzd> selectForPage(@Param("start") long start,
                              @Param("end") long end,
                              @Param("startdate") String startdate,
                              @Param("enddate") String enddate,
                              @Param("ddh") String ddh,
                              @Param("khmc") String khmc,
-                             @Param("ew") Wrapper<Cgmx> wrapper);
+                             @Param("ew") Wrapper<Cgdzd> wrapper);
 
     /**
      * 获取总记录数
@@ -62,10 +62,10 @@ public interface CgdzdMapper extends BaseMapper<Cgdzd> {
             "  </if>" +
             "</where>" +
             "</script>")
-    Long selectCountForPage(@Param("ew") Wrapper<Cgmx> wrapper);
+    Long selectCountForPage(@Param("ew") Wrapper<Cgdzd> wrapper);
 
     @Select("SELECT * FROM caigoumingxi WHERE htbh=#{ddh}")
-    List<Cgmx> getDetailByDdh(String ddh);
+    List<Cgdzd> getDetailByDdh(String ddh);
 
 
     @Update("UPDATE caigoumingxi SET dzzt = #{dzzt} WHERE htbh = #{ddh}")
