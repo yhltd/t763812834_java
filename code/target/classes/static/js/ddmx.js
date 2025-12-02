@@ -5,6 +5,13 @@ var totalCount = 0;
 var totalPages = 0;
 var currentId = '';
 
+
+// 新增：统计变量
+var totalYingfuAmount = 0;  // 应付金额合计
+var totalYifuAmount = 0;    // 已付金额合计
+var totalWeifuAmount = 0;   // 未付金额合计
+var totalOrderCount = 0;    // 订单数量
+
 // 页面加载完成后初始化
 $(document).ready(function() {
     console.log('页面加载完成，初始化订单明细页面...');
@@ -12,6 +19,11 @@ $(document).ready(function() {
     initDdmxPage();
     initToolbarEvents();
     initDetailModalEvents();
+
+    // 确保统计区域可见
+    $('#statisticsContainer').show();
+    // 初始化统计值为0
+    updateStatistics();
 
     // 设置默认日期并获取数据
     setDefaultDateRange();
@@ -263,12 +275,18 @@ function updateField(ddh, fieldName, fieldValue, callback) {
 
 // 填充表格 - 渲染订单明细字段
 function fillTable(data) {
-    console.log("返回数据", data)
+    console.log("返回数据", data);
     $('#ddmxTable').empty();
+
+    // 重置统计变量
+    totalYingfuAmount = 0;
+    totalYifuAmount = 0;
+    totalWeifuAmount = 0;
+    totalOrderCount = 0;
 
     var tableHeader = `
         <thead>
-           <tr style="color: red; font-size: 10px">
+           <tr style="color: #eb6464; font-size: 10px">
                 <th>双击表格内特殊颜色单元格进行输入</th>
                 <th></th>
                 <th></th>
@@ -288,11 +306,9 @@ function fillTable(data) {
                 <th></th>
                 <th></th>
                 <th></th>
-                                    
-                                    
             </tr>
             <tr>
-                  <th>订单日期</th>
+                <th>订单日期</th>
                 <th>订单号</th>
                 <th>客户简称</th>
                 <th>负责人</th>
@@ -323,10 +339,14 @@ function fillTable(data) {
             var yingfu = calculateYingfu(item.yfsj, item.zk);
             var weifu = calculateWeifu(yingfu, item.yifu);
 
+            // 累计统计值
+            totalYingfuAmount += parseFloat(yingfu) || 0;
+            totalYifuAmount += parseFloat(item.yifu) || 0;
+            totalWeifuAmount += parseFloat(weifu) || 0;
+            totalOrderCount++;
+
             // 判断是否有PDF文件
             var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
-
-            console.log('订单号:', item.ddh, '是否有PDF:', hasPdf, 'PDF文件名:', item.pdf_file_name);
 
             tableBody += `
                 <tr data-id="${item.id || index}" data-ddh="${item.ddh || ''}">
@@ -387,12 +407,19 @@ function fillTable(data) {
                 </tr>
             `;
         });
+
+        // 更新统计显示
+        updateStatistics();
+        $('#statisticsContainer').show();
     } else {
         tableBody += `
             <tr>
                 <td colspan="19" style="text-align: center; color: #999;">暂无订单数据</td>
             </tr>
         `;
+        // 没有数据时显示0值
+        updateStatistics();
+        $('#statisticsContainer').show();
     }
 
     tableBody += '</tbody>';
@@ -408,6 +435,14 @@ function fillTable(data) {
     bindDeletePdfEvents();    // 绑定删除PDF事件
 
     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
+}
+
+// 更新统计显示函数
+function updateStatistics() {
+    $('#totalYingfuAmount').text(totalYingfuAmount.toFixed(2));
+    $('#totalYifuAmount').text(totalYifuAmount.toFixed(2));
+    $('#totalWeifuAmount').text(totalWeifuAmount.toFixed(2));
+    $('#totalOrderCount').text(totalOrderCount);
 }
 
 // 自动调整列宽函数
@@ -919,6 +954,30 @@ function updateYingfuWeifuDisplay($row) {
     // 更新显示
     $row.find('td:eq(11)').text(yingfu); // 应付金额列
     $row.find('td:eq(13)').text(weifu);  // 未付金额列
+
+    // 重新计算统计（如果需要实时更新统计）
+    recalculateStatistics();
+}
+
+// 重新计算统计
+function recalculateStatistics() {
+    totalYingfuAmount = 0;
+    totalYifuAmount = 0;
+    totalWeifuAmount = 0;
+    totalOrderCount = 0;
+
+    $('#ddmxTable tbody tr').each(function() {
+        var yingfu = parseFloat($(this).find('td:eq(11)').text().trim()) || 0;
+        var yifu = parseFloat($(this).find('td:eq(12)').text().trim()) || 0;
+        var weifu = parseFloat($(this).find('td:eq(13)').text().trim()) || 0;
+
+        totalYingfuAmount += yingfu;
+        totalYifuAmount += yifu;
+        totalWeifuAmount += weifu;
+        totalOrderCount++;
+    });
+
+    updateStatistics();
 }
 
 // 绑定详情按钮事件
@@ -1451,6 +1510,96 @@ function addTableStyles() {
             .delete-pdf-btn:hover {
                 background-color: #c82333;
                 border-color: #bd2130;
+            }
+            
+            /* 新增：统计区域样式 - 调整高度为80px并均匀分布 */
+            .statistics-container {
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                padding: 10px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                height: 80px;
+                margin-bottom: 15px;
+            }
+            .statistics-container .card {
+                height: 100%;
+                border: none;
+                background-color: transparent;
+                margin: 0;
+            }
+            .statistics-container .card-body {
+                padding: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+            }
+            .statistics-container .row {
+                width: 100%;
+                margin: 0;
+                height: 100%;
+            }
+            .statistics-container .col-md-3 {
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .stat-item {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border-right: 1px solid #dee2e6;
+            }
+            .statistics-container .col-md-3:last-child .stat-item {
+                border-right: none;
+            }
+            .stat-item h5 {
+                font-size: 13px;
+                color: #6c757d;
+                margin-bottom: 5px;
+                font-weight: 600;
+                text-align: center;
+                white-space: nowrap;
+            }
+            .stat-item h3 {
+                font-size: 22px;
+                font-weight: bold;
+                margin: 0;
+                text-align: center;
+            }
+            /* 响应式调整 */
+            @media (max-width: 768px) {
+                .statistics-container {
+                    height: auto;
+                    min-height: 80px;
+                }
+                .statistics-container .row {
+                    flex-wrap: wrap;
+                }
+                .statistics-container .col-md-3 {
+                    width: 50%;
+                    margin-bottom: 5px;
+                }
+                .stat-item {
+                    height: 60px;
+                    border-right: none;
+                    border-bottom: 1px solid #dee2e6;
+                }
+                .statistics-container .col-md-3:nth-child(odd) .stat-item {
+                    border-right: 1px solid #dee2e6;
+                }
+                .statistics-container .col-md-3:nth-child(-n+2) .stat-item {
+                    border-bottom: none;
+                }
+                .stat-item h5 {
+                    font-size: 12px;
+                }
+                .stat-item h3 {
+                    font-size: 18px;
+                }
             }
         `)
         .appendTo('head');

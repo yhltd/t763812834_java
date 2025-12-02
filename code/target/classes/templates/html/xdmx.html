@@ -184,6 +184,40 @@
 
 </div>
 
+<!-- 修改统计区域HTML结构 -->
+<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;">
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="row text-center align-items-center h-100">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>合计金额</h5>
+                        <h3 class="text-primary" id="totalAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>未开票数量</h5>
+                        <h3 class="text-warning" id="uninvoicedCount">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>已开票数量</h5>
+                        <h3 class="text-success" id="invoicedCount">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>不开票数量</h5>
+                        <h3 class="text-secondary" id="noInvoiceCount">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="table-div border-top">
     <table id="khzlTable" class="gradient-table"></table>
 </div>

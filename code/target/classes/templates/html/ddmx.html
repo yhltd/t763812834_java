@@ -73,18 +73,18 @@
         </div>
     </div>
     <div class="top-toolbar row">
-        <!--    <div class="col-md-2 mb-2">-->
-        <!--        <input id="ddh" type="text" class="form-control" placeholder="订单号" autocomplete="off">-->
-        <!--    </div>-->
-        <!--    <div class="col-md-2 mb-2">-->
-        <!--        <input id="khmc" type="text" class="form-control" placeholder="客户名称" autocomplete="off">-->
-        <!--    </div>-->
-        <!--    <div class="col-md-2 mb-2">-->
-        <!--        <input id="fzr" type="text" class="form-control" placeholder="负责人" autocomplete="off">-->
-        <!--    </div>-->
-        <!--    <div class="col-md-2 mb-2">-->
-        <!--        <input id="bm" type="text" class="form-control" placeholder="部门" autocomplete="off">-->
-        <!--    </div>-->
+            <div class="col-md-2 mb-2">
+                <input id="ddh" type="text" class="form-control" placeholder="订单号" autocomplete="off">
+            </div>
+            <div class="col-md-2 mb-2">
+                <input id="khmc" type="text" class="form-control" placeholder="客户名称" autocomplete="off">
+            </div>
+            <div class="col-md-2 mb-2">
+                <input id="fzr" type="text" class="form-control" placeholder="负责人" autocomplete="off">
+            </div>
+<!--            <div class="col-md-2 mb-2">-->
+<!--                <input id="bm" type="text" class="form-control" placeholder="部门" autocomplete="off">-->
+<!--            </div>-->
         <div class="col-md-2 mb-2">
             <input id="startDate" type="date" class="form-control" placeholder="开始日期">
         </div>
@@ -115,6 +115,40 @@
 
 <div id="table-toolbar">
 
+</div>
+
+<!-- 在表格div之前添加统计区域 -->
+<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;margin-top: 50px;">
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="row text-center align-items-center h-100">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>应付金额合计</h5>
+                        <h3 class="text-primary" id="totalYingfuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>已付金额合计</h5>
+                        <h3 class="text-success" id="totalYifuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>未付金额合计</h5>
+                        <h3 class="text-danger" id="totalWeifuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>订单数量</h5>
+                        <h3 class="text-secondary" id="totalOrderCount">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="table-div border-top">

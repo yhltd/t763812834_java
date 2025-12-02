@@ -599,7 +599,7 @@ function fillTable(data) {
     // 创建表头
     var tableHeader = `
         <thead >
-         <tr style="color: red;font-size: 10px">
+         <tr style="color:#eb6464;font-size: 10px">
                 <th >表格内数据为该年每月销售额</th>
                 <th ></th>
                 <th></th>

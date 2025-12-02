@@ -20,6 +20,11 @@ $(document).ready(function() {
     initDetailModalEvents();
     getDW();
 
+    // 确保统计区域可见
+    $('#statisticsContainer').show();
+    // 初始化统计值为0
+    updateStatistics(0, 0, 0, 0);
+
     // 设置默认日期范围并获取数据
     setDefaultDateRange();
     getList(currentPage, pageSize, {});
@@ -745,11 +750,18 @@ function searchKhxx() {
 }
 
 // 填充表格
+// 填充表格
 function fillTable(data) {
     $('#khzlTable').empty();
 
     // 清空并重新填充部门映射表
     departmentMap = {};
+
+    // 重置统计变量（使用全局变量）
+    window.totalAmount = 0;
+    window.uninvoicedCount = 0;
+    window.invoicedCount = 0;
+    window.noInvoiceCount = 0;
 
     var tableHeader = `
         <thead>
@@ -778,13 +790,34 @@ function fillTable(data) {
                 departmentMap[item.id] = item.bm;
             }
 
+            // 计算统计信息 - 使用全局变量
+            var amount = parseFloat(item.hj) || 0;
+            window.totalAmount += amount;
+
+            var invoiceStatus = item.kpzt || '';
+            switch(invoiceStatus) {
+                case '未开票':
+                    window.uninvoicedCount++;
+                    break;
+                case '已开票':
+                    window.invoicedCount++;
+                    break;
+                case '不开票':
+                    window.noInvoiceCount++;
+                    break;
+                default:
+                    // 如果开票状态为空或其他值，计入未开票
+                    window.uninvoicedCount++;
+                    break;
+            }
+
             tableBody += `
                 <tr data-id="${item.id}">
                     <td>${item.khcm || ''}</td>
                     <td>${item.lxr || ''}</td>
                     <td>${item.lxdh || ''}</td>
                     <td>${item.ddrq || ''}</td>
-                    <td>${item.hj || ''}</td>
+                    <td>${formatNumber(item.hj)}</td>
                     <td>${item.fzr || ''}</td>
                     <td>${item.htbh || ''}</td>
                     <td>${item.yq || ''}</td>
@@ -805,12 +838,26 @@ function fillTable(data) {
                 </tr>
             `;
         });
+
+        // 调试：输出统计结果
+        console.log('统计结果:');
+        console.log('合计金额:', window.totalAmount);
+        console.log('未开票数量:', window.uninvoicedCount);
+        console.log('已开票数量:', window.invoicedCount);
+        console.log('不开票数量:', window.noInvoiceCount);
+
+        // 更新统计显示
+        updateStatistics(window.totalAmount, window.uninvoicedCount, window.invoicedCount, window.noInvoiceCount);
+        $('#statisticsContainer').show();
     } else {
         tableBody += `
             <tr>
                 <td colspan="11" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
+        // 没有数据时重置统计显示
+        updateStatistics(0, 0, 0, 0);
+        $('#statisticsContainer').show(); // 即使没有数据也显示统计区域，但显示0值
     }
 
     tableBody += '</tbody>';
@@ -818,6 +865,40 @@ function fillTable(data) {
     addRowClickEvent();
     bindDetailButtonEvents();
     bindDeleteButtonEvents(); // 绑定删除按钮事件
+}
+
+// 添加格式化数字的函数
+function formatNumber(value) {
+    if (!value) return '0.00';
+
+    var num = parseFloat(value);
+    if (isNaN(num)) return '0.00';
+
+    return num.toFixed(2);
+}
+
+// 新增：更新统计显示函数
+function updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount) {
+    console.log('更新统计显示:', totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount);
+
+    // 确保元素存在
+    if ($('#totalAmount').length > 0) {
+        // 格式化金额显示，保留两位小数
+        var formattedAmount = parseFloat(totalAmount).toFixed(2);
+        $('#totalAmount').text(formattedAmount);
+        $('#uninvoicedCount').text(uninvoicedCount || 0);
+        $('#invoicedCount').text(invoicedCount || 0);
+        $('#noInvoiceCount').text(noInvoiceCount || 0);
+
+        console.log('更新后的显示值:', {
+            totalAmount: formattedAmount,
+            uninvoicedCount: uninvoicedCount,
+            invoicedCount: invoicedCount,
+            noInvoiceCount: noInvoiceCount
+        });
+    } else {
+        console.warn('统计显示元素不存在');
+    }
 }
 
 // 绑定删除按钮事件
@@ -1595,14 +1676,133 @@ function bindPaginationEvents() {
 }
 
 // 在CSS中添加选中行样式
+// function addTableStyles() {
+//     if ($('#table-styles').length) return;
+//
+//     $('<style id="table-styles">')
+//         .prop('type', 'text/css')
+//         .html(`
+//             .selected-row { background-color: #b3d9ff !important; font-weight: bold; }
+//             .table-div { max-height: 600px; overflow-y: auto; border: 1px solid #ddd; }
+//         `)
+//         .appendTo('head');
+// }
+
 function addTableStyles() {
     if ($('#table-styles').length) return;
 
     $('<style id="table-styles">')
         .prop('type', 'text/css')
         .html(`
-            .selected-row { background-color: #b3d9ff !important; font-weight: bold; }
-            .table-div { max-height: 600px; overflow-y: auto; border: 1px solid #ddd; }
+            .selected-row {
+                background-color: #b3d9ff !important;
+                font-weight: bold;
+            }
+            .table-div {
+                max-height: 600px;
+                overflow-y: auto;
+                border: 1px solid #ddd;
+            }
+            /* 新增：禁用状态样式 */
+            select:disabled {
+                background-color: #e9ecef;
+                opacity: 1;
+                color: #6c757d;
+                cursor: not-allowed;
+            }
+            .disabled-info {
+                color: #dc3545;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            /* 修改：统计区域样式 - 调整高度为80px并均匀分布 */
+            .statistics-container {
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                padding: 10px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                height: 80px;
+            }
+            .statistics-container .card {
+                height: 100%;
+                border: none;
+                background-color: transparent;
+                margin: 0;
+            }
+            .statistics-container .card-body {
+                padding: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+            }
+            .statistics-container .row {
+                width: 100%;
+                margin: 0;
+                height: 100%;
+            }
+            .statistics-container .col-md-3 {
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .stat-item {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border-right: 1px solid #dee2e6;
+            }
+            .statistics-container .col-md-3:last-child .stat-item {
+                border-right: none;
+            }
+            .stat-item h5 {
+                font-size: 13px;
+                color: #6c757d;
+                margin-bottom: 5px;
+                font-weight: 600;
+                text-align: center;
+                white-space: nowrap;
+            }
+            .stat-item h3 {
+                font-size: 22px;
+                font-weight: bold;
+                margin: 0;
+                text-align: center;
+            }
+            /* 响应式调整 */
+            @media (max-width: 768px) {
+                .statistics-container {
+                    height: auto;
+                    min-height: 80px;
+                }
+                .statistics-container .row {
+                    flex-wrap: wrap;
+                }
+                .statistics-container .col-md-3 {
+                    width: 50%;
+                    margin-bottom: 5px;
+                }
+                .stat-item {
+                    height: 60px;
+                    border-right: none;
+                    border-bottom: 1px solid #dee2e6;
+                }
+                .statistics-container .col-md-3:nth-child(odd) .stat-item {
+                    border-right: 1px solid #dee2e6;
+                }
+                .statistics-container .col-md-3:nth-child(-n+2) .stat-item {
+                    border-bottom: none;
+                }
+                .stat-item h5 {
+                    font-size: 12px;
+                }
+                .stat-item h3 {
+                    font-size: 18px;
+                }
+            }
         `)
         .appendTo('head');
 }

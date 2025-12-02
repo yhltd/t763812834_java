@@ -5,6 +5,11 @@ var totalCount = 0;
 var totalPages = 0;
 var currentId = ''; // 存储当前详情弹窗的合同编号
 
+// 新增：统计变量
+var totalHjAmount = 0;  // 合计金额总计
+var totalQkjeAmount = 0; // 欠款金额总计
+var totalYfjeAmount = 0; // 已付金额总计
+
 // 页面加载完成后初始化
 $(document).ready(function() {
     console.log('页面加载完成，初始化客户信息页面...');
@@ -12,6 +17,11 @@ $(document).ready(function() {
     initKhxxPage();
     initToolbarEvents();
     initDetailModalEvents();
+
+    // 确保统计区域可见并初始化
+    $('#statisticsContainer').show();
+    updateStatistics(); // 初始化显示为0
+
     getList(currentPage, pageSize, '');
 });
 
@@ -187,19 +197,21 @@ function searchKhxx() {
 function fillTable(data) {
     $('#cgmxTable').empty();
 
+    // 重置统计变量
+    totalHjAmount = 0;
+    totalQkjeAmount = 0;
+    totalYfjeAmount = 0;
+
     var tableHeader = `
         <thead>
             <tr>
                 <th width="280">乙方公司</th>
-         
                 <th width="120">订单日期</th>
                 <th width="120">合计金额</th>
-              
                 <th width="150">合同编号</th>
                 <th width="150">开票日期</th>
                 <th width="150">欠款金额</th>
                 <th width="150">已付金额</th>
-                
                 <th width="200">备注</th>
                 <th width="90">操作</th>
             </tr>
@@ -210,18 +222,25 @@ function fillTable(data) {
 
     if (data && data.length > 0) {
         data.forEach(function(item, index) {
+            // 获取并转换金额值
+            var hjAmount = parseFloat(item.hj) || 0;
+            var qkjeAmount = parseFloat(item.qkje) || 0;
+            var yfjeAmount = parseFloat(item.yfje) || 0;
+
+            // 累计统计值
+            totalHjAmount += hjAmount;
+            totalQkjeAmount += qkjeAmount;
+            totalYfjeAmount += yfjeAmount;
+
             tableBody += `
                 <tr data-id="${item.id}">
                     <td>${item.khcm || ''}</td>
-                  
                     <td>${item.ddrq || ''}</td>
-                    <td>${item.hj || ''}</td>
-                  
+                    <td>${formatAmount(item.hj)}</td>
                     <td>${item.htbh || ''}</td>
                     <td>${item.kprq || ''}</td>
-                    <td>${item.qkje || ''}</td>
-                    <td>${item.yfje || ''}</td>
-                  
+                    <td>${formatAmount(item.qkje)}</td>
+                    <td>${formatAmount(item.yfje)}</td>
                     <td>${item.zbz || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
@@ -233,18 +252,53 @@ function fillTable(data) {
                 </tr>
             `;
         });
+
+        // 更新统计显示
+        updateStatistics();
+        $('#statisticsContainer').show();
     } else {
         tableBody += `
             <tr>
                 <td colspan="10" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
+        // 没有数据时也显示统计区域，但值为0
+        updateStatistics();
+        $('#statisticsContainer').show();
     }
 
     tableBody += '</tbody>';
     $('#cgmxTable').html(tableHeader + tableBody);
     addRowClickEvent();
     bindDetailButtonEvents();
+}
+
+// 添加格式化金额的函数
+function formatAmount(value) {
+    if (!value || value === '') return '0.00';
+
+    var num = parseFloat(value);
+    if (isNaN(num)) return '0.00';
+
+    return num.toFixed(2);
+}
+
+// 更新统计显示函数
+function updateStatistics() {
+    // 确保元素存在
+    if ($('#totalHjAmount').length > 0) {
+        $('#totalHjAmount').text(totalHjAmount.toFixed(2));
+        $('#totalQkjeAmount').text(totalQkjeAmount.toFixed(2));
+        $('#totalYfjeAmount').text(totalYfjeAmount.toFixed(2));
+
+        console.log('统计更新:', {
+            totalHjAmount: totalHjAmount.toFixed(2),
+            totalQkjeAmount: totalQkjeAmount.toFixed(2),
+            totalYfjeAmount: totalYfjeAmount.toFixed(2)
+        });
+    } else {
+        console.warn('统计元素不存在');
+    }
 }
 
 // 绑定详情按钮事件
@@ -510,6 +564,7 @@ function saveKhxx() {
                 swal('保存成功！');
                 $('#khxxModal').modal('hide');
                 getList(currentPage, pageSize, '');
+                // 保存后会重新获取列表，fillTable中会自动更新统计
             } else {
                 swal('操作失败: ' + result.message);
             }
@@ -723,6 +778,93 @@ function addTableStyles() {
                 max-height: 600px;
                 overflow-y: auto;
                 border: 1px solid #ddd;
+            }
+            
+            /* 新增：统计区域样式 - 调整高度为80px并均匀分布 */
+            .statistics-container {
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                padding: 10px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                height: 80px;
+                margin-bottom: 15px;
+            }
+            .statistics-container .card {
+                height: 100%;
+                border: none;
+                background-color: transparent;
+                margin: 0;
+            }
+            .statistics-container .card-body {
+                padding: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+            }
+            .statistics-container .row {
+                width: 100%;
+                margin: 0;
+                height: 100%;
+            }
+            .statistics-container .col-md-4 {
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .stat-item {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border-right: 1px solid #dee2e6;
+            }
+            .statistics-container .col-md-4:last-child .stat-item {
+                border-right: none;
+            }
+            .stat-item h5 {
+                font-size: 14px;
+                color: #6c757d;
+                margin-bottom: 5px;
+                font-weight: 600;
+                text-align: center;
+                white-space: nowrap;
+            }
+            .stat-item h3 {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0;
+                text-align: center;
+            }
+            /* 响应式调整 */
+            @media (max-width: 768px) {
+                .statistics-container {
+                    height: auto;
+                    min-height: 80px;
+                }
+                .statistics-container .row {
+                    flex-wrap: wrap;
+                }
+                .statistics-container .col-md-4 {
+                    width: 100%;
+                    margin-bottom: 5px;
+                }
+                .stat-item {
+                    height: 60px;
+                    border-right: none;
+                    border-bottom: 1px solid #dee2e6;
+                }
+                .statistics-container .col-md-4:last-child .stat-item {
+                    border-bottom: none;
+                }
+                .stat-item h5 {
+                    font-size: 13px;
+                }
+                .stat-item h3 {
+                    font-size: 20px;
+                }
             }
         `)
         .appendTo('head');

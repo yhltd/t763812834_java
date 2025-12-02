@@ -110,6 +110,34 @@
 
 </div>
 
+<!-- 在表格div之前添加统计区域 -->
+<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;">
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="row text-center align-items-center h-100">
+        <div class="col-md-4">
+          <div class="stat-item">
+            <h5>合计金额</h5>
+            <h3 class="text-primary" id="totalHjAmount">0.00</h3>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-item">
+            <h5>欠款金额</h5>
+            <h3 class="text-danger" id="totalQkjeAmount">0.00</h3>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-item">
+            <h5>已付金额</h5>
+            <h3 class="text-success" id="totalYfjeAmount">0.00</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="table-div border-top">
   <table id="cgmxTable" class="gradient-table"></table>
 </div>

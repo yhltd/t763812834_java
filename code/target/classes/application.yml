@@ -5,14 +5,40 @@ spring:
   profiles:
     active: dev
   datasource:
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
-    username: sa
-    password: Lyh07910_001
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
+    # 使用dynamic-datasource管理多个数据源
+    dynamic:
+      primary: druid  # 设置默认数据源为druid
+      strict: false
+      datasource:
+        # 主数据源
+        druid:
+          url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
+          username: sa
+          password: Lyh07910_001
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            min-idle: 5
+            max-active: 20
+            max-wait: 10000
+            test-on-borrow: true
+            validation-query: SELECT 1
+
+        # 第二个数据源
+        softtime:
+          url: jdbc:sqlserver://bds28428944.my3w.com;DatabaseName=bds28428944_db
+          username: bds28428944
+          password: 07910Lyh
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 3
+            min-idle: 3
+            max-active: 10
+            max-wait: 10000
+            test-on-borrow: true
+            validation-query: SELECT 1
   servlet:
     multipart:
       max-file-size: 10MB
