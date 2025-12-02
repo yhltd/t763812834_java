@@ -829,15 +829,17 @@ function fillTable(data) {
                                 data-htbh="${item.htbh || ''}">
                             <i class="bi bi-eye"></i> 详情
                         </button>
-                        <button class="btn btn-sm btn-danger delete-btn" 
-                                data-id="${item.id}"
-                                data-khcm="${item.khcm || ''}">
-                            <i class="bi bi-trash"></i> 删除
-                        </button>
+
                     </td>
                 </tr>
             `;
         });
+
+        // <button className="btn btn-sm btn-danger delete-btn"
+        //         data-id="${item.id}"
+        //         data-khcm="${item.khcm || ''}">
+        //     <i className="bi bi-trash"></i> 删除
+        // </button>
 
         // 调试：输出统计结果
         console.log('统计结果:');
@@ -1674,20 +1676,6 @@ function bindPaginationEvents() {
         getList(currentPage, pageSize, getSearchParams());
     });
 }
-
-// 在CSS中添加选中行样式
-// function addTableStyles() {
-//     if ($('#table-styles').length) return;
-//
-//     $('<style id="table-styles">')
-//         .prop('type', 'text/css')
-//         .html(`
-//             .selected-row { background-color: #b3d9ff !important; font-weight: bold; }
-//             .table-div { max-height: 600px; overflow-y: auto; border: 1px solid #ddd; }
-//         `)
-//         .appendTo('head');
-// }
-
 function addTableStyles() {
     if ($('#table-styles').length) return;
 

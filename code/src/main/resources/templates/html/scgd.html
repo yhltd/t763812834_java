@@ -54,6 +54,36 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+
+    .page-indicator {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    .page-indicator:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        transform: translateY(-1px);
+    }
+
+    .modal-body h6 {
+        color: #495057;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-body ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-body ul li {
+        margin-bottom: 0.3rem;
+    }
+
 </style>
 
 <body class=" body-yangshi">
@@ -121,10 +151,42 @@
             </button>
             <span style="border-right: 20px solid white"></span>
             <span style="border-right: 20px solid white"></span>
-            <a class="btn btn-dangqian" style="color: white;padding-top: 8px;border-radius:5px;">当前页：销售下单</a>
+            <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：销售下单</a>
         </div>
     </div>
     <div id="table-toolbar"></div>
+</div>
+
+<!-- 销售下单使用说明弹窗 -->
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    销售下单使用说明
+                </h5>
+            </div>
+            <div class="modal-body">
+                <h6><i class="bi bi-1-circle me-2"></i>基本操作</h6>
+                <ul>
+                    <li>可根据客户名称，联系人，负责人，开票状态，日期进行查询。</li>
+                    <li>选择一行数据后点击修改按钮，进行数据修改，点击保存，保存修改。</li>
+                    <li>选择一行数据后，点击删除按钮，进行数据删除。</li>
+                    <li>表格拉到最后，点击详情按钮，进入订单详情。</li>
+                    <li>订单详情中，点击下单按钮，数据会保存至下单明细。</li>
+                    <li>订单详情中，点击驳回按钮，数据会驳回至销售合同。</li>
+                </ul>
+
+                <h6><i class="bi bi-2-circle me-2"></i>注意事项</h6>
+                <ul>
+                    <li>驳回的数据，只在应负责人在销售合同中体现。</li>
+
+                </ul>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -322,6 +384,20 @@
     // 启动定时器
     updateTime();
     setInterval(updateTime, 1000);
+
+    $(document).ready(function() {
+        // 点击页面指示器显示使用说明弹窗
+        $('#pageIndicator').on('click', function() {
+            $('#instructionsModal').modal('show');
+        });
+
+        // 已阅读按钮点击事件
+        $('#confirmReadBtn').on('click', function() {
+            $('#instructionsModal').modal('hide');
+            localStorage.setItem('workReportInstructionsRead', 'true');
+            console.log('用户已确认阅读使用说明');
+        });
+    });
 
 </script>
 </html>

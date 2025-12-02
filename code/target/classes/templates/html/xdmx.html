@@ -118,6 +118,37 @@
         max-height: 70vh;
         overflow-y: auto;
     }
+
+     .page-indicator {
+         cursor: pointer;
+         transition: all 0.3s ease;
+         padding: 8px 12px;
+         border-radius: 6px;
+         display: inline-block;
+     }
+
+    .page-indicator:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        transform: translateY(-1px);
+    }
+
+    .modal-body h6 {
+        color: #495057;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-body ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-body ul li {
+        margin-bottom: 0.3rem;
+    }
+
+
 </style>
 
 <body  class=" body-yangshi">
@@ -173,7 +204,7 @@
             </button>
             <span style="border-right: 20px solid white"></span>
             <!-- 移除外部的打印按钮 -->
-            <a class="btn btn-dangqian" style="color: white;padding-top: 8px;border-radius:5px;">当前页：下单明细</a>
+            <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：下单明细</a>
         </div>
     </div>
 </div>
@@ -182,6 +213,33 @@
 
 <div id="table-toolbar">
 
+</div>
+
+
+
+<!-- 下单明细使用说明弹窗 -->
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    下单明细使用说明
+                </h5>
+            </div>
+            <div class="modal-body">
+                <h6><i class="bi bi-1-circle me-2"></i>基本操作</h6>
+                <ul>
+                    <li>可根据客户名称，联系人，负责人，开票状态，日期进行查询。</li>
+                    <li>表格拉到最后，点击详情按钮，进入订单详情。</li>
+                    <li>订单详情中，在表前复选框选中一行数据，点击打印选中产品，会弹出生产工单打印预览。</li>
+                    <li>订单详情中，点击录库按钮，会把此订单数据保存到订单明细表。</li>
+                    <li>订单详情中，点击驳回按钮，会把此订单数据驳回到销售下单。</li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- 修改统计区域HTML结构 -->
@@ -291,6 +349,20 @@
     // 启动定时器
     updateTime();
     setInterval(updateTime, 1000);
+
+    $(document).ready(function() {
+        // 点击页面指示器显示使用说明弹窗
+        $('#pageIndicator').on('click', function() {
+            $('#instructionsModal').modal('show');
+        });
+
+        // 已阅读按钮点击事件
+        $('#confirmReadBtn').on('click', function() {
+            $('#instructionsModal').modal('hide');
+            localStorage.setItem('workReportInstructionsRead', 'true');
+            console.log('用户已确认阅读使用说明');
+        });
+    });
 
 </script>
 </html>

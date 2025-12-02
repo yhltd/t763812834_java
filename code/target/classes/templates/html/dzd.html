@@ -54,6 +54,35 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
+
+     .page-indicator {
+         cursor: pointer;
+         transition: all 0.3s ease;
+         padding: 8px 12px;
+         border-radius: 6px;
+         display: inline-block;
+     }
+
+    .page-indicator:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        transform: translateY(-1px);
+    }
+
+    .modal-body h6 {
+        color: #495057;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-body ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-body ul li {
+        margin-bottom: 0.3rem;
+    }
 </style>
 
 <body  class=" body-yangshi">
@@ -110,7 +139,7 @@
                 撤回对账
             </button>
             <span style="border-right: 20px solid white"></span>
-            <a class="btn btn-dangqian" style="color: white;padding-top: 8px;border-radius:5px;">当前页：销售对账单</a>
+            <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：销售对账单</a>
         </div>
     </div>
 </div>
@@ -119,6 +148,30 @@
 
 <div id="table-toolbar">
 
+</div>
+
+<!-- 销售对账单使用说明弹窗 -->
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    销售对账单使用说明
+                </h5>
+            </div>
+            <div class="modal-body">
+                <h6><i class="bi bi-1-circle me-2"></i>基本操作</h6>
+                <ul>
+                    <li>可根据客户名称，订单号，日期进行条件查询。</li>
+                    <li>选择一行数据后，点击打印对账单，会生成对账单打印预览。</li>
+                    <li>选择一行数据后，点击撤回对账，对账状态会改为未对账。</li>
+                    <li>点击发货按钮，订单明细中的，订单详情的发货时间字段会变为发货时间。</li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="table-div border-top">
@@ -277,6 +330,20 @@
     // 启动定时器
     updateTime();
     setInterval(updateTime, 1000);
+
+    $(document).ready(function() {
+        // 点击页面指示器显示使用说明弹窗
+        $('#pageIndicator').on('click', function() {
+            $('#instructionsModal').modal('show');
+        });
+
+        // 已阅读按钮点击事件
+        $('#confirmReadBtn').on('click', function() {
+            $('#instructionsModal').modal('hide');
+            localStorage.setItem('workReportInstructionsRead', 'true');
+            console.log('用户已确认阅读使用说明');
+        });
+    });
 
 </script>
 </html>

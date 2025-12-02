@@ -680,11 +680,17 @@ function getFieldLabel(field) {
 
 // 保存函数
 function saveKhxx() {
+
+    // 获取原始值
+    const ddrqValue = $('input[name="ddrq"]').val(); // 格式: "2025-12-02"
+
+// 转换为 2025/12/02 格式
+    const formattedDdrq = ddrqValue.replace(/-/g, '/');
     var formData = {
         khcm: $('input[name="khcm"]').val(),
         lxr: $('input[name="lxr"]').val(),
         lxdh: $('input[name="lxdh"]').val(),
-        ddrq: $('input[name="ddrq"]').val(),
+        ddrq: formattedDdrq,
         hj: $('input[name="hj"]').val(),
         fzr: $('input[name="fzr"]').val(),
         htbh: $('input[name="htbh"]').val(),

@@ -180,7 +180,9 @@ function updateDzztStatus(ddh, dzztValue, callback) {
             // 使用强制刷新确保数据一致性
             forceRefresh();
             if (callback) callback(true);
-        } else {
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！")
+        }else {
             console.error("更新对账状态失败:", res.message);
             if (callback) callback(false);
         }
@@ -423,7 +425,9 @@ function getDetailDataForPrint(ddh, callback) {
     }, false, '', function (res) {
         if (res.code === 200) {
             callback(res.data);
-        } else {
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！")
+        }else {
             console.error("获取详情失败:", res.message);
             callback(null);
         }
@@ -501,6 +505,8 @@ function getList(page, size, searchParams) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
+        }else if(res.code == 403){
+            swal("权限不足，无法访问此功能！")
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
@@ -775,6 +781,8 @@ function uploadPdfFile(ddh, file) {
                 swal('PDF文件上传成功！');
                 // 上传成功后刷新数据
                 getList(currentPage, pageSize, getSearchParams());
+            }else if(res.code == 403){
+                swal("权限不足，无法访问此功能！")
             } else {
                 console.error("PDF文件上传失败:", res.message);
                 swal("PDF文件上传失败: " + (res.message || '未知错误'));
@@ -836,7 +844,9 @@ function deletePdfFile(ddh, $btn) {
 
             // 删除成功后刷新数据
             getList(currentPage, pageSize, getSearchParams());
-        } else {
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！")
+        }else {
             console.error("PDF文件删除失败:", res.message);
             swal("PDF文件删除失败: " + (res.message || '未知错误'));
         }
@@ -908,6 +918,8 @@ function getDetailData(ddh) {
         if (res.code === 200) {
             console.log("返回的详细信息", res);
             fillDetailInfo(res.data);
+        }else if(res.code == 403){
+            swal("权限不足，无法访问此功能！")
         } else {
             console.error("获取详情失败:", res.message);
             $('#detailFormContainer').html(`

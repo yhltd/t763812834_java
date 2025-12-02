@@ -44,7 +44,7 @@ public interface YgxxMapper extends BaseMapper<Ygxx> {
     /**
      * 修改用户信息
      */
-    @Update("UPDATE yuangongxinxi SET  zw = #{zw}, bm = #{bm}, lxfs = #{lxfs}, bz = #{bz}, gh = #{gh} WHERE id = #{id}")
+    @Update("UPDATE yuangongxinxi SET  zw = #{zw},xm = #{xm}, bm = #{bm}, lxfs = #{lxfs}, bz = #{bz}, gh = #{gh} WHERE id = #{id}")
     Integer updateUser(Ygxx ygxx);
 
 

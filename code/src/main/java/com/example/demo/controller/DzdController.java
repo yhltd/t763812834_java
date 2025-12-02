@@ -96,7 +96,7 @@ public class DzdController {
     public Result updateDzztStatus(HttpSession session,@RequestBody Map<String, Object> params) {
 
         // 权限检查
-        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }

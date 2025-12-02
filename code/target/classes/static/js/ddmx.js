@@ -28,6 +28,11 @@ $(document).ready(function() {
     // 设置默认日期并获取数据
     setDefaultDateRange();
     getList(currentPage, pageSize, {});
+
+    // 延迟执行表格列宽调整
+    setTimeout(function() {
+        adjustTableColumns();
+    }, 300);
 });
 
 function initDdmxPage() {
@@ -261,6 +266,8 @@ function updateField(ddh, fieldName, fieldValue, callback) {
             if (fieldName.includes('pdf') || fieldName.includes('file')) {
                 getList(currentPage, pageSize, getSearchParams());
             }
+        }else if(res.code === 403){
+            swal("权限不足！ ");
         } else {
             console.error(fieldName + "字段更新失败:", res.message);
             swal(fieldName + "字段更新失败: " + (res.message || '未知错误'));
@@ -349,63 +356,73 @@ function fillTable(data) {
             var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
 
             tableBody += `
-                <tr data-id="${item.id || index}" data-ddh="${item.ddh || ''}">
-                    <td>${item.ddrq || ''}</td>
-                    <td>${item.ddh || ''}</td>
-                    <td>${item.khjc || ''}</td>
-                    <td>${item.fzr || ''}</td>
-                    <td>${item.bm || ''}</td>
-                    <td>${item.lxr || ''}</td>
-                    <td>${item.lxdh || ''}</td>
-                    <td class="editable-tcd" data-field="tcd" data-ddh="${item.ddh || ''}">${item.tcd || ''}</td>
-                    <td>${item.khmc || ''}</td>
-                    <td class="kpsj-cell">${item.kpsj || ''}</td>
-                    <td class="yfsj-cell">${item.yingfu || ''}</td>
-                    <td>${yingfu}</td>
-                    <td class="editable-yifu" data-field="yifu" data-ddh="${item.ddh || ''}" data-original="${item.yifu || '0'}">${item.yifu || ''}</td>
-                    <td>${weifu}</td>
-                    <td class="editable-sfkp" data-field="sfkp" data-ddh="${item.ddh || ''}">
-                        <select class="sfkp-select">
-                            <option value="未开票" ${item.sfkp === '未开票' ? 'selected' : ''}>未开票</option>
-                            <option value="已开票" ${item.sfkp === '已开票' ? 'selected' : ''}>已开票</option>
-                        </select>
-                    </td>
-                    <td class="editable-wldh" data-field="wldh" data-ddh="${item.ddh || ''}">${item.wldh || ''}</td>
-                    <td class="editable-zk" data-field="zk" data-ddh="${item.ddh || ''}">${item.zk || ''}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info detail-btn" 
-                                data-ddh="${item.ddh || ''}">
-                            <i class="bi bi-eye"></i> 详情
-                        </button>
-                        <button class="btn btn-sm btn-warning withdraw-btn" 
+    <tr data-id="${item.id || index}" data-ddh="${item.ddh || ''}">
+        <td>${item.ddrq || ''}</td>
+        <td>${item.ddh || ''}</td>
+        <td>${item.khjc || ''}</td>
+        <td>${item.fzr || ''}</td>
+        <td>${item.bm || ''}</td>
+        <td>${item.lxr || ''}</td>
+        <td>${item.lxdh || ''}</td>
+        <td class="editable-tcd" data-field="tcd" data-ddh="${item.ddh || ''}">${item.tcd || ''}</td>
+        <td>${item.khmc || ''}</td>
+        <td class="kpsj-cell">${item.kpsj || ''}</td>
+        <td class="yfsj-cell">${item.yingfu || ''}</td>
+        <td>${yingfu}</td>
+        <td class="editable-yifu" data-field="yifu" data-ddh="${item.ddh || ''}" data-original="${item.yifu || '0'}">${item.yifu || ''}</td>
+        <td>${weifu}</td>
+        <td class="editable-sfkp" data-field="sfkp" data-ddh="${item.ddh || ''}">
+            <select class="sfkp-select">
+                <option value="未开票" ${item.sfkp === '未开票' ? 'selected' : ''}>未开票</option>
+                <option value="已开票" ${item.sfkp === '已开票' ? 'selected' : ''}>已开票</option>
+            </select>
+        </td>
+        <td class="editable-wldh" data-field="wldh" data-ddh="${item.ddh || ''}">${item.wldh || ''}</td>
+        <td class="editable-zk" data-field="zk" data-ddh="${item.ddh || ''}">${item.zk || ''}</td>
+        <td>
+            <button class="btn btn-sm btn-info detail-btn" 
+                    data-ddh="${item.ddh || ''}">
+                <i class="bi bi-eye"></i> 详情
+            </button>
+            <button class="btn btn-sm btn-warning withdraw-btn" 
+                    data-ddh="${item.ddh || ''}"
+                    style="margin-top: 2px;">
+                <i class="bi bi-arrow-counterclockwise"></i> 撤回
+            </button>
+        </td>
+        <td class="pdf-upload-cell">
+            <div class="pdf-btn-container">
+                ${hasPdf ? `
+                    <!-- 有PDF文件时的按钮 - 垂直排列 -->
+                    <div>
+                        <button class="btn btn-sm btn-success view-pdf-btn" 
                                 data-ddh="${item.ddh || ''}"
-                                style="margin-top: 2px;">
-                            <i class="bi bi-arrow-counterclockwise"></i> 撤回
+                                title="查看PDF文件">
+                            <i class="bi bi-file-earmark-pdf"></i> 查看PDF
                         </button>
-                    </td>
-                    <td class="pdf-upload-cell">
-                        ${hasPdf ? `
-                            <!-- 有PDF文件时的按钮 -->
-                            <button class="btn btn-sm btn-success view-pdf-btn" 
-                                    data-ddh="${item.ddh || ''}">
-                                <i class="bi bi-file-earmark-pdf"></i> 查看PDF
-                            </button>
-                            <button class="btn btn-sm btn-danger delete-pdf-btn" 
-                                    data-ddh="${item.ddh || ''}"
-                                    style="margin-top: 2px;">
-                                <i class="bi bi-trash"></i> 删除
-                            </button>
-                        ` : `
-                            <!-- 没有PDF文件时的按钮 -->
-                            <button class="btn btn-sm btn-warning upload-pdf-btn" 
-                                    data-ddh="${item.ddh || ''}">
-                                <i class="bi bi-cloud-upload"></i> 上传PDF
-                            </button>
-                        `}
-                        <input type="file" class="pdf-file-input" data-ddh="${item.ddh || ''}" accept=".pdf" style="display: none;">
-                    </td>
-                </tr>
-            `;
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-danger delete-pdf-btn" 
+                                data-ddh="${item.ddh || ''}"
+                                title="删除PDF文件">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </div>
+                ` : `
+                    <!-- 没有PDF文件时的按钮 -->
+                    <div>
+                        <button class="btn btn-sm btn-warning upload-pdf-btn" 
+                                data-ddh="${item.ddh || ''}"
+                                title="上传PDF文件">
+                            <i class="bi bi-cloud-upload"></i> 上传PDF
+                        </button>
+                    </div>
+                `}
+                <input type="file" class="pdf-file-input" data-ddh="${item.ddh || ''}" accept=".pdf" style="display: none;">
+            </div>
+        </td>
+    </tr>
+`;
         });
 
         // 更新统计显示
@@ -450,33 +467,33 @@ function autoAdjustColumnWidths() {
     const table = document.getElementById('ddmxTable');
     if (!table) return;
 
-    // 设置表格为自动布局
-    table.style.tableLayout = 'auto';
+    // 设置表格为固定布局
+    table.style.tableLayout = 'fixed';
+    table.style.width = '100%';
 
-    // 为每个单元格设置合适的样式
-    const cells = table.getElementsByTagName('td');
-    for (let cell of cells) {
-        cell.style.whiteSpace = 'nowrap';
-        cell.style.overflow = 'hidden';
-        cell.style.textOverflow = 'ellipsis';
-        cell.style.maxWidth = '300px'; // 防止过宽
-    }
-
-    // 为操作列和PDF列设置固定宽度
-    const actionCells = table.querySelectorAll('td.action-cell');
+    // 确保PDF列有足够的宽度
     const pdfCells = table.querySelectorAll('td.pdf-upload-cell');
+    pdfCells.forEach(cell => {
+        cell.style.width = '250px';
+        cell.style.minWidth = '250px';
+        cell.style.maxWidth = '250px';
+        cell.style.overflow = 'visible';
+    });
 
+    // 确保操作列有正确的宽度
+    const actionCells = table.querySelectorAll('td:nth-child(18)');
     actionCells.forEach(cell => {
         cell.style.width = '160px';
         cell.style.minWidth = '160px';
         cell.style.maxWidth = '160px';
+        cell.style.textAlign = 'center';
     });
 
-    pdfCells.forEach(cell => {
-        cell.style.width = '200px';
-        cell.style.minWidth = '200px';
-        cell.style.maxWidth = '200px';
-    });
+    // 调整表格容器
+    const tableContainer = table.closest('.table-div');
+    if (tableContainer) {
+        tableContainer.style.overflowX = 'auto';
+    }
 }
 // 绑定查看PDF事件
 function bindViewPdfEvents() {
@@ -615,7 +632,10 @@ function deletePdfFile(ddh, $btn) {
 
             // 删除成功后刷新数据
             getList(currentPage, pageSize, getSearchParams());
-        } else {
+        } else if(res.code === 403){
+            swal("权限不足！ ");
+        }
+        else {
             console.error("PDF文件删除失败:", res.message);
             swal("PDF文件删除失败: " + (res.message || '未知错误'));
         }
@@ -677,6 +697,8 @@ function withdrawOrder(ddh, $btn) {
 
             // 刷新数据
             getList(currentPage, pageSize, getSearchParams());
+        }else if(res.code === 403){
+            swal("权限不足！ ");
         } else {
             console.error("订单撤回失败:", res.message);
             swal("订单撤回失败: " + (res.message || '未知错误'));
@@ -898,7 +920,9 @@ function bindEditableEvents() {
                 if (res.code === 200) {
                     console.log("开票状态和开票时间更新成功");
                     updateYingfuWeifuDisplay($row);
-                } else {
+                } else if(res.code === 403){
+                    swal("权限不足！ ");
+                }else {
                     console.error("开票状态更新失败:", res.message);
                     swal("开票状态更新失败: " + (res.message || '未知错误'));
                     $select.val('未开票');
@@ -1038,6 +1062,8 @@ function getDetailData(ddh, ddrq) {
         if (res.code === 200) {
             console.log("返回的详细信息", res);
             fillDetailInfo(res.data);
+        }else if(res.code === 403){
+            swal("权限不足！ ");
         } else {
             console.error("获取详情失败:", res.message);
             $('#detailFormContainer').html(`
@@ -1393,28 +1419,23 @@ function addTableStyles() {
         .prop('type', 'text/css')
         .html(`
             .selected-row {
-                background-color: #b3d9ff !important;
                 font-weight: bold;
             }
             .table-div {
                 max-height: 600px;
                 overflow-y: auto;
+                overflow-x: auto;
                 border: 1px solid #ddd;
             }
             select:disabled {
-                background-color: #e9ecef;
                 opacity: 1;
-                color: #6c757d;
                 cursor: not-allowed;
             }
             .disabled-info {
-                color: #dc3545;
                 font-size: 12px;
                 margin-top: 5px;
             }
             .pending-shipment {
-                background-color: #409EFF !important;
-                color: white !important;
                 font-weight: bold;
             }
             
@@ -1427,14 +1448,12 @@ function addTableStyles() {
                 border-radius: 3px !important;
                 padding: 4px 6px !important;
                 font-size: 12px !important;
-                background-color: white !important;
                 cursor: pointer !important;
                 height: 28px !important;
                 box-sizing: border-box !important;
             }
             
             .sfkp-select:focus {
-                border-color: #409EFF !important;
                 outline: none !important;
                 box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2) !important;
             }
@@ -1444,13 +1463,113 @@ function addTableStyles() {
                 font-size: 12px !important;
             }
             
-            /* 开票状态单元格样式 */
-            .editable-sfkp {
-                min-width: 120px !important;
-                max-width: 120px !important;
+            /* 表格整体布局 - 固定布局 */
+            #ddmxTable {
+                table-layout: fixed;
+                width: 100%;
+                min-width: 1800px;
+            }
+            
+            /* PDF列 - 增加宽度确保两个按钮能完整显示 */
+            #ddmxTable th:nth-child(19),
+            #ddmxTable td:nth-child(19) {
+                width: 250px !important;
+                min-width: 250px !important;
+                max-width: 250px !important;
+                padding: 4px !important;
+                text-align: center !important;
                 overflow: visible !important;
             }
             
+            /* 操作列 */
+            #ddmxTable th:nth-child(18),
+            #ddmxTable td:nth-child(18) {
+                width: 160px !important;
+                min-width: 160px !important;
+                max-width: 160px !important;
+                padding: 4px !important;
+                text-align: center !important;
+            }
+            
+            /* 开票状态列 */
+            #ddmxTable th:nth-child(15),
+            #ddmxTable td:nth-child(15) {
+                width: 120px !important;
+                min-width: 120px !important;
+                max-width: 120px !important;
+            }
+            
+            /* 单元格通用样式 */
+            #ddmxTable td {
+                padding: 6px 4px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                vertical-align: middle !important;
+            }
+            
+            /* PDF单元格特殊处理 */
+            .pdf-upload-cell {
+                white-space: normal !important;
+                overflow: visible !important;
+                line-height: 1.4 !important;
+            }
+            
+            /* PDF按钮容器 */
+            .pdf-btn-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                min-height: 70px;
+                justify-content: center;
+            }
+            
+            /* PDF按钮样式 - 垂直排列 */
+            .view-pdf-btn, .upload-pdf-btn, .delete-pdf-btn {
+                width: 100px !important;
+                min-width: 100px !important;
+                max-width: 100px !important;
+                margin: 2px !important;
+                padding: 6px 8px !important;
+                font-size: 12px !important;
+                line-height: 1.2 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                display: block !important;
+            }
+            
+            /* 操作按钮样式 */
+            .detail-btn, .withdraw-btn {
+                width: 70px !important;
+                min-width: 70px !important;
+                max-width: 70px !important;
+                margin: 2px !important;
+                padding: 4px 6px !important;
+                font-size: 12px !important;
+                line-height: 1.2 !important;
+                display: inline-block !important;
+            }
+            
+            /* PDF按钮颜色 */
+            .view-pdf-btn {
+                background-color: #28a745 !important;
+                border-color: #28a745 !important;
+                color: white !important;
+            }
+            .upload-pdf-btn {
+                background-color: #ffc107 !important;
+                border-color: #ffc107 !important;
+                color: #212529 !important;
+            }
+            .delete-pdf-btn {
+                background-color: #dc3545 !important;
+                border-color: #dc3545 !important;
+                color: white !important;
+            }
+            
+            /* 可编辑字段样式 */
             .editable-tcd, .editable-wldh, .editable-zk, .editable-yifu {
                 cursor: pointer;
                 background-color: #f0f8ff;
@@ -1462,59 +1581,22 @@ function addTableStyles() {
                 background-color: #e6f7ff;
             }
             
-            /* PDF按钮样式 */
-            .pdf-upload-cell {
-                text-align: center;
-            }
-            .view-pdf-btn, .upload-pdf-btn, .delete-pdf-btn {
-                min-width: 80px;
-                margin: 2px;
-            }
-            .view-pdf-btn {
-                background-color: #28a745;
-                border-color: #28a745;
-                color: white;
-            }
-            .upload-pdf-btn {
-                background-color: #ffc107;
-                border-color: #ffc107;
-                color: #212529;
-            }
-            .delete-pdf-btn {
-                background-color: #dc3545;
-                border-color: #dc3545;
-                color: white;
-            }
-            
-            /* 表格布局优化 */
-            #ddmxTable {
-                table-layout: fixed;
-            }
-            
-            #ddmxTable th:nth-child(15),
-            #ddmxTable td:nth-child(15) {
-                width: 120px !important;
-                min-width: 120px !important;
-                max-width: 120px !important;
-            }
-            
-            /* 新按钮悬停效果 */
+            /* 按钮悬停效果 */
             .view-pdf-btn:hover {
-                background-color: #218838;
-                border-color: #1e7e34;
+                background-color: #218838 !important;
+                border-color: #1e7e34 !important;
             }
             .upload-pdf-btn:hover {
-                background-color: #e0a800;
-                border-color: #d39e00;
+                background-color: #e0a800 !important;
+                border-color: #d39e00 !important;
             }
             .delete-pdf-btn:hover {
-                background-color: #c82333;
-                border-color: #bd2130;
+                background-color: #c82333 !important;
+                border-color: #bd2130 !important;
             }
             
-            /* 新增：统计区域样式 - 调整高度为80px并均匀分布 */
+            /* 新增：统计区域样式 */
             .statistics-container {
-                background-color: #f8f9fa;
                 border-radius: 8px;
                 padding: 10px 0;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -1524,7 +1606,6 @@ function addTableStyles() {
             .statistics-container .card {
                 height: 100%;
                 border: none;
-                background-color: transparent;
                 margin: 0;
             }
             .statistics-container .card-body {
@@ -1558,7 +1639,6 @@ function addTableStyles() {
             }
             .stat-item h5 {
                 font-size: 13px;
-                color: #6c757d;
                 margin-bottom: 5px;
                 font-weight: 600;
                 text-align: center;
@@ -1570,6 +1650,36 @@ function addTableStyles() {
                 margin: 0;
                 text-align: center;
             }
+            
+            /* 表格标题行样式 */
+            #ddmxTable th {
+                font-weight: bold;
+                text-align: center;
+                padding: 10px 4px !important;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+            
+            /* 表格容器滚动条样式 */
+            .table-div::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            
+            .table-div::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+            
+            .table-div::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 4px;
+            }
+            
+            .table-div::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+            
             /* 响应式调整 */
             @media (max-width: 768px) {
                 .statistics-container {
@@ -1635,7 +1745,9 @@ function uploadPdfFile(ddh, file) {
                 swal('PDF文件上传成功！');
                 // 上传成功后刷新数据
                 getList(currentPage, pageSize, getSearchParams());
-            } else {
+            } else if(res.code === 403){
+                swal("权限不足！ ");
+            }else {
                 console.error("PDF文件上传失败:", res.message);
                 swal("PDF文件上传失败: " + (res.message || '未知错误'));
             }
@@ -1730,9 +1842,35 @@ function downloadPdfFile(ddh) {
                     swal('PDF下载失败');
                 }
             }
-        } else {
+        } else if(res.code === 403){
+            swal("权限不足！ ");
+        }else {
             console.error("PDF文件下载失败:", res.message);
             swal("PDF文件下载失败: " + (res.message || '未知错误'));
         }
     });
 }
+
+// 调整表格列宽辅助函数
+function adjustTableColumns() {
+    const table = $('#ddmxTable');
+    if (!table.length) return;
+
+    // 确保PDF列有足够的宽度
+    const pdfCells = table.find('td.pdf-upload-cell');
+    pdfCells.css({
+        'width': '250px',
+        'min-width': '250px',
+        'max-width': '250px',
+        'overflow': 'visible'
+    });
+
+    // 确保表格容器有水平滚动条
+    const tableContainer = $('.table-div');
+    if (tableContainer.length) {
+        tableContainer.css('overflow-x', 'auto');
+    }
+
+    console.log('PDF列宽度已调整');
+}
+

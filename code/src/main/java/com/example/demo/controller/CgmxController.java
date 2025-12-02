@@ -30,7 +30,7 @@ public class CgmxController {
     public Result<PageResult<Cgmx>> getKhxxList(HttpSession session, @RequestBody PageRequestDTO request) {
         try {
             // 权限检查
-            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+            Result<?> authResult = AuthUtil.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
@@ -52,7 +52,7 @@ public class CgmxController {
     public Result<Cgmx> getCgmxDetail(HttpSession session, @RequestBody DetailRequestDTO request) {
         try {
             // 权限检查
-            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+            Result<?> authResult = AuthUtil.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
@@ -83,7 +83,7 @@ public class CgmxController {
     public Result queryList(HttpSession session, @RequestBody Map<String, Object> params) {
         try {
             // 权限检查
-            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+            Result<?> authResult = AuthUtil.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
@@ -101,15 +101,16 @@ public class CgmxController {
     }
 
     /**
-     * 更新状态
-     */
-
-
-    /**
      * 删除客户信息
      */
     @PostMapping("/delete")
-    public Result delete(@RequestBody Map<String, Object> params) {
+    public Result delete(HttpSession session,@RequestBody Map<String, Object> params) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
             Integer id = (Integer) params.get("id");
             if (id == null) {

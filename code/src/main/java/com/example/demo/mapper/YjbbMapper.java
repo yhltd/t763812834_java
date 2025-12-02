@@ -16,9 +16,8 @@ public interface YjbbMapper extends BaseMapper<Yjbb> {
      * 分页查询 - 使用兼容的 SQL Server 分页语法
      */
     @Select("<script>" +
-            "SELECT * FROM (" +
-            "   SELECT ROW_NUMBER() OVER (ORDER BY year DESC, month DESC, d.fzr) as row_num, " +
-            "    year, month, d.fzr, y.gh, zj " +
+            "SELECT " +
+            "    d.year, d.month, d.fzr, y.gh, d.zj " +
             "FROM (" +
             "    SELECT fzr, " +
             "        CAST(LEFT(ddrq, 4) AS INT) AS year, " +
@@ -42,14 +41,10 @@ public interface YjbbMapper extends BaseMapper<Yjbb> {
             "            CHARINDEX('/', ddrq, CHARINDEX('/', ddrq) + 1) - CHARINDEX('/', ddrq) - 1) AS INT), fzr " +
             ") d " +
             "LEFT JOIN yuangongxinxi y ON d.fzr = y.xm " +
-            ") as temp " +
-            "WHERE row_num BETWEEN #{start} AND #{end}" +
+            "ORDER BY d.year DESC, d.month DESC, d.fzr" +
             "</script>")
 
-    List<Yjbb> selectForPage(@Param("start") long start,
-                             @Param("end") long end,
-                             @Param("selectedYear") String selectedYear,
-                             @Param("ew") Wrapper<Yjbb> wrapper);
+    List<Yjbb> selectForPage(@Param("selectedYear") String selectedYear);
 
     /**
      * 获取总记录数

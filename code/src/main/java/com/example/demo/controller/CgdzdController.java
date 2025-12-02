@@ -33,7 +33,7 @@ public class CgdzdController {
     public Result<PageResult<Cgdzd>> getKhxxList(HttpSession session, @RequestBody PageRequestDTO request) {
         try {
             // 权限检查
-            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+            Result<?> authResult = AuthUtil.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
@@ -51,7 +51,13 @@ public class CgdzdController {
      * 根据订单号获取详细信息
      */
     @PostMapping("/getDetailByDdh")
-    public Result getDetailByDdh(@RequestBody Map<String, Object> params) {
+    public Result getDetailByDdh(HttpSession session,@RequestBody Map<String, Object> params) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
             String ddh = (String) params.get("ddh");
             if (ddh == null) {
@@ -70,7 +76,13 @@ public class CgdzdController {
      * 更新对账状态
      */
     @PostMapping("/updateDzztStatus")
-    public Result updateDzztStatus(@RequestBody Map<String, Object> params) {
+    public Result updateDzztStatus(HttpSession session,@RequestBody Map<String, Object> params) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
             String ddh = (String) params.get("ddh");
             String dzzt = (String) params.get("dzzt");

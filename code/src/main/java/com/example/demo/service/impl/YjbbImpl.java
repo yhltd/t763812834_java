@@ -36,7 +36,7 @@ public class YjbbImpl extends ServiceImpl<YjbbMapper, Yjbb> implements YjbbServi
             LambdaQueryWrapper<Yjbb> wrapper = buildQueryWrapper(request);
 
             // 使用 SQL Server 分页查询数据
-            List<Yjbb> records = baseMapper.selectForPage(start, end,selectedYear, wrapper);
+            List<Yjbb> records = baseMapper.selectForPage(selectedYear);
 
             // 查询总记录数
             Long totalCount = baseMapper.selectCountForPage(wrapper);

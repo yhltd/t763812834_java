@@ -208,9 +208,18 @@ public class DdmxController {
      * 上传PDF文件
      */
     @PostMapping("/uploadPdf")
-    public ResponseEntity<?> uploadPdf(
+    public ResponseEntity<?> uploadPdf(HttpSession session,
             @RequestParam("ddh") String ddh,
             @RequestParam("pdfFile") MultipartFile pdfFile) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 403);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
 
         try {
             Map<String, Object> result = ddmxService.uploadPdf(ddh, pdfFile);
@@ -235,7 +244,7 @@ public class DdmxController {
      * 下载PDF文件
      */
     @PostMapping("/downloadPdf")
-    public ResponseEntity<byte[]> downloadPdf(@RequestBody Map<String, String> params) {
+    public ResponseEntity<byte[]> downloadPdf(HttpSession session,@RequestBody Map<String, String> params) {
         try {
             String ddh = params.get("ddh");
             Map<String, Object> result = ddmxService.downloadPdf(ddh);
@@ -259,7 +268,9 @@ public class DdmxController {
      * 查看PDF文件（在线预览）
      */
     @RequestMapping(value = "/viewPdf", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<byte[]> viewPdf(@RequestParam("ddh") String ddh) {
+    public ResponseEntity<byte[]> viewPdf(HttpSession session,@RequestParam("ddh") String ddh) {
+
+
         try {
             Map<String, Object> result = ddmxService.downloadPdf(ddh);
             byte[] pdfBytes = (byte[]) result.get("content");
@@ -280,7 +291,16 @@ public class DdmxController {
      * 删除PDF文件
      */
     @PostMapping("/deletePdf")
-    public ResponseEntity<?> deletePdf(@RequestBody Map<String, String> params) {
+    public ResponseEntity<?> deletePdf(HttpSession session,@RequestBody Map<String, String> params) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 403);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
         try {
             String ddh = params.get("ddh");
             boolean success = ddmxService.deletePdf(ddh);
@@ -309,7 +329,7 @@ public class DdmxController {
      * 获取PDF文件信息
      */
     @PostMapping("/getPdfInfo")
-    public ResponseEntity<?> getPdfInfo(@RequestBody Map<String, String> params) {
+    public ResponseEntity<?> getPdfInfo(HttpSession session,@RequestBody Map<String, String> params) {
         try {
             String ddh = params.get("ddh");
             Map<String, Object> result = ddmxService.getPdfInfo(ddh);

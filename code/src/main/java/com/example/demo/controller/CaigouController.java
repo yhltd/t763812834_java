@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.entity.*;
 import com.example.demo.service.CaigouService;
 import com.example.demo.service.CgmxService;
-import com.example.demo.service.YjbbService;
 import com.example.demo.util.*;
 import com.example.demo.util.Qxgl;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +26,12 @@ public class CaigouController {
     private CgmxService cgmxService;
     @PostMapping("/getyifang")
     public ResultInfo getyifang(HttpSession session) {
-//        UserInfo userInfo = GsonUtil.toEntity(SessionUtil.getToken(session), UserInfo.class);
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return ResultInfo.error(authResult.getCode(), authResult.getMessage());
+        }
+
         Qxgl userInfo = GsonUtil.toEntity(SessionUtil.getToken(session), Qxgl.class);
         try {
             List<Caigou> getyifang = caigouService.getyifang();
@@ -45,6 +49,12 @@ public class CaigouController {
 
     @PostMapping("/saveCgmx")
     public Result<?> saveCgmx(@RequestBody Cgmx cgmx, HttpSession session) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
 
             boolean success = cgmxService.save(cgmx);
