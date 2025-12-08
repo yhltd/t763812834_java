@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -27,6 +29,13 @@ public class ScgdController {
     @PostMapping("/list")
     public Result<PageResult<Scgd>> getKhxxList(HttpSession session, @RequestBody ScgdSearchRequest request) {
         try {
+            // 处理日期格式转换：将-替换为/
+            if (StringUtils.isNotBlank(request.getStartDate())) {
+                request.setStartDate(normalizeDateString(request.getStartDate()));
+            }
+            if (StringUtils.isNotBlank(request.getEndDate())) {
+                request.setEndDate(normalizeDateString(request.getEndDate()));
+            }
 
             // 执行查询
             PageResult<Scgd> result = scgdService.getScgdPage(request);
@@ -35,6 +44,58 @@ public class ScgdController {
         } catch (Exception e) {
             log.error("查询客户信息失败", e);
             return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    private String normalizeDateString(String dateStr) {
+        if (StringUtils.isBlank(dateStr)) {
+            return dateStr;
+        }
+
+        try {
+            // 移除所有非数字字符（除了斜杠）
+            String cleaned = dateStr.replaceAll("[^0-9/]", "/");
+
+            // 处理纯数字格式（如20250101）
+            if (cleaned.matches("\\d{8}")) {
+                cleaned = cleaned.substring(0, 4) + "/" +
+                        cleaned.substring(4, 6) + "/" +
+                        cleaned.substring(6, 8);
+            }
+
+            // 使用SimpleDateFormat解析并格式化
+            SimpleDateFormat[] possibleFormats = {
+                    new SimpleDateFormat("yyyy/M/d"),
+                    new SimpleDateFormat("yyyy-MM-dd"),
+                    new SimpleDateFormat("yyyy.MM.dd"),
+                    new SimpleDateFormat("yyyy/MM/dd")
+            };
+
+            Date date = null;
+            for (SimpleDateFormat sdf : possibleFormats) {
+                try {
+                    sdf.setLenient(false); // 严格模式
+                    date = sdf.parse(cleaned);
+                    break;
+                } catch (Exception e) {
+                    // 尝试下一个格式
+                    continue;
+                }
+            }
+
+            if (date != null) {
+                // 统一格式化为 yyyy/MM/dd
+                SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy/MM/dd");
+                return outputFormat.format(date);
+            }
+
+            // 如果无法解析，返回原始值（但记录日志）
+            log.warn("无法解析日期字符串: {}", dateStr);
+            return dateStr;
+
+        } catch (Exception e) {
+            log.error("日期格式化错误: {}", dateStr, e);
+            return dateStr;
         }
     }
 

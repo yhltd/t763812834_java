@@ -12,6 +12,6 @@ public class PageRequest {
     private String khmc;
     private String fzr;
     private String bm;
-    private Date startDate;
-    private Date endDate;
+    private String startDate;
+    private String endDate;
 }

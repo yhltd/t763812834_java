@@ -136,8 +136,17 @@ function addStatisticsStyles() {
         .appendTo('head');
 }
 
-// 设置表格数据的函数 - 确保正确销毁
-function setTable(data) {
+// 自定义分页功能
+function initCustomPagination() {
+    // 移除bootstrapTable自带的分页
+    $('#ygxxTable').bootstrapTable('destroy');
+
+}
+
+
+
+// 设置表格数据的函数
+function setTable(data, total = 0) {
     console.log('设置表格数据:', data);
 
     // 为每条数据添加自动递增的序号
@@ -300,6 +309,9 @@ function updateTime() {
 $(function () {
     // 添加统计栏样式
     addStatisticsStyles();
+
+    // 初始化自定义分页
+    initCustomPagination();
 
     // 创建统计栏
     createStatisticsBar();
@@ -527,7 +539,7 @@ $(function () {
         swal("刷新成功", "数据已更新", "success");
     });
 
-// 删除按钮
+    // 删除按钮
     $('#delete-btn').click(function () {
         console.log('删除按钮被点击');
         let rows = getTableSelection("#ygxxTable");

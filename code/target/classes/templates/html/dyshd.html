@@ -842,6 +842,7 @@
 
                 if (res.code == 200) {
                     console.log("查询成功，数据:", res.data);
+                    swal("查询成功！")
                     fillProductTable(res.data);
                 }else if(res.code == 403){
                     swal("权限不足，无法访问此功能！")

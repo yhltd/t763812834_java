@@ -59,7 +59,7 @@ function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${year}/${month}/${day}`;
 }
 
 // 初始化工具栏事件
@@ -160,6 +160,17 @@ function resetSearch() {
 
 // 获取搜索参数
 function getSearchParams() {
+    var startDate = $('#startDate').val() || '';
+    var endDate = $('#endDate').val() || '';
+
+    // 如果日期是yyyy-MM-dd格式，转换为yyyy/MM/dd格式
+    if (startDate && startDate.indexOf('-') !== -1) {
+        startDate = startDate.replace(/-/g, '/');
+    }
+    if (endDate && endDate.indexOf('-') !== -1) {
+        endDate = endDate.replace(/-/g, '/');
+    }
+
     return {
         khcm: $('#khcm').val() || '',
         lxr: $('#lxr').val() || '',

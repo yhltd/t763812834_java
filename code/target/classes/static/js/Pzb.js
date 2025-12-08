@@ -56,7 +56,15 @@ $(document).ready(function() {
     initPzbPage();
     initToolbarEvents();
     getList();
+    initCustomPagination();
 });
+
+// 自定义分页功能
+function initCustomPagination() {
+    // 移除bootstrapTable自带的分页
+    $('#qhdTable').bootstrapTable('destroy');
+
+}
 
 function initPzbPage() {
     console.log('初始化配置表页面...');

@@ -44,4 +44,6 @@ public interface DdmxService extends IService<Ddmx> {
     boolean deletePdf(String ddh);
     Map<String, Object> getPdfInfo(String ddh);
 
+    boolean updatePdfFileNameByDdh(String ddh, String pdfFileName);
+
 }

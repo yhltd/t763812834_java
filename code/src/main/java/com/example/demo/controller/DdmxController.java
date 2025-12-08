@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.entity.Ddmx;
 import com.example.demo.service.DdmxService;
+import com.example.demo.service.impl.LargeFileUploadService;
 import com.example.demo.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,11 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @RestController
@@ -29,6 +28,9 @@ public class DdmxController {
     @Autowired
     private DdmxService ddmxService;
 
+    @Autowired
+    private LargeFileUploadService largeFileUploadService;
+
     @Value("${pdf.upload.path:/tmp/uploads/pdf/}")
     private String uploadPath;
 
@@ -37,8 +39,6 @@ public class DdmxController {
      */
     @PostMapping("/distinctPage")
     public Result<Page<Map<String, Object>>> distinctPage(HttpSession session,@RequestBody PageRequest pageRequest) {
-
-
         // 创建分页对象
         Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
 
@@ -53,13 +53,24 @@ public class DdmxController {
             queryWrapper.like("khmc", pageRequest.getKhmc());
         }
         if (StringUtils.isNotBlank(pageRequest.getFzr())) {
-            queryWrapper.eq("fzr", pageRequest.getFzr());
+            queryWrapper.like("fzr", pageRequest.getFzr());
         }
         if (StringUtils.isNotBlank(pageRequest.getBm())) {
-            queryWrapper.eq("bm", pageRequest.getBm());
+            queryWrapper.like("bm", pageRequest.getBm());
         }
-        if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
-            queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+        if (pageRequest.getStartDate() != null || pageRequest.getEndDate() != null) {
+            String startDate = convertToSlashFormat(pageRequest.getStartDate());
+            String endDate = convertToSlashFormat(pageRequest.getEndDate());
+
+            if (startDate != null && endDate != null) {
+                // 使用apply方法处理日期查询
+                queryWrapper.apply(
+                        "ISDATE(ddrq) = 1 AND " +
+                                "CONVERT(DATE, ddrq) " +
+                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+                        startDate, endDate
+                );
+            }
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -78,6 +89,30 @@ public class DdmxController {
         Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(page, queryWrapper);
 
         return Result.success(result);
+    }
+
+    private String convertToSlashFormat(String dateStr) {
+        if (StringUtils.isBlank(dateStr)) {
+            return null;
+        }
+
+        // 替换横杠为斜杠
+        dateStr = dateStr.replace("-", "/");
+
+        // 处理单数字月份和日期
+        String[] parts = dateStr.split("/");
+        if (parts.length == 3) {
+            // 年份
+            String year = parts[0];
+            // 月份补零
+            String month = parts[1].length() == 1 ? "0" + parts[1] : parts[1];
+            // 日期补零
+            String day = parts[2].length() == 1 ? "0" + parts[2] : parts[2];
+
+            return year + "/" + month + "/" + day;
+        }
+
+        return dateStr;
     }
 
     /**
@@ -205,12 +240,14 @@ public class DdmxController {
     }
 
     /**
-     * 上传PDF文件
+     * 优化上传PDF文件 - 支持分片上传
      */
     @PostMapping("/uploadPdf")
     public ResponseEntity<?> uploadPdf(HttpSession session,
-            @RequestParam("ddh") String ddh,
-            @RequestParam("pdfFile") MultipartFile pdfFile) {
+                                       @RequestParam("ddh") String ddh,
+                                       @RequestParam("pdfFile") MultipartFile pdfFile,
+                                       @RequestParam(value = "chunk", required = false) Integer chunk,
+                                       @RequestParam(value = "chunks", required = false) Integer chunks) {
 
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -222,6 +259,17 @@ public class DdmxController {
         }
 
         try {
+            // 检查文件大小
+            if (pdfFile.getSize() > 50 * 1024 * 1024) { // 50MB限制
+                throw new RuntimeException("文件大小不能超过50MB");
+            }
+
+            // 分片上传处理
+            if (chunks != null && chunks > 1) {
+                return handleChunkUpload(ddh, pdfFile, chunk, chunks);
+            }
+
+            // 普通上传
             Map<String, Object> result = ddmxService.uploadPdf(ddh, pdfFile);
 
             Map<String, Object> response = new HashMap<>();
@@ -241,44 +289,201 @@ public class DdmxController {
     }
 
     /**
-     * 下载PDF文件
+     * 处理分片上传
+     */
+    private ResponseEntity<?> handleChunkUpload(String ddh, MultipartFile chunkFile, Integer chunk, Integer chunks) {
+        try {
+            // 这里实现分片上传逻辑
+            // 实际项目中需要保存分片到临时位置，最后合并
+            // 简化实现：直接拒绝分片上传，要求完整上传
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 400);
+            errorResponse.put("message", "当前版本不支持分片上传，请上传完整文件");
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 500);
+            errorResponse.put("message", "分片上传处理失败: " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    /**
+     * 优化下载PDF文件 - 支持断点续传
      */
     @PostMapping("/downloadPdf")
-    public ResponseEntity<byte[]> downloadPdf(HttpSession session,@RequestBody Map<String, String> params) {
+    public ResponseEntity<byte[]> downloadPdf(HttpSession session,
+                                              @RequestBody Map<String, String> params,
+                                              @RequestHeader(value = "Range", required = false) String rangeHeader) {
+
         try {
             String ddh = params.get("ddh");
             Map<String, Object> result = ddmxService.downloadPdf(ddh);
 
             byte[] pdfBytes = (byte[]) result.get("content");
             String fileName = (String) result.get("fileName");
+            String source = (String) result.get("source");
+
+            System.out.println("文件下载完成，来源: " + source + ", 大小: " + pdfBytes.length);
+
+            // 支持断点续传
+            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+                return handleRangeDownload(pdfBytes, fileName, rangeHeader);
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment", fileName);
             headers.setContentLength(pdfBytes.length);
+            headers.add("Cache-Control", "private, max-age=3600");
+            headers.add("X-File-Source", source);
 
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 
         } catch (Exception e) {
+            System.err.println("文件下载失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     /**
-     * 查看PDF文件（在线预览）
+     * 处理断点续传
+     */
+    private ResponseEntity<byte[]> handleRangeDownload(byte[] fullBytes, String fileName, String rangeHeader) {
+        try {
+            long fileSize = fullBytes.length;
+            String range = rangeHeader.substring(6);
+            String[] ranges = range.split("-");
+
+            long start = Long.parseLong(ranges[0]);
+            long end = fileSize - 1;
+            if (ranges.length > 1) {
+                end = Long.parseLong(ranges[1]);
+            }
+
+            if (start > end || start < 0 || end >= fileSize) {
+                return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).build();
+            }
+
+            long contentLength = end - start + 1;
+            byte[] partialContent = new byte[(int) contentLength];
+            System.arraycopy(fullBytes, (int) start, partialContent, 0, (int) contentLength);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentLength(contentLength);
+            headers.add("Content-Range", "bytes " + start + "-" + end + "/" + fileSize);
+            headers.add("Accept-Ranges", "bytes");
+            headers.add("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            headers.add("Cache-Control", "private, max-age=3600");
+
+            return new ResponseEntity<>(partialContent, headers, HttpStatus.PARTIAL_CONTENT);
+
+        } catch (Exception e) {
+            System.err.println("断点续传处理失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 专门处理大文件上传的接口
+     */
+    @PostMapping("/uploadLargePdf")
+    public ResponseEntity<?> uploadLargePdf(HttpSession session,
+                                            @RequestParam("ddh") String ddh,
+                                            @RequestParam("pdfFile") MultipartFile pdfFile) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createResponse(403, "权限不足"));
+        }
+
+        try {
+            // 文件大小检查
+            if (pdfFile.getSize() > 100 * 1024 * 1024) { // 100MB限制
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createResponse(400, "文件大小不能超过100MB"));
+            }
+
+            long startTime = System.currentTimeMillis();
+
+            // 根据文件大小选择不同的处理方式
+            Map<String, Object> result;
+            if (pdfFile.getSize() > 10 * 1024 * 1024) { // 超过10MB使用大文件处理
+                double fileSizeMB = pdfFile.getSize() / (1024.0 * 1024.0);
+                result = largeFileUploadService.uploadLargePdf(ddh, pdfFile);
+            } else {
+                // 小文件使用原处理方式
+                result = ddmxService.uploadPdf(ddh, pdfFile);
+            }
+
+            long costTime = System.currentTimeMillis() - startTime;
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "文件上传成功");
+            response.put("data", result);
+            response.put("totalCostTime", costTime + "ms");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 500);
+            errorResponse.put("message", "文件上传失败: " + e.getMessage());
+            errorResponse.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    /**
+     * 创建响应Map的辅助方法
+     */
+    private Map<String, Object> createResponse(int code, String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", code);
+        response.put("message", message);
+        return response;
+    }
+
+
+
+    /**
+     * 优化查看PDF文件（在线预览）- 添加缓存控制
      */
     @RequestMapping(value = "/viewPdf", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<byte[]> viewPdf(HttpSession session,@RequestParam("ddh") String ddh) {
-
+    public ResponseEntity<byte[]> viewPdf(HttpSession session,
+                                          @RequestParam("ddh") String ddh,
+                                          @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch) {
 
         try {
             Map<String, Object> result = ddmxService.downloadPdf(ddh);
             byte[] pdfBytes = (byte[]) result.get("content");
+            String source = (String) result.get("source");
+
+            // 生成ETag（简单版本）
+            String eTag = "\"" + Integer.toHexString(Arrays.hashCode(pdfBytes)) + "\"";
+
+            // 检查缓存
+            if (ifNoneMatch != null && ifNoneMatch.equals(eTag)) {
+                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("inline", "document.pdf");
             headers.setContentLength(pdfBytes.length);
+            headers.setETag(eTag);
+            headers.setCacheControl("public, max-age=3600");
+            headers.add("X-File-Source", source);
 
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 
@@ -348,4 +553,76 @@ public class DdmxController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    /**
+     * 快速预览URL（直接返回文件URL，不经过后端处理）
+     */
+    @GetMapping("/previewUrl/{ddh}")
+    public ResponseEntity<?> getPreviewUrl(@PathVariable String ddh) {
+        try {
+            // 在实际项目中，这里可以返回MinIO/S3的直接访问URL
+            // 简化实现：返回后端下载URL
+
+            // 检查订单是否存在PDF文件
+            QueryWrapper<Ddmx> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("pdf_file_name")
+                    .eq("ddh", ddh)
+                    .isNotNull("pdf_base64")
+                    .ne("pdf_base64", "")
+                    .last("LIMIT 1");
+
+            Ddmx ddmx = ddmxService.getOne(queryWrapper);
+
+            if (ddmx == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("code", 404);
+                errorResponse.put("message", "该订单没有PDF文件");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            }
+
+            // 构建预览信息
+            Map<String, Object> previewInfo = new HashMap<>();
+            previewInfo.put("url", "/ddmx/viewPdf?ddh=" + URLEncoder.encode(ddh, "UTF-8"));
+            previewInfo.put("direct", false);
+            previewInfo.put("message", "请使用后端预览接口");
+            previewInfo.put("fileName", ddmx.getPdfFileName());
+            previewInfo.put("hasFile", true);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "获取预览URL成功");
+            response.put("data", previewInfo);
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok().body(response);
+
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 500);
+            errorResponse.put("message", "获取预览URL失败: " + e.getMessage());
+            errorResponse.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
+//     在DdmxController中添加
+    @PostMapping("/updatePdfFileName")
+    public Result updatePdfFileName(@RequestBody Map<String, Object> params) {
+        String ddh = (String) params.get("ddh");
+        String pdfFileName = (String) params.get("pdfFileName");
+
+        // 更新dingdanmingx表的pdf_file_name字段
+        boolean success = ddmxService.updatePdfFileNameByDdh(ddh, pdfFileName);
+
+        if (success) {
+            return Result.success("PDF文件名更新成功");
+        } else {
+            return Result.error("PDF文件名更新失败");
+        }
+    }
+
+
+
 }

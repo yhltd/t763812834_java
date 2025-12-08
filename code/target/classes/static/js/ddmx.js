@@ -29,10 +29,72 @@ $(document).ready(function() {
     setDefaultDateRange();
     getList(currentPage, pageSize, {});
 
+
+    // 添加按钮点击事件 - 使用更可靠的事件委托
+    $(document).on('click', '#add-btn', function(e) {
+        e.preventDefault();
+        console.log('上传文件按钮被点击 - 使用委托绑定');
+
+        // 获取选中的行
+        var selectedRow = getSelectedRow();
+
+        console.log('选中的行数据:', selectedRow);
+
+        if (!selectedRow || !selectedRow.ddh) {
+            swal({
+                title: '未选择订单',
+                text: '请先在表格中选中一行订单，然后再上传文件',
+                icon: 'warning',
+                buttons: {
+                    confirm: '确定'
+                }
+            });
+            return;
+        }
+
+        // 使用选中行的订单号
+        var orderNumber = selectedRow.ddh;
+
+        console.log('使用选中订单号:', orderNumber);
+
+        // 设置订单号
+        $('#add-orderNumber').val(orderNumber);
+
+        // 清空之前的文件选择
+        try {
+            var $fileInput = $('#fileInput1');
+            if ($.fn.fileinput && $fileInput.data('fileinput')) {
+                $fileInput.fileinput('clear');
+            } else {
+                $fileInput.val('');
+            }
+        } catch (error) {
+            console.log('清空文件选择器失败:', error);
+            $('#fileInput1').val('');
+        }
+
+        // 显示上传模态框
+        $('#add-modal').modal('show');
+
+        console.log('模态框已显示');
+    });
+
     // 延迟执行表格列宽调整
     setTimeout(function() {
         adjustTableColumns();
     }, 300);
+
+    // if (window.performance && window.performance.memory) {
+    //     setInterval(() => {
+    //         const memory = window.performance.memory;
+    //         console.log('内存使用情况:', {
+    //             usedJSHeapSize: formatFileSize(memory.usedJSHeapSize),
+    //             totalJSHeapSize: formatFileSize(memory.totalJSHeapSize),
+    //             jsHeapSizeLimit: formatFileSize(memory.jsHeapSizeLimit)
+    //         });
+    //     }, 30000); // 每30秒记录一次
+    // }
+
 });
 
 function initDdmxPage() {
@@ -95,6 +157,12 @@ function initToolbarEvents() {
         resetSearchAndRefresh();
     });
 
+    // 删除上传文件按钮
+    $('#delete-btn').off('click').on('click', function() {
+        console.log('删除上传文件按钮点击');
+        deleteUploadedFile();
+    });
+
     // 打印按钮
     $('#print-btn').off('click').on('click', function() {
         console.log('打印按钮点击');
@@ -106,6 +174,54 @@ function initToolbarEvents() {
         // 这里可以添加打印逻辑
         swal('打印功能待实现');
     });
+}
+
+// 删除上传文件函数
+function deleteUploadedFile() {
+    console.log('执行删除上传文件操作...');
+
+    // 获取选中的行
+    var selectedRow = getSelectedRow();
+
+    if (!selectedRow) {
+        alert('未选择订单\n请先在表格中选中一行订单，然后再删除文件');
+        return;
+    }
+
+    // 获取订单号和文件路径
+    var ddh = selectedRow.ddh;
+    var filePath = selectedRow.pdf_file_name;
+
+    if (!ddh) {
+        alert('订单号为空\n选中行的订单号为空，无法删除文件');
+        return;
+    }
+
+    // 使用原生 confirm 对话框
+    var willDelete = confirm(`确定要删除订单 ${ddh} 的上传文件吗？`);
+
+    if (willDelete) {
+        console.log('用户确认删除，开始执行删除操作...');
+
+        // 显示加载中
+        $('#delete-btn').prop('disabled', true).html('<i class="bi bi-hourglass-split icon"></i> 删除中...');
+
+        try {
+            // 调用提取和删除函数
+            extractAndDeleteFromUrl(filePath, ddh);
+
+            // 同时需要清空数据库中的文件记录
+            clearFileRecord(ddh);
+
+            // 显示成功消息
+            alert(`删除成功！\n订单 ${ddh} 的文件已删除`);
+        } catch (error) {
+        } finally {
+            $('#delete-btn').prop('disabled', false).html('<i class="bi bi-trash icon"></i> 删除上传文件');
+        }
+    } else {
+        console.log('用户取消删除操作');
+    }
 }
 
 function resetSearchAndRefresh() {
@@ -355,6 +471,34 @@ function fillTable(data) {
             // 判断是否有PDF文件
             var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
 
+            // 获取文件扩展名，用于显示不同的图标
+            var fileExt = '';
+            var fileIcon = '';
+            if (hasPdf) {
+                fileExt = item.pdf_file_name.split('.').pop().toLowerCase();
+                switch(fileExt) {
+                    case 'pdf':
+                        fileIcon = 'bi-file-earmark-pdf';
+                        break;
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                        fileIcon = 'bi-file-earmark-image';
+                        break;
+                    case 'doc':
+                    case 'docx':
+                        fileIcon = 'bi-file-earmark-word';
+                        break;
+                    case 'xls':
+                    case 'xlsx':
+                        fileIcon = 'bi-file-earmark-excel';
+                        break;
+                    default:
+                        fileIcon = 'bi-file-earmark';
+                }
+            }
+
             tableBody += `
     <tr data-id="${item.id || index}" data-ddh="${item.ddh || ''}">
         <td>${item.ddrq || ''}</td>
@@ -395,30 +539,21 @@ function fillTable(data) {
                 ${hasPdf ? `
                     <!-- 有PDF文件时的按钮 - 垂直排列 -->
                     <div>
-                        <button class="btn btn-sm btn-success view-pdf-btn" 
-                                data-ddh="${item.ddh || ''}"
-                                title="查看PDF文件">
-                            <i class="bi bi-file-earmark-pdf"></i> 查看PDF
+                        <button class="btn btn-sm btn-success view-file-btn" 
+                                data-filepath="${item.pdf_file_name || ''}"
+                                data-filename="${item.ddh || ''}-10.${fileExt}"
+                                title="查看文件：${item.pdf_file_name || ''}">
+                            <i class="bi ${fileIcon}"></i> 查看文件
                         </button>
                     </div>
-                    <div>
-                        <button class="btn btn-sm btn-danger delete-pdf-btn" 
-                                data-ddh="${item.ddh || ''}"
-                                title="删除PDF文件">
-                            <i class="bi bi-trash"></i> 删除
-                        </button>
-                    </div>
+
                 ` : `
                     <!-- 没有PDF文件时的按钮 -->
                     <div>
-                        <button class="btn btn-sm btn-warning upload-pdf-btn" 
-                                data-ddh="${item.ddh || ''}"
-                                title="上传PDF文件">
-                            <i class="bi bi-cloud-upload"></i> 上传PDF
-                        </button>
+
                     </div>
                 `}
-                <input type="file" class="pdf-file-input" data-ddh="${item.ddh || ''}" accept=".pdf" style="display: none;">
+                <input type="file" class="pdf-file-input" data-ddh="${item.ddh || ''}" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx" style="display: none;">
             </div>
         </td>
     </tr>
@@ -447,11 +582,87 @@ function fillTable(data) {
     bindDetailButtonEvents();
     bindEditableEvents();
     bindWithdrawButtonEvents();
-    bindViewPdfEvents();      // 绑定查看PDF事件
-    bindUploadPdfEvents();    // 绑定上传PDF事件
-    bindDeletePdfEvents();    // 绑定删除PDF事件
+    bindViewFileEvents();      // 绑定查看文件事件（新增）
+    // bindDeletePdfEvents();    // 绑定删除PDF事件
 
+    // <div>
+    //     <button className="btn btn-sm btn-danger delete-pdf-btn"
+    //             data-ddh="${item.ddh || ''}"
+    //             title="删除PDF文件">
+    //         <i className="bi bi-trash"></i> 删除
+    //     </button>
+    // </div>
+    // <button className="btn btn-sm btn-warning upload-pdf-btn"
+    //         data-ddh="${item.ddh || ''}"
+    //         title="上传PDF文件">
+    //     <i className="bi bi-cloud-upload"></i> 上传文件
+    // </button>
+
+    // 确保每次渲染后都调整列宽
+    setTimeout(function() {
+        autoAdjustColumnWidths();
+        adjustTableColumns();
+    }, 100);
     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
+}
+
+// 绑定查看文件事件
+function bindViewFileEvents() {
+    console.log('绑定查看文件事件...');
+
+    $('.view-file-btn').off('click.view').on('click.view', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $btn = $(this);
+        var filePath = $btn.data('filepath');
+        var fileName = $btn.data('filename') || 'file';
+
+        console.log('查看文件按钮点击，文件路径:', filePath);
+        console.log('文件名:', fileName);
+
+        if (!filePath) {
+            swal('错误', '文件路径为空，无法查看文件', 'error');
+            return;
+        }
+
+        // 显示加载中
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 打开中...');
+
+        try {
+            // 检查URL是否有效
+            if (isValidUrl(filePath)) {
+                // 在新窗口/标签页中打开文件
+                window.open(filePath, '_blank');
+
+                console.log('文件已在新窗口打开:', filePath);
+
+                // 恢复按钮状态
+                setTimeout(function() {
+                    $btn.prop('disabled', false).html('<i class="bi bi-file-earmark"></i> 查看文件');
+                }, 1000);
+            } else {
+                throw new Error('文件路径格式不正确');
+            }
+        } catch (error) {
+            console.error('打开文件失败:', error);
+            swal('打开失败', '无法打开文件: ' + error.message, 'error');
+
+            // 恢复按钮状态
+            $btn.prop('disabled', false).html('<i class="bi bi-file-earmark"></i> 查看文件');
+        }
+    });
+}
+
+// 验证URL是否有效
+function isValidUrl(string) {
+    try {
+        // 尝试创建URL对象
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 
 // 更新统计显示函数
@@ -467,20 +678,30 @@ function autoAdjustColumnWidths() {
     const table = document.getElementById('ddmxTable');
     if (!table) return;
 
-    // 设置表格为固定布局
-    table.style.tableLayout = 'fixed';
+    // 设置表格为自动布局
+    table.style.tableLayout = 'auto';  // 改为auto
     table.style.width = '100%';
 
-    // 确保PDF列有足够的宽度
+    // 对于PDF列，设置更灵活的宽度
     const pdfCells = table.querySelectorAll('td.pdf-upload-cell');
     pdfCells.forEach(cell => {
-        cell.style.width = '250px';
-        cell.style.minWidth = '250px';
-        cell.style.maxWidth = '250px';
+        const hasPdf = cell.querySelector('.view-file-btn') !== null;
+
+        if (hasPdf) {
+            // 有PDF文件时，根据按钮宽度自适应
+            cell.style.width = 'auto';
+            cell.style.minWidth = '150px';
+            cell.style.maxWidth = '250px';
+        } else {
+            // 没有PDF文件时，使用最小宽度
+            cell.style.width = 'auto';
+            cell.style.minWidth = '120px';
+            cell.style.maxWidth = '120px';
+        }
         cell.style.overflow = 'visible';
     });
 
-    // 确保操作列有正确的宽度
+    // 操作列保持固定宽度
     const actionCells = table.querySelectorAll('td:nth-child(18)');
     actionCells.forEach(cell => {
         cell.style.width = '160px';
@@ -513,65 +734,219 @@ function bindViewPdfEvents() {
             return;
         }
 
-        viewPdfFile(ddh);
+        // 显示加载中
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 加载中...');
+
+        // 使用优化下载
+        optimizedDownloadPdf(ddh, $btn.data('filename'))
+            .then(() => {
+                console.log('PDF查看成功');
+            })
+            .catch(error => {
+                console.error('PDF查看失败:', error);
+                swal('查看失败', error.message, 'error');
+            })
+            .finally(() => {
+                $btn.prop('disabled', false).html('<i class="bi bi-file-earmark-pdf"></i> 查看PDF');
+            });
     });
 }
 
-// 绑定上传PDF事件
-function bindUploadPdfEvents() {
-    console.log('绑定上传PDF事件...');
+// 辅助函数
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
 
-    $('.upload-pdf-btn').off('click.upload').on('click.upload', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+// 在 bindUploadPdfEvents 函数中修改
+// function bindUploadPdfEvents() {
+//     console.log('绑定上传PDF事件...');
+//
+//     $('.upload-pdf-btn').off('click.upload').on('click.upload', function(e) {
+//         e.preventDefault();
+//         e.stopPropagation();
+//
+//         var $btn = $(this);
+//         var ddh = $btn.data('ddh');
+//         var $fileInput = $btn.closest('td').find('.pdf-file-input');
+//
+//         console.log('上传PDF按钮点击，订单号:', ddh);
+//
+//         if (!ddh) {
+//             swal('订单号不能为空');
+//             return;
+//         }
+//
+//         // 触发文件选择
+//         $fileInput.trigger('click');
+//     });
+//
+//     // 文件选择变化事件
+//     $('.pdf-file-input').off('change.upload').on('change.upload', function(e) {
+//         console.log('文件选择框变化事件触发');
+//
+//         var file = e.target.files[0];
+//         var ddh = $(this).data('ddh');
+//         var $btn = $(this).closest('td').find('.upload-pdf-btn');
+//
+//         console.log('选择的文件:', file ? file.name : '无文件', '订单号:', ddh,
+//             '大小:', file ? formatFileSize(file.size) : '0');
+//
+//         if (!file) {
+//             return;
+//         }
+//
+//         // 验证文件类型
+//         if (file.type !== 'application/pdf') {
+//             swal('请选择PDF文件');
+//             $(this).val('');
+//             return;
+//         }
+//
+//         // 验证文件大小（增加到100MB）
+//         if (file.size > 100 * 1024 * 1024) {
+//             swal('文件大小不能超过100MB');
+//             $(this).val('');
+//             return;
+//         }
+//
+//         // 显示上传进度
+//         $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 上传中...');
+//
+//         // 显示进度条
+//         const progressHtml = `
+//         <div class="progress mt-2" style="height: 20px;">
+//             <div class="progress-bar progress-bar-striped progress-bar-animated"
+//                  role="progressbar" style="width: 0%;"
+//                  aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+//                 0%
+//             </div>
+//         </div>
+//     `;
+//         $btn.after(progressHtml);
+//         const $progressBar = $btn.next('.progress').find('.progress-bar');
+//
+//         // 根据文件大小选择不同的上传方式
+//         const uploadFunction = file.size > 10 * 1024 * 1024
+//             ? uploadLargePdfFile  // 超过10MB使用大文件上传
+//             : uploadPdfFile;      // 小文件使用普通上传
+//
+//         uploadFunction(ddh, file, (percent) => {
+//             $progressBar.css('width', percent + '%').text(percent + '%');
+//         })
+//             .then(result => {
+//                 console.log("PDF文件上传成功", result);
+//                 swal({
+//                     title: '上传成功！',
+//                     text: '文件大小: ' + formatFileSize(file.size) +
+//                         '\n处理时间: ' + (result.data?.costTime || result.totalCostTime),
+//                     icon: 'success'
+//                 });
+//
+//                 // 上传成功后刷新数据
+//                 getList(currentPage, pageSize, getSearchParams());
+//             })
+//             .catch(error => {
+//                 console.error("PDF文件上传失败:", error);
+//                 swal("上传失败", error.message, "error");
+//             })
+//             .finally(() => {
+//                 // 清理状态
+//                 $btn.prop('disabled', false).html('<i class="bi bi-cloud-upload"></i> 上传PDF');
+//                 $progressBar.parent().remove();
+//                 $(this).val('');
+//             });
+//     });
+// }
 
-        var $btn = $(this);
-        var ddh = $btn.data('ddh');
-        var $fileInput = $btn.closest('td').find('.pdf-file-input');
+// 新增大文件上传函数
+function uploadLargePdfFile(ddh, file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('ddh', ddh);
+        formData.append('pdfFile', file);
 
-        console.log('上传PDF按钮点击，订单号:', ddh, '找到文件输入框:', $fileInput.length);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/ddmx/uploadLargePdf'); // 使用大文件上传接口
 
-        if (!ddh) {
-            swal('订单号不能为空');
-            return;
+        // 进度监听
+        if (onProgress) {
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    onProgress(percent);
+                }
+            });
         }
 
-        // 触发文件选择
-        $fileInput.trigger('click');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.code === 200) {
+                        resolve(response);
+                    } else {
+                        reject(new Error(response.message || '上传失败'));
+                    }
+                } catch (e) {
+                    reject(new Error('响应解析失败'));
+                }
+            } else {
+                reject(new Error('上传失败，状态码: ' + xhr.status));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('网络错误'));
+        };
+
+        xhr.onabort = function() {
+            reject(new Error('上传被取消'));
+        };
+
+        // 设置超时时间（300秒）
+        xhr.timeout = 300000;
+        xhr.ontimeout = function() {
+            reject(new Error('上传超时'));
+        };
+
+        xhr.send(formData);
     });
+}
 
-    // 文件选择变化事件
-    $('.pdf-file-input').off('change.upload').on('change.upload', function(e) {
-        console.log('文件选择框变化事件触发');
+function optimizedDownloadPdf(ddh, fileName) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/ddmx/downloadPdf', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.responseType = 'blob';
 
-        var file = e.target.files[0];
-        var ddh = $(this).data('ddh');
+        xhr.onload = function() {
+            if (this.status === 200 || this.status === 206) { // 支持206部分内容
+                const blob = new Blob([this.response], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
 
-        console.log('选择的文件:', file ? file.name : '无文件', '订单号:', ddh);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName || 'document.pdf';
+                document.body.appendChild(a);
+                a.click();
 
-        if (!file) {
-            return;
-        }
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    resolve();
+                }, 100);
+            } else {
+                reject(new Error('下载失败，状态码: ' + this.status));
+            }
+        };
 
-        // 验证文件类型
-        if (file.type !== 'application/pdf') {
-            swal('请选择PDF文件');
-            $(this).val('');
-            return;
-        }
-
-        // 验证文件大小（限制为10MB）
-        if (file.size > 10 * 1024 * 1024) {
-            swal('文件大小不能超过10MB');
-            $(this).val('');
-            return;
-        }
-
-        // 上传文件
-        uploadPdfFile(ddh, file);
-
-        // 清空文件输入，允许重复选择同一个文件
-        $(this).val('');
+        xhr.onerror = reject;
+        xhr.send(JSON.stringify({ ddh: ddh }));
     });
 }
 
@@ -1283,7 +1658,8 @@ function getSelectedRow() {
         wldh: selectedRow.find('td:eq(14)').text().trim(),
         zk: selectedRow.find('td:eq(15)').text().trim(),
         fhsj: selectedRow.find('td:eq(16)').text().trim(),
-        bz: selectedRow.find('td:eq(17)').text().trim()
+        bz: selectedRow.find('td:eq(17)').text().trim(),
+        pdf_file_name: selectedRow.find('.view-file-btn').data('filepath') || ''
     };
 
     return rowData;
@@ -1473,13 +1849,15 @@ function addTableStyles() {
             /* PDF列 - 增加宽度确保两个按钮能完整显示 */
             #ddmxTable th:nth-child(19),
             #ddmxTable td:nth-child(19) {
-                width: 250px !important;
-                min-width: 250px !important;
-                max-width: 250px !important;
+                width: auto !important;  /* 改为auto */
+                min-width: 120px !important;  /* 设置最小宽度 */
+                max-width: 250px !important;  /* 保留最大宽度 */
                 padding: 4px !important;
                 text-align: center !important;
                 overflow: visible !important;
+                white-space: nowrap !important;  /* 防止换行 */
             }
+
             
             /* 操作列 */
             #ddmxTable th:nth-child(18),
@@ -1513,9 +1891,10 @@ function addTableStyles() {
                 white-space: normal !important;
                 overflow: visible !important;
                 line-height: 1.4 !important;
+                width: auto !important;  /* 添加这行 */
             }
             
-            /* PDF按钮容器 */
+            /* PDF按钮容器 - 优化垂直布局 */
             .pdf-btn-container {
                 display: flex;
                 flex-direction: column;
@@ -1523,6 +1902,8 @@ function addTableStyles() {
                 gap: 4px;
                 min-height: 70px;
                 justify-content: center;
+                width: fit-content !important;  /* 添加这行 */
+                margin: 0 auto !important;  /* 居中 */
             }
             
             /* PDF按钮样式 - 垂直排列 */
@@ -1716,47 +2097,49 @@ function addTableStyles() {
 }
 
 // 上传PDF文件
-function uploadPdfFile(ddh, file) {
-    if (!ddh || !file) {
-        swal('参数错误');
-        return;
-    }
+// 原有小文件上传函数（保持兼容）
+function uploadPdfFile(ddh, file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('ddh', ddh);
+        formData.append('pdfFile', file);
 
-    showLoading();
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/ddmx/uploadPdf'); // 使用原上传接口
 
-    // 创建FormData对象
-    var formData = new FormData();
-    formData.append('ddh', ddh);
-    formData.append('pdfFile', file);
+        // 进度监听
+        if (onProgress) {
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    onProgress(percent);
+                }
+            });
+        }
 
-    console.log('开始上传PDF文件，订单号:', ddh, '文件:', file.name, '大小:', file.size);
-
-    // 使用原生 fetch 或修改 $ajax 调用方式
-    fetch('/ddmx/uploadPdf', {
-        method: 'POST',
-        body: formData,
-        // 不要设置 Content-Type，让浏览器自动设置
-    })
-        .then(response => response.json())
-        .then(res => {
-            hideLoading();
-            if (res.code === 200) {
-                console.log("PDF文件上传成功", res);
-                swal('PDF文件上传成功！');
-                // 上传成功后刷新数据
-                getList(currentPage, pageSize, getSearchParams());
-            } else if(res.code === 403){
-                swal("权限不足！ ");
-            }else {
-                console.error("PDF文件上传失败:", res.message);
-                swal("PDF文件上传失败: " + (res.message || '未知错误'));
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.code === 200) {
+                        resolve(response);
+                    } else {
+                        reject(new Error(response.message || '上传失败'));
+                    }
+                } catch (e) {
+                    reject(new Error('响应解析失败'));
+                }
+            } else {
+                reject(new Error('上传失败，状态码: ' + xhr.status));
             }
-        })
-        .catch(error => {
-            hideLoading();
-            console.error("上传请求失败:", error);
-            swal("上传请求失败，请检查网络连接");
-        });
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('网络错误'));
+        };
+
+        xhr.send(formData);
+    });
 }
 
 // 查看PDF文件（在线预览）- 修正版
@@ -1873,4 +2256,498 @@ function adjustTableColumns() {
 
     console.log('PDF列宽度已调整');
 }
+
+// 在 bindUploadPdfEvents 函数中优化
+function optimizedUploadPdf(ddh, file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('ddh', ddh);
+        formData.append('pdfFile', file);
+
+        // 添加禁用压缩的参数
+        formData.append('compress', 'false');
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/ddmx/uploadPdf');
+
+        // 进度监听
+        if (onProgress) {
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    onProgress(percent);
+                }
+            });
+        }
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.code === 200) {
+                    resolve(response);
+                } else {
+                    reject(new Error(response.message || '上传失败'));
+                }
+            } else {
+                reject(new Error('上传失败，状态码: ' + xhr.status));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('网络错误'));
+        };
+
+        xhr.send(formData);
+    });
+}
+
+// 添加上传前的文件检查
+function checkFileBeforeUpload(file) {
+    // 检查文件类型
+    if (file.type !== 'application/pdf') {
+        throw new Error('请选择PDF文件');
+    }
+
+    // 检查文件名
+    if (file.name.length > 200) {
+        throw new Error('文件名过长，请缩短文件名');
+    }
+
+    return true;
+}
+
+
+
+
+
+
+// 文件上传核心功能
+$(function () {
+    // 初始化文件上传组件
+    initFileInput("fileInput1", "10");
+
+    // 初始化文件上传函数
+    function initFileInput(ctrlName, fileSuffix) {
+        var control = $('#' + ctrlName);
+        control.fileinput({
+            language: 'zh',
+            uploadUrl: "https://yhocn.cn:9097/file/upload",
+            // 添加PDF支持
+            allowedFileExtensions: ['jpg', 'gif', 'png', 'jpeg', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
+            uploadAsync: false,
+            showUpload: true,
+            showRemove: true,
+            showPreview: true,
+            showCaption: false,
+            browseClass: "btn btn-primary",
+            maxFileCount: 1,
+            enctype: 'multipart/form-data',
+            validateInitialCount: true,
+            msgFilesTooMany: "只能上传一个文件！",
+            // 配置PDF预览
+            initialPreviewConfig: {
+                type: 'object',
+                // PDF预览配置
+                pdfRendererUrl: 'https://mozilla.github.io/pdf.js/web/viewer.html'
+            },
+            // 文件类型图标
+            fileActionSettings: {
+                showUpload: true,
+                showRemove: true,
+                showZoom: false,
+                showDrag: false
+            },
+            uploadExtraData: function () {
+                var orderNumber = $("#add-orderNumber").val();
+                var fileInput = document.getElementById('fileInput1');
+                var fileName = "default";
+                var fileExt = "jpg";
+
+                if (fileInput.files.length > 0) {
+                    var file = fileInput.files[0];
+                    var originalName = file.name;
+                    var originalExt = originalName.split('.').pop().toLowerCase();
+
+                    // 保持原始文件名
+                    fileName = originalName;
+                    fileExt = originalExt;
+                }
+
+                console.log("上传额外数据:", {
+                    file: fileName,
+                    name: fileName,
+                    path: "/t763812834_java_sharepic/",
+                    kongjian: 3,
+                    fileType: fileExt,
+                    orderNumber: orderNumber
+                });
+
+                return {
+                    file: fileName,  // 文件名
+                    name: fileName,  // 名称
+                    path: "/t763812834_java_sharepic/",  // 路径
+                    kongjian: 3,  // 空间
+                    fileType: fileExt,  // 文件类型
+                    orderNumber: orderNumber  // 订单号
+                };
+            }
+        }).on("fileuploaded", function (event, data) {
+            // 上传成功回调
+            console.log('文件上传成功:', data.response);
+            if (data.response && data.response.code === 200) {
+                var fileName = data.response.data.fileName || '';
+                var fileExt = fileName.split('.').pop().toLowerCase();
+
+                // 根据文件类型显示不同的成功消息
+                var fileTypeText = '';
+                switch(fileExt) {
+                    case 'pdf':
+                        fileTypeText = 'PDF文件';
+                        break;
+                    case 'doc':
+                    case 'docx':
+                        fileTypeText = 'Word文档';
+                        break;
+                    case 'xls':
+                    case 'xlsx':
+                        fileTypeText = 'Excel文件';
+                        break;
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                        fileTypeText = '图片';
+                        break;
+                    default:
+                        fileTypeText = '文件';
+                }
+
+                alert(fileTypeText + "上传成功！");
+
+                // 可以在这里更新表格数据
+                // $('#psdTable').bootstrapTable('refresh');
+            }
+        }).on("fileuploaderror", function (event, data) {
+            // 上传失败回调
+            console.log('文件上传失败:', data);
+            var errorMsg = "文件上传失败！";
+            if (data.response && data.response.msg) {
+                errorMsg += " 原因：" + data.response.msg;
+            }
+            alert(errorMsg);
+        }).on('filepreupload', function(event, data, previewId, index) {
+            // 文件上传前验证
+            var file = data.files[index];
+            if (file) {
+                var maxSize = 10 * 1024 * 1024; // 10MB
+                if (file.size > maxSize) {
+                    alert("文件大小不能超过10MB！");
+                    return false;
+                }
+            }
+        }).on('fileloaded', function(event, file, previewId, index, reader) {
+            // 文件加载后显示预览
+            console.log('文件已加载:', file.name);
+
+            // 更新订单号输入框（如果文件包含订单信息）
+            var fileName = file.name;
+            // 尝试从文件名中提取订单号模式
+            var orderNumberPattern = /PS\d{8}\d{3}/;
+            var match = fileName.match(orderNumberPattern);
+            if (match) {
+                $('#add-orderNumber').val(match[0]);
+            }
+        });
+    }
+
+
+
+    // 提交上传
+    $("#add-submit-btn").click(function () {
+        // 获取表单数据
+        var formData = new FormData();
+        var fileInput = document.getElementById('fileInput1');
+
+        if (fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            var originalName = file.name; // 正确定义 originalName 变量
+            var orderNumber = $('#add-orderNumber').val();
+            var fileExtension = originalName.split('.').pop().toLowerCase();
+            var originalName = orderNumber+"-10."+fileExtension;
+            // 根据截图中的参数格式设置FormData
+            formData.append('file', file);  // 文件字段
+
+            // 添加其他必要的参数（根据截图）
+            formData.append('initialPreview', '[]');
+            formData.append('initialPreviewConfig', '[]');
+            formData.append('initialPreviewThumbTags', '[]');
+            formData.append('file', originalName);  // 文件名参数（与截图一致）
+            formData.append('name', originalName);  // 名称参数
+            formData.append('path', '/t763812834_java_sharepic/');  // 路径参数
+            formData.append('kongjian', '3');  // 空间参数
+            formData.append('fileType', fileExtension);  // 文件类型参数
+            formData.append('orderNumber', orderNumber);  // 订单号参数
+
+            // 发送上传请求
+            $.ajax({
+                url: "https://yhocn.cn:9097/file/upload",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.code === 200) {
+                        alert("上传成功！");
+                        $('#add-modal').modal('hide');
+                        clearForm();
+
+                        // 上传成功后更新订单明细表的pdf_file_name字段
+                        updatePdfFileName(orderNumber, fileExtension);
+
+                    } else {
+                        alert("上传失败：" + res.msg);
+                    }
+                },
+                error: function () {
+                    alert("上传失败！");
+                }
+            });
+        } else {
+            alert("请选择要上传的文件！");
+        }
+    });
+
+    function updatePdfFileName(ddh, pdfFileName) {
+        showLoading();
+
+        pdfFileName="http://yhocn.cn:9088/t763812834_java_sharepic/"+ddh+"-10."+pdfFileName
+
+        $ajax({
+            type: 'post',
+            url: '/ddmx/updatePdfFileName',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                ddh: ddh,
+                pdfFileName: pdfFileName
+            }),
+            dataType: 'json'
+        }, false, '', function (res) {
+            hideLoading();
+            if (res.code === 200) {
+                console.log("PDF文件名更新成功");
+                // 刷新数据
+                getList(currentPage, pageSize, getSearchParams());
+            } else {
+                console.error("PDF文件名更新失败:", res.message);
+                swal("PDF文件名更新失败: " + (res.message || '未知错误'));
+            }
+        });
+    }
+
+
+    // 关闭按钮
+    $('#add-close-btn').click(function () {
+        $('#add-modal').modal('hide');
+        clearForm();
+    });
+
+    // 清空表单
+    function clearForm() {
+        $('#add-orderNumber').val('');
+        $('#fileInput1').fileinput('clear');
+    }
+});
+
+// 清空文件输入值（辅助函数）
+function clearFileValue(input) {
+    input.value = '';
+}
+
+// 简单的表单转JSON函数
+function formToJson(formSelector) {
+    var form = document.querySelector(formSelector);
+    var formData = new FormData(form);
+    var json = {};
+
+    formData.forEach(function(value, key){
+        json[key] = value;
+    });
+
+    return json;
+}
+
+
+// 删除
+function extractAndDeleteFromUrl(filePath, ddh) {
+    const ddname = removeBaseUrl(filePath);
+    imageUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + ddname;
+
+    console.log('开始处理URL:', imageUrl);
+
+    // 解析URL
+    const url = new URL(imageUrl);
+
+    // 获取路径部分
+    const fullPath = url.pathname;
+
+    console.log('完整路径:', fullPath);
+
+    // 分离路径和文件名
+    const lastSlashIndex = fullPath.lastIndexOf('/');
+    const path = fullPath.substring(0, lastSlashIndex + 1);
+    const fileName = fullPath.substring(lastSlashIndex + 1);
+
+    console.log('路径:', path);
+    console.log('文件名:', fileName);
+
+    // 支持 jpg, png, pdf 等多种格式
+    // 匹配格式: 文件名-数字.扩展名
+    const match = fileName.match(/^(.*)-(\d+)\.(jpg|jpeg|png|pdf|gif|bmp|webp|tiff)$/i);
+
+    if (!match) {
+        console.error('文件名格式不正确');
+        alert('错误: 文件名格式不正确\n格式应为: 文件名-数字.扩展名\n例如: PS20251204001-1.jpg');
+        return;
+    }
+
+    const orderNumber = match[1]; // 获取文件名部分
+    const fileNumber = match[2];  // 获取数字部分
+    const fileExt = match[3];     // 获取扩展名部分
+
+    console.log('提取的orderNumber:', orderNumber);
+    console.log('文件编号:', fileNumber);
+    console.log('文件格式:', fileExt);
+
+    // 调用删除接口
+    deleteFiles(orderNumber, path);
+}
+
+// 删除函数 - 修复版本
+async function deleteFiles(orderNumber, path) {
+    try {
+        const params = new URLSearchParams({
+            order_number: orderNumber,
+            path: path
+        });
+
+        // 尝试两种可能的端口
+        const endpoints = [
+            'https://yhocn.cn:9097/file/delete'  // 和上传同端口
+        ];
+
+        let success = false;
+        let errorMessage = '所有接口都不可用';
+        let result;
+
+        // 尝试所有可能的端点
+        for (const baseUrl of endpoints) {
+            const url = `${baseUrl}?${params.toString()}`;
+            console.log('尝试请求URL:', url);
+
+            try {
+                // 先尝试POST
+                let response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+
+                console.log('响应状态:', response.status);
+
+                if (response.ok) {
+                    result = await response.json();
+                    success = true;
+                    break;
+                } else {
+                    // 尝试GET
+                    const getResponse = await fetch(url, {
+                        method: 'GET'
+                    });
+
+                    if (getResponse.ok) {
+                        result = await getResponse.json();
+                        console.log('GET删除成功:', result);
+                        success = true;
+                        break;
+                    } else {
+                        errorMessage = `服务器返回错误: ${getResponse.status} ${getResponse.statusText}`;
+                    }
+                }
+            } catch (error) {
+                console.log(`${baseUrl} 请求失败:`, error.message);
+                errorMessage = `网络请求失败: ${error.message}`;
+            }
+        }
+
+        if (success) {
+            swal({
+                title: "删除成功！",
+                text: `订单 ${orderNumber} 的文件已成功删除`,
+                icon: "success",
+                button: "确定"
+            });
+        } else {
+            swal({
+                title: "删除失败",
+                text: errorMessage,
+                icon: "error",
+                button: "确定"
+            });
+        }
+
+        return { success, result };
+
+    } catch (error) {
+        console.error('删除操作异常:', error);
+        swal({
+            title: "删除失败",
+            text: `系统异常: ${error.message}`,
+            icon: "error",
+            button: "确定"
+        });
+        return { success: false, error: error.message };
+    }
+}
+
+function removeBaseUrl(fullUrl) {
+    const baseUrl = 'http://yhocn.cn:9088/t763812834_java_sharepic/';
+    if (fullUrl.startsWith(baseUrl)) {
+        return fullUrl.substring(baseUrl.length);
+    }
+    return fullUrl; // 如果不匹配，返回原字符串
+}
+
+// 删除后更新字段
+function clearFileRecord(ddh) {
+
+    $ajax({
+        type: 'post',
+        url: '/ddmx/updatePdfFileName',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            ddh: ddh,
+            pdfFileName: "",
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        hideLoading();
+        if (res.code === 200) {
+            console.log("PDF文件名更新成功");
+            // 刷新数据
+            getList(currentPage, pageSize, getSearchParams());
+        } else {
+            console.error("PDF文件名更新失败:", res.message);
+            swal("PDF文件名更新失败: " + (res.message || '未知错误'));
+        }
+    });
+}
+
+
+
+
+
+
+
+
 

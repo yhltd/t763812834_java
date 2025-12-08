@@ -187,7 +187,17 @@ $(function () {
             })
         }
     })
+
+    initCustomPagination();
+
 });
+
+// 自定义分页功能
+function initCustomPagination() {
+    // 移除bootstrapTable自带的分页
+    $('#userTable').bootstrapTable('destroy');
+
+}
 
 function setTable(data) {
     if ($('#userTable').html != '') {

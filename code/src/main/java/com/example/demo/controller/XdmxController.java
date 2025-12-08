@@ -38,6 +38,14 @@ public class XdmxController {
     @PostMapping("/list")
     public Result<PageResult<Xdmx>> getKhxxList(HttpSession session, @RequestBody ScgdSearchRequest request) {
         try {
+            // 处理日期格式转换：将-替换为/
+            if (StringUtils.isNotBlank(request.getStartDate())) {
+                request.setStartDate(formatDateWithZeroPadding(request.getStartDate()));
+            }
+            if (StringUtils.isNotBlank(request.getEndDate())) {
+                request.setEndDate(formatDateWithZeroPadding(request.getEndDate()));
+            }
+
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
@@ -58,6 +66,45 @@ public class XdmxController {
         } catch (Exception e) {
             log.error("查询客户信息失败", e);
             return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    private String formatDateWithZeroPadding(String dateStr) {
+        if (StringUtils.isBlank(dateStr)) {
+            return dateStr;
+        }
+
+        try {
+            log.info("原始日期: {}", dateStr);
+
+            // 1. 替换所有分隔符为斜杠
+            String normalized = dateStr.replaceAll("[-.]", "/");
+            log.info("标准化后: {}", normalized);
+
+            // 2. 按斜杠分割
+            String[] parts = normalized.split("/");
+            if (parts.length != 3) {
+                log.warn("日期格式不正确: {}", dateStr);
+                return dateStr;
+            }
+
+            // 3. 对每个部分去除空格
+            String year = parts[0].trim();
+            String month = parts[1].trim();
+            String day = parts[2].trim();
+
+            // 4. 补零处理
+            String formattedMonth = month.length() == 1 ? "0" + month : month;
+            String formattedDay = day.length() == 1 ? "0" + day : day;
+
+            String result = year + "/" + formattedMonth + "/" + formattedDay;
+            log.info("格式化后: {}", result);
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("日期格式化异常: {}, 错误: {}", dateStr, e.getMessage());
+            return dateStr;
         }
     }
 
@@ -423,31 +470,30 @@ public class XdmxController {
 
     @PostMapping("/saveToOrderDetail")
     @ResponseBody
-    public Map<String, Object> saveToOrderDetail(@RequestBody List<Ddmx> ddmxList) {
+    public Result<?> saveToOrderDetail(HttpSession session, @RequestBody List<Ddmx> ddmxList) {
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return authResult; // 直接返回 Result 类型
+        }
 
-        Map<String, Object> result = new HashMap<>();
         try {
             if (ddmxList == null || ddmxList.isEmpty()) {
-                result.put("success", false);
-                result.put("message", "接收到的数据为空");
-                return result;
+                return Result.error("接收到的数据为空");
             }
 
             int successCount = 0;
             List<String> errorMessages = new ArrayList<>();
 
-            // 使用单条插入替代批量插入
             for (int i = 0; i < ddmxList.size(); i++) {
                 try {
                     Ddmx ddmx = ddmxList.get(i);
 
-                    // 数据验证
                     if (!validateDdmx(ddmx)) {
                         errorMessages.add("第 " + (i + 1) + " 条记录数据验证失败");
                         continue;
                     }
 
-                    // 设置默认值
                     if (ddmx.getVersion() == null) {
                         ddmx.setVersion(0);
                     }
@@ -455,7 +501,6 @@ public class XdmxController {
                         ddmx.setXh(String.valueOf(i + 1));
                     }
 
-                    // 单条保存
                     boolean saveResult = ddmxService.save(ddmx);
                     if (saveResult) {
                         successCount++;
@@ -469,24 +514,87 @@ public class XdmxController {
             }
 
             if (successCount > 0) {
-                result.put("success", true);
-                result.put("message", "成功保存 " + successCount + " 条记录");
+                Map<String, Object> data = new HashMap<>();
+                data.put("successCount", successCount);
                 if (!errorMessages.isEmpty()) {
-                    result.put("errors", errorMessages);
+                    data.put("errors", errorMessages);
                 }
+                return Result.success("成功保存 ");
             } else {
-                result.put("success", false);
-                result.put("message", "所有记录保存失败");
-                result.put("errors", errorMessages);
+                return Result.error("所有记录保存失败");
             }
 
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "保存过程中发生错误: " + e.getMessage());
-            e.printStackTrace();
+            return Result.error("保存过程中发生错误: " + e.getMessage());
         }
-        return result;
     }
+
+//    @PostMapping("/saveToOrderDetail")
+//    @ResponseBody
+//    public Map<String, Object> saveToOrderDetail(@RequestBody List<Ddmx> ddmxList) {
+//
+//        Map<String, Object> result = new HashMap<>();
+//        try {
+//            if (ddmxList == null || ddmxList.isEmpty()) {
+//                result.put("success", false);
+//                result.put("message", "接收到的数据为空");
+//                return result;
+//            }
+//
+//            int successCount = 0;
+//            List<String> errorMessages = new ArrayList<>();
+//
+//            // 使用单条插入替代批量插入
+//            for (int i = 0; i < ddmxList.size(); i++) {
+//                try {
+//                    Ddmx ddmx = ddmxList.get(i);
+//
+//                    // 数据验证
+//                    if (!validateDdmx(ddmx)) {
+//                        errorMessages.add("第 " + (i + 1) + " 条记录数据验证失败");
+//                        continue;
+//                    }
+//
+//                    // 设置默认值
+//                    if (ddmx.getVersion() == null) {
+//                        ddmx.setVersion(0);
+//                    }
+//                    if (ddmx.getXh() == null || ddmx.getXh().trim().isEmpty()) {
+//                        ddmx.setXh(String.valueOf(i + 1));
+//                    }
+//
+//                    // 单条保存
+//                    boolean saveResult = ddmxService.save(ddmx);
+//                    if (saveResult) {
+//                        successCount++;
+//                    } else {
+//                        errorMessages.add("第 " + (i + 1) + " 条记录保存失败");
+//                    }
+//                } catch (Exception e) {
+//                    errorMessages.add("第 " + (i + 1) + " 条记录保存异常: " + e.getMessage());
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            if (successCount > 0) {
+//                result.put("success", true);
+//                result.put("message", "成功保存 " + successCount + " 条记录");
+//                if (!errorMessages.isEmpty()) {
+//                    result.put("errors", errorMessages);
+//                }
+//            } else {
+//                result.put("success", false);
+//                result.put("message", "所有记录保存失败");
+//                result.put("errors", errorMessages);
+//            }
+//
+//        } catch (Exception e) {
+//            result.put("success", false);
+//            result.put("message", "保存过程中发生错误: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//        return result;
+//    }
 
     /**
      * 验证 Ddmx 对象是否有效

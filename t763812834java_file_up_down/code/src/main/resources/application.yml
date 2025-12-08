@@ -1,0 +1,35 @@
+server:
+  port: 9097
+  max-http-header-size: 102400000
+  ssl:
+    enabled: true #启用SSL
+    key-store: classpath:yhocn.cn.jks #文件位置
+    key-store-password: xk97ji4s1h3f360 #密钥存储密码（即生成时要求输入两遍的那个的密钥库口令）
+    key-store-type: JKS
+web:
+  upload-path: D:/profile
+spring:
+  servlet:
+    multipart:
+      max-request-size: 150MB
+      max-file-size: 150MB
+  profiles:
+    active: dev
+  datasource:
+    druid:
+      max-wait: 10000
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://yhocn.cn/test?autoReconnect=true&allowMultiQueries=true&characterEncoding=utf8&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+    username: root
+    password: Lyh07910
+  mvc:
+    view:
+      suffix: .html
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations: file:${web.upload-path},classpath:/templates/,classpath:/static/
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
