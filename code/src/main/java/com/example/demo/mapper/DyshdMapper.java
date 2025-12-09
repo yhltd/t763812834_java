@@ -12,7 +12,7 @@ import java.util.List;
 
 @Mapper
 public interface DyshdMapper extends BaseMapper<Dyshd> {
-    @Select("select ddh from dingdanmingx")
+    @Select("select ddh from dingdanmingx where fhsj IS NULL OR fhsj = '待发货'")
     List<Dyshd> getddh();
 
     @Select("SELECT id, pm, ggxh, sl, dw, khmc FROM dingdanmingx WHERE ddh = #{ddh} AND (fhsj IS NULL OR fhsj = '待发货')")

@@ -518,7 +518,7 @@
         </div>
     </div>
     <div class="labels-container" id="labels-container">
-        <div class="empty-labels">暂无发货标签，请点击"发货全部行"生成标签</div>
+        <div class="empty-labels">暂无发货标签，请点击"发货"生成标签</div>
     </div>
 </div>
 
@@ -842,10 +842,10 @@
 
                 if (res.code == 200) {
                     console.log("查询成功，数据:", res.data);
-                    swal("查询成功！")
+                    alert("查询成功！")
                     fillProductTable(res.data);
                 }else if(res.code == 403){
-                    swal("权限不足，无法访问此功能！")
+                    alert("权限不足，无法访问此功能！")
                 } else {
                     console.error("查询失败:", res.message);
                     alert("查询失败: " + res.message);
