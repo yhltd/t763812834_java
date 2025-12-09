@@ -147,7 +147,43 @@
     .modal-body ul li {
         margin-bottom: 0.3rem;
     }
+    /* ==================== 移动端body padding调整（安全方案） ==================== */
 
+    /* 平板设备 (992px以下) */
+    @media screen and (max-width: 992px) {
+        .body-yangshi {
+            padding-top: 280px !important; /* 调整这个值直到不遮挡 */
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+    }
+
+    /* 手机设备 (768px以下) */
+    @media screen and (max-width: 768px) {
+        .body-yangshi {
+            padding-top: 120px !important;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+
+    /* 小屏幕手机 (576px以下) */
+    @media screen and (max-width: 576px) {
+        .body-yangshi {
+            padding-top: 400px !important;
+            padding-left: 3px;
+            padding-right: 3px;
+        }
+    }
+
+    /* 超小屏幕手机 (360px以下) */
+    @media screen and (max-width: 360px) {
+        .body-yangshi {
+            padding-top: 400px !important;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    }
 
 </style>
 

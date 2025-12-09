@@ -504,6 +504,261 @@
         .btn-close {
             filter: invert(1);
         }
+
+        /* ==================== 移动端响应式适配 ==================== */
+
+        /* 手机端：变成滑动表格（只针对预览表格） */
+        @media screen and (max-width: 768px) {
+            /* 调整整体布局 */
+            body {
+                padding: 10px !important;
+                overflow-x: hidden !important;
+            }
+
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .header h1 {
+                font-size: 24px !important;
+            }
+
+            /* 表单区域调整 */
+            .form-section {
+                padding: 15px !important;
+            }
+
+            .input-row {
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+
+            /* 产品输入区域 - 使用原来的垂直排列方案 */
+            #itemsContainer {
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                margin: 10px 0;
+                overflow-x: hidden !important; /* 禁止水平滚动 */
+            }
+
+            /* 产品行 - 垂直排列 */
+            .item-row {
+                display: block !important; /* 改为块级显示 */
+                width: 100% !important;
+                padding: 10px;
+                background: white;
+                border-radius: 6px;
+                margin-bottom: 10px;
+                border: 1px solid #ddd;
+            }
+
+            .item-row .form-group {
+                width: 100% !important;
+                margin-bottom: 10px !important;
+                display: block !important;
+            }
+
+            .item-row .form-group:last-child {
+                text-align: center;
+                margin-bottom: 0 !important;
+            }
+
+            /* 移除产品行的flex和grid相关样式 */
+            .item-row .form-group:first-child {
+                flex: none !important;
+            }
+
+            /* 产品名称输入框全宽 */
+            .item-row .item-name {
+                width: 100% !important;
+            }
+
+            /* 表格容器 - 滑动方案（去掉提示） */
+            .table-responsive-wrapper {
+                position: relative;
+                width: 100%;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                margin: 15px 0;
+                background: #f8f9fa;
+                box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            }
+
+            /* 移除滑动提示 */
+            .table-responsive-wrapper::after {
+                display: none !important;
+            }
+
+            /* 表格本身 - 固定最小宽度 */
+            .table-responsive-wrapper .items-table {
+                min-width: 900px !important; /* 确保所有列都显示 */
+                width: auto !important;
+                margin: 0 !important;
+                border-collapse: collapse;
+                table-layout: auto !important;
+            }
+
+            /* 表格单元格 */
+            .table-responsive-wrapper .items-table th,
+            .table-responsive-wrapper .items-table td {
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+                min-width: 80px !important;
+                max-width: 150px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                border: 1px solid #ddd !important;
+            }
+
+            /* 按钮调整 */
+            .action-buttons {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 8px 15px !important;
+                font-size: 14px !important;
+                flex: 1;
+                min-width: 120px;
+            }
+
+            /* 底部签字区域 */
+            .footer {
+                flex-direction: column !important;
+                gap: 20px;
+            }
+
+            .footer-left,
+            .footer-right {
+                width: 100% !important;
+            }
+
+            /* 印章缩小 */
+            .seal-overlay img {
+                width: 150px !important;
+            }
+
+            /* 确保输入框内容可见 */
+            input, select, textarea {
+                font-size: 16px !important;
+                width: 100% !important;
+                box-sizing: border-box;
+                padding: 8px 10px !important;
+            }
+        }
+
+        /* 小屏幕手机 (576px以下) */
+        @media screen and (max-width: 576px) {
+            .header h1 {
+                font-size: 20px !important;
+            }
+
+            .contract-title {
+                font-size: 18px !important;
+            }
+
+            .table-responsive-wrapper {
+                margin: 10px 0;
+            }
+
+            .btn {
+                padding: 7px 12px !important;
+                font-size: 13px !important;
+            }
+
+            /* 进一步压缩表格 */
+            .table-responsive-wrapper .items-table {
+                min-width: 800px !important;
+            }
+
+            .table-responsive-wrapper .items-table th,
+            .table-responsive-wrapper .items-table td {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+            }
+
+            /* 产品行标签文字缩小 */
+            .item-row .form-group label {
+                font-size: 12px !important;
+            }
+
+            /* 产品输入框 */
+            .item-row input,
+            .item-row select {
+                font-size: 14px !important;
+                padding: 6px 8px !important;
+            }
+        }
+
+        /* 超小屏幕手机 (360px以下) */
+        @media screen and (max-width: 360px) {
+            .header h1 {
+                font-size: 18px !important;
+            }
+
+            .contract-title {
+                font-size: 16px !important;
+            }
+
+            .table-responsive-wrapper .items-table {
+                min-width: 700px !important;
+            }
+
+            .table-responsive-wrapper .items-table th,
+            .table-responsive-wrapper .items-table td {
+                padding: 5px 6px !important;
+                font-size: 10px !important;
+                min-width: 70px !important;
+            }
+
+            .btn {
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+            }
+        }
+
+        /* 电脑端：保持原样 */
+        @media screen and (min-width: 769px) {
+            .table-responsive-wrapper {
+                overflow: visible !important;
+            }
+
+            .items-table {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
+            /* 电脑端产品行保持水平排列 */
+            .item-row {
+                display: flex !important;
+                gap: 10px;
+                margin-bottom: 10px;
+                padding: 12px;
+                background: #f8f9fa;
+                border-radius: var(--radius);
+                transition: var(--transition);
+            }
+
+            .item-row:hover {
+                background: #f0f4ff;
+            }
+
+            .item-row .form-group {
+                flex: 1;
+                margin-bottom: 0;
+            }
+
+            .item-row .form-group:first-child {
+                flex: 2;
+            }
+        }
     </style>
 </head>
 <body>
@@ -662,7 +917,7 @@
         <div style="margin-bottom: 20px;">
             <p><strong>一、以下为货物名称、数量、单价及总金额及乙方要求和收货地址：</strong></p>
         </div>
-
+        <div class="table-responsive-wrapper">
         <table class="items-table">
             <thead>
             <tr>
@@ -681,7 +936,7 @@
             <!-- 动态生成的内容 -->
             </tbody>
         </table>
-
+        </div>
         <div class="summary">
             <table class="summary-table">
                 <tr>
