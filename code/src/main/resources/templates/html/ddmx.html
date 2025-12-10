@@ -95,19 +95,11 @@
 
     /* ==================== 移动端body padding调整（安全方案） ==================== */
 
-    /* 平板设备 (992px以下) */
-    @media screen and (max-width: 992px) {
-        .body-yangshi {
-            padding-top: 280px !important; /* 调整这个值直到不遮挡 */
-            padding-left: 8px;
-            padding-right: 8px;
-        }
-    }
 
     /* 手机设备 (768px以下) */
     @media screen and (max-width: 768px) {
         .body-yangshi {
-            padding-top: 120px !important;
+            padding-top: 0px !important;
             padding-left: 5px;
             padding-right: 5px;
         }
@@ -116,7 +108,7 @@
     /* 小屏幕手机 (576px以下) */
     @media screen and (max-width: 576px) {
         .body-yangshi {
-            padding-top: 320px !important;
+            padding-top: 0px !important;
             padding-left: 3px;
             padding-right: 3px;
         }
@@ -125,16 +117,52 @@
     /* 超小屏幕手机 (360px以下) */
     @media screen and (max-width: 360px) {
         .body-yangshi {
-            padding-top: 400px !important;
+            padding-top: 0px !important;
             padding-left: 2px;
             padding-right: 2px;
         }
+    }
+
+    /* 简化版移动端下拉 */
+    @media screen and (max-width: 800px) {
+        .top-toolbar {
+            display: none;
+            padding: 15px !important;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .top-zujian.expanded .top-toolbar {
+            display: block !important;
+        }
+
+        .mobile-toggle {
+            display: block !important;
+            background: #4361ee;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 1px solid #3a0ca3;
+        }
+
+        .mobile-toggle i {
+            margin-right: 8px;
+        }
+    }
+    /* 电脑端：正常显示 */
+    .mobile-toggle {
+        display: none; /* 默认隐藏 */
     }
 
 </style>
 
 <body  class=" body-yangshi" style="padding: 130px 10px 0 10px;">
 <div class="top-zujian">
+    <!-- 简化下拉按钮 -->
+    <div class="mobile-toggle" onclick="$('.top-toolbar').slideToggle(); $(this).find('i').toggleClass('bi-chevron-down bi-chevron-up');">
+        <i class="bi bi-chevron-down"></i> 展开搜索栏
+    </div>
     <div class="time-bar">
         <div class="time-display">
             <i class="bi bi-calendar tubiao "></i>
