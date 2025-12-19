@@ -144,5 +144,8 @@ public class ScgdImpl extends ServiceImpl<ScgdMapper, Scgd> implements ScgdServi
     public List<Scgd> getListRE(String fuzeren){
         return baseMapper.getListRE(fuzeren);
     }
-
+    @Override
+    public List<Scgd> getListRE(){
+        return baseMapper.getListRE(null);
+    }
 }

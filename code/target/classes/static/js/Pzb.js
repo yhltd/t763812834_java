@@ -157,6 +157,78 @@ function initToolbarEvents() {
             }
         });
     });
+
+    $('#ghf-btn').click(function () {
+        $ajax({
+            type: 'post',
+            url: '/pzb/getListghf',
+        }, false, '加载中...', function (res) {
+            hideLoading();
+            console.log('获取数据响应:', res);
+            if (res.code == 200) {
+                const firstData = res.data[0];
+                $('#update-modal').modal('show');
+                $('#update-ghf').val(firstData.ghf || '');
+                $('#update-khh').val(firstData.khh || '');
+                $('#update-zhanghao').val(firstData.zhanghao || '');
+                $('#update-shuihao').val(firstData.shuihao || '');
+                $('#update-dizhi').val(firstData.dizhi || '');
+            } else {
+                // 处理权限错误
+                if (res.code === 401) {
+                    swal("登录已过期，请重新登录");
+                    window.location.href = "/login.html";
+                } else if (res.code === 403) {
+                    swal("权限不足，无法访问此功能");
+                } else {
+                    swal("查询失败: " + res.message);
+                }
+            }
+        }, function(error) {
+            console.error('获取数据失败:', error);
+            swal("获取数据失败", "网络错误或服务器异常", "error");
+        });
+
+
+    });
+
+    //修改弹窗点击关闭按钮
+    $('#update-close-btn').click(function () {
+        $('#update-form')[0].reset();
+        $('#update-modal').modal('hide');
+    });
+
+    //修改弹窗里点击提交按钮
+    $('#update-submit-btn').click(function () {
+        var msg = confirm("确认要修改吗？");
+        if (msg) {
+            let params = formToJson('#update-form');
+
+            // 包装为 updateInfo 格式
+            let requestData = {
+                updateInfo: params
+            };
+
+            console.log('发送的数据:', JSON.stringify(requestData));
+
+            $ajax({
+                type: 'post',
+                url: '/pzb/updateghf',
+                contentType: 'application/json;charset=utf-8', // 指定JSON格式
+                data: JSON.stringify(requestData), // 发送JSON字符串
+                dataType: 'json'
+            }, false, '', function (res) {
+                if (res.code == 200) {
+                    swal("", res.msg, "success");
+                    $('#update-close-btn').click();
+                    $('#update-modal').modal('hide');
+                    getList();
+                } else {
+                    swal("", res.msg, "error");
+                }
+            });
+        }
+    });
 }
 
 function resetSearchAndRefresh() {
@@ -167,7 +239,13 @@ function resetSearchAndRefresh() {
     currentPage = 1;
     getList();
 }
-
+function formToJson(formId) {
+    var formData = {};
+    $(formId).serializeArray().forEach(function(item) {
+        formData[item.name] = item.value;
+    });
+    return formData;
+}
 // 获取搜索参数
 function getSearchParams() {
     return {
@@ -284,6 +362,7 @@ function setTable(data) {
                     <th width="80">单位</th>
                     <th width="150">职位</th>
                     <th width="180">采购乙方</th>
+                    <th width="180">供货方</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -304,6 +383,7 @@ function setTable(data) {
                     <td class="editable-cell" data-field="danwei">${item.danwei || ''}</td>
                     <td class="editable-cell" data-field="zhiwei">${item.zhiwei || ''}</td>
                     <td class="editable-cell" data-field="cgyf">${item.cgyf || ''}</td>
+                    <td class="editable-cell" data-field="ghf">${item.ghf || ''}</td>
                     
                 </tr>`;
         });

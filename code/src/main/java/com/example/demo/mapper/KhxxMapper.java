@@ -84,8 +84,19 @@ public interface KhxxMapper extends BaseMapper<Khxx> {
     /**
      * 获取客户信息
      */
-    @Select("SELECT khmc,lxr1,lxdh1,dz,dz1,dz2,dz3,dz4,dz5,yq,khh,zh,sh,fkfs,khzy FROM kehuxinxi")
-    List<Khxx> getKH();
+
+        @Select({
+                "<script>",
+                "SELECT khmc,lxr1,lxdh1,dz,dz1,dz2,dz3,dz4,dz5,yq,khh,zh,sh,fkfs,khzy ",
+                "FROM kehuxinxi",
+                "<where>",
+                "   <if test='fuzeren != null and fuzeren != \"\"'>",
+                "       AND fzr = #{fuzeren}",
+                "   </if>",
+                "</where>",
+                "</script>"
+        })
+        List<Khxx> getKH(@Param("fuzeren") String fuzeren);
 
     /**
      * 获取最后一位id

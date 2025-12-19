@@ -214,6 +214,10 @@
                 <i class="bi bi-trash icon"></i>
                 删除
             </button>
+            <button id="ghf-btn" class="btn btn-color" style="border-radius:5px;">
+                <i class="bi bi-plus-square icon"></i>
+                修改供货方配置
+            </button>
             <span style="border-right: 20px solid white"></span>
             <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：配置表</a>
         </div>
@@ -256,87 +260,6 @@
 </div>
 
 
-<div id="add-modal" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">录入</div>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <form id="add-form" class="needs-validation">
-                    <div class="row justify-content-evenly">
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-riqi">日期</label>
-                                <input id="add-riqi" name="riqi" type="date" class="form-control" autocomplete="off">
-                                <div class="invalid-feedback">
-                                    请输入日期！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-gsm">公司名</label>
-                                <input id="add-gsm" name="gsm" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入送货单号！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-pm">品名</label>
-                                <input id="add-pm" name="pm" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入品名！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-zl">重量</label>
-                                <input id="add-zl" name="zl" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入重量！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-dj">单价</label>
-                                <input id="add-dj" name="dj" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入单价！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="add-je">金额</label>
-                                <input id="add-je" name="je" type="text" class="form-control" autocomplete="off" readonly data-required="1">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="border-top" style="padding: 15px;">
-                <button id="add-submit-btn" type="button" class="btn" style="background-color: limegreen;color: white">
-                    <i class="bi bi-arrow-bar-up icon"></i>
-                    提交
-                </button>
-                <button id="add-close-btn" type="button" class="btn left-margin" style="background-color: red;color: white">
-                    <i class="bi bi-x-circle icon"></i>
-                    关闭
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div id="update-modal" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -349,59 +272,38 @@
             <div class="modal-body">
                 <form id="update-form" class="needs-validation">
                     <div class="form-group">
-                        <input id="id" name="id" type="hidden">
+                        <input id="id" name="id" type="hidden"  value="1">
                     </div>
 
                     <div class="row justify-content-evenly">
                         <div class="col-6">
                             <div class="form-group">
-                                <label for="update-riqi">日期</label>
-                                <input id="update-riqi" name="riqi" type="date" class="form-control" autocomplete="off">
-                                <div class="invalid-feedback">
-                                    请输入日期！
-                                </div>
+                                <label for="update-ghf">供货方</label>
+                                <input id="update-ghf" name="ghf" type="text" class="form-control" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label for="update-gsm">公司名</label>
-                                <input id="update-gsm" name="gsm" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入公司名！
-                                </div>
+                                <label for="update-khh">开户行</label>
+                                <input id="update-khh" name="khh" type="text" class="form-control" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label for="update-pm">品名</label>
-                                <input id="update-pm" name="pm" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入品名！
-                                </div>
+                                <label for="update-zhanghao">账号</label>
+                                <input id="update-zhanghao" name="zhanghao" type="text" class="form-control" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label for="update-zl">重量</label>
-                                <input id="update-zl" name="zl" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入重量！
-                                </div>
+                                <label for="update-shuihao">税号</label>
+                                <input id="update-shuihao" name="shuihao" type="text" class="form-control" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label for="update-dj">单价</label>
-                                <input id="update-dj" name="dj" type="text" class="form-control" autocomplete="off" data-required="1">
-                                <div class="invalid-feedback">
-                                    请输入单价！
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label for="update-je">金额</label>
-                                <input id="update-je" name="je" type="text" class="form-control" autocomplete="off" readonly data-required="1">
+                                <label for="update-dizhi">地址</label>
+                                <input id="update-dizhi" name="dizhi" type="text" class="form-control" autocomplete="off">
                             </div>
                         </div>
                     </div>

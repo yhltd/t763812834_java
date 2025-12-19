@@ -35,4 +35,5 @@ public interface ScgdService extends IService<Scgd> {
     boolean updateStatus(Integer id, String zt);
 
     List<Scgd> getListRE(String fuzeren);
+    List<Scgd> getListRE();
 }

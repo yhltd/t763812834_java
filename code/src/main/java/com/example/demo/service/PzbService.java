@@ -2,12 +2,14 @@ package com.example.demo.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.demo.entity.Pzb;
+import com.example.demo.entity.Ygxx;
 
 import java.util.List;
 
 public interface PzbService extends IService<Pzb> {
 
     List<Pzb> getList(String fuzeren);
+    List<Pzb> getghf();
     List<Pzb> getXL();
     List<Pzb> getXLGL();
     List<Pzb> getDW();
@@ -42,4 +44,7 @@ public interface PzbService extends IService<Pzb> {
      * 添加
      */
     boolean update(String column,String value,int id);
+
+    boolean updateghf(Pzb pzb);
+    List<Pzb> getListghf();
 }

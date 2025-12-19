@@ -2,9 +2,12 @@ package com.example.demo.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.demo.entity.Pzb;
+import com.example.demo.entity.Ygxx;
 import com.example.demo.mapper.PzbMapper;
+import com.example.demo.mapper.YjbbMapper;
 import com.example.demo.service.PzbService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,12 +15,16 @@ import java.util.List;
 @Slf4j
 @Service
 public class PzbImpl extends ServiceImpl<PzbMapper, Pzb> implements PzbService {
-
+    @Autowired
+    PzbMapper pzbMapper;
     @Override
     public List<Pzb> getList(String fuzeren) {
         return baseMapper.getList(fuzeren);
     }
-
+    @Override
+    public List<Pzb> getghf() {
+        return baseMapper.getghf();
+    }
     @Override
     public List<Pzb> getXL() {
         return baseMapper.getXL();
@@ -71,4 +78,26 @@ public class PzbImpl extends ServiceImpl<PzbMapper, Pzb> implements PzbService {
         return baseMapper.update(column,value,id);
     }
 
+
+    @Override
+    public boolean updateghf(Pzb pzb) {
+        if (pzb == null ) {
+            return false;
+        }
+
+        try {
+
+            // 执行更新
+            Integer result = pzbMapper.updateghf(pzb);
+            return result != null && result > 0;
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public List<Pzb> getListghf() {
+        return baseMapper.getListghf();
+    }
 }

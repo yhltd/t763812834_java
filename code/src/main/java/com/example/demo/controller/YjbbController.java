@@ -26,7 +26,13 @@ public class YjbbController {
      * 分页查询客户信息
      */
     @PostMapping("/list")
-    public Result<PageResult<Yjbb>> getYjbbList(@RequestBody PageRequestDTO request) {
+    public Result<PageResult<Yjbb>> getYjbbList(HttpSession session,@RequestBody PageRequestDTO request) {
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
         try {
             log.info("分页查询业绩报表，页码: {}, 页大小: {}, 关键词: {}",
                     request.getPageNum(), request.getPageSize(), request.getKeyword());

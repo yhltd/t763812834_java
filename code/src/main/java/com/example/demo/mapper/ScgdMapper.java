@@ -52,7 +52,13 @@ public interface ScgdMapper extends BaseMapper<Scgd> {
     /**
      * 查询驳回内
      */
-    @Select("SELECT * FROM shengchangongdan WHERE fzr = #{fuzeren} AND zt = '驳回' ")
+    @Select("<script>" +
+            "SELECT * FROM shengchangongdan " +
+            "WHERE zt = '驳回' " +
+            "<if test='fuzeren != null'>" +
+            "   AND fzr = #{fuzeren}" +
+            "</if>" +
+            "</script>")
     List<Scgd> getListRE(@Param("fuzeren") String fuzeren);
 
     /**

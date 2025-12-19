@@ -56,6 +56,35 @@ public class XshtController {
         }
     }
 
+    @PostMapping("/ddh")
+    public Result<List<Pzb>> getddh(@RequestBody Map<String, Object> params) {
+        try {
+            String fuzeren = (String) params.get("fzr");
+
+            // 执行查询，传入负责人作为查询条件
+            List<Pzb> result = pzbService.getList(fuzeren);
+            return Result.success(result);
+
+        } catch (Exception e) {
+            log.error("查询配置表信息失败", e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/ghf")
+    public Result<List<Pzb>> getghf(HttpSession session) {
+        try {
+
+            // 执行查询，传入负责人作为查询条件
+            List<Pzb> result = pzbService.getghf();
+            return Result.success(result);
+
+        } catch (Exception e) {
+            log.error("查询配置表信息失败", e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
     /**
      * 查询基础信息配置
      */
@@ -99,9 +128,17 @@ public class XshtController {
     @PostMapping("/kehu")
     public Result<List<Khxx>> getKH(HttpSession session) {
         try {
+            // 从 Session 中获取 D 值（管理员名称）
+            String quanxian = (String) session.getAttribute("C");
+            String fuzeren = (String) session.getAttribute("D");
 
-            // 执行查询下拉内容
-            List<Khxx> result = khxxService.getKH();
+            List<Khxx> result;
+            if ("业务员".equals(quanxian)){
+                result = khxxService.getKH(fuzeren);
+            }else{
+                result = khxxService.getKH();
+            }
+
             return Result.success(result);
 
         } catch (Exception e) {
@@ -135,15 +172,18 @@ public class XshtController {
     @PostMapping("/returnlist")
     public Result<List<Scgd>> getListRE(HttpSession session) {
         try {
-
+            String quanxian = (String) session.getAttribute("C");
             // 从 Session 中获取 D 值（管理员名称）
             String fuzeren = (String) session.getAttribute("D");
+            List<Scgd> result;
             if (fuzeren == null || fuzeren.trim().isEmpty()) {
                 return Result.error("为获取身份信息，请重新登录");
             }
-
-            // 执行查询，传入负责人作为查询条件
-            List<Scgd> result = scgdService.getListRE(fuzeren);
+            if ("业务员".equals(quanxian)){
+                result = scgdService.getListRE(fuzeren);
+            }else{
+                result = scgdService.getListRE();
+            }
             return Result.success(result);
 
         } catch (Exception e) {

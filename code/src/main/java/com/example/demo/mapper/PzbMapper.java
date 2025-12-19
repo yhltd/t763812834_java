@@ -2,6 +2,7 @@ package com.example.demo.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.demo.entity.Pzb;
+import com.example.demo.entity.Ygxx;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -11,7 +12,8 @@ public interface PzbMapper extends BaseMapper<Pzb> {
 
     @Select("SELECT fuzeren,dianhua,bianhao FROM peizhibiao WHERE fuzeren = #{fuzeren}")
     List<Pzb> getList(@Param("fuzeren") String fuzeren);
-
+    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi FROM ghfxinxi")
+    List<Pzb> getghf();
     @Select("SELECT chanpinmingcheng,fukuanfangshi FROM peizhibiao")
     List<Pzb> getXL();
 
@@ -58,5 +60,11 @@ public interface PzbMapper extends BaseMapper<Pzb> {
 
     @Update("update peizhibiao set ${column} = #{value} where id = #{id}")
     boolean update(String column, String value, int id);
+
+    @Update("UPDATE ghfxinxi SET  ghf = #{ghf},khh = #{khh}, shuihao = #{shuihao}, zhanghao = #{zhanghao}, dizhi = #{dizhi} WHERE id = 1")
+    Integer updateghf(Pzb pzb);
+
+    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi FROM ghfxinxi WHERE id = 1")
+    List<Pzb> getListghf();
 
 }

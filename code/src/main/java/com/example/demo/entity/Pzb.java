@@ -54,4 +54,9 @@ public class Pzb {
      * 采购乙方
      */
     private String cgyf;
+    private String ghf;
+    private String khh;
+    private String zhanghao;
+    private String shuihao;
+    private String dizhi;
 }

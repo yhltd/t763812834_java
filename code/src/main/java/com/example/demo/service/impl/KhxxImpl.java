@@ -111,9 +111,15 @@ public class KhxxImpl extends ServiceImpl<KhxxMapper, Khxx> implements KhxxServi
         return wrapper;
     }
 
+
     @Override
     public List<Khxx> getKH() {
-        return baseMapper.getKH();
+        return baseMapper.getKH(null);
+    }
+
+    @Override
+    public List<Khxx> getKH(String fuzeren) {
+        return baseMapper.getKH(fuzeren);
     }
 
     /**

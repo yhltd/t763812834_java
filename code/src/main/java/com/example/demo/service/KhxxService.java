@@ -23,6 +23,7 @@ public interface KhxxService extends IService<Khxx> {
      * 客户基础信息
      */
     List<Khxx> getKH();
+    List<Khxx> getKH(String fuzeren);
     /**
      * 带乐观锁检查的更新方法
      */

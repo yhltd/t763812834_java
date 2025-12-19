@@ -303,7 +303,7 @@ function fillTable(data) {
                 <th width="80">状态</th>
                 <th width="120">购方要求</th>
                 <th width="80">开票状态</th>
-                <th width="200">备注</th>
+          
                 <th width="90">操作</th>
             </tr>
         </thead>
@@ -348,7 +348,7 @@ function fillTable(data) {
                     <td>${item.zt || ''}</td>
                     <td>${item.yq || ''}</td>
                     <td>${item.kpzt || ''}</td>
-                    <td>${item.zbz || ''}</td>
+                
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
                                 data-id="${item.id}" 
@@ -387,78 +387,7 @@ function updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoice
     $('#noInvoiceCount').text(noInvoiceCount);
 }
 
-// 在 fillBasicInfo 函数中添加新字段
-function fillBasicInfo(id) {
-    var rowData = null;
-    $('#khzlTable tbody tr').each(function() {
-        if ($(this).data('id') === id) {
-            rowData = {
-                khcm: $(this).find('td:eq(0)').text().trim(),
-                lxr: $(this).find('td:eq(1)').text().trim(),
-                lxdh: $(this).find('td:eq(2)').text().trim(),
-                ddrq: $(this).find('td:eq(3)').text().trim(),
-                hj: $(this).find('td:eq(4)').text().trim(),
-                fzr: $(this).find('td:eq(5)').text().trim(),
-                htbh: $(this).find('td:eq(6)').text().trim(),
-                zt: $(this).find('td:eq(7)').text().trim(),
-                yq: $(this).find('td:eq(8)').text().trim(), // 新增购方要求
-                kpzt: $(this).find('td:eq(9)').text().trim(), // 新增开票状态
-                zbz: $(this).find('td:eq(10)').text().trim()
-            };
-            return false;
-        }
-    });
 
-    if (rowData) {
-        var basicInfoHtml = `
-            <div class="col-md-4">
-                <label><strong>客户名称：</strong></label>
-                <span>${rowData.khcm}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>联系人：</strong></label>
-                <span>${rowData.lxr}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>联系电话：</strong></label>
-                <span>${rowData.lxdh}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>订单日期：</strong></label>
-                <span>${rowData.ddrq}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>合计金额：</strong></label>
-                <span>${rowData.hj}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>负责人：</strong></label>
-                <span>${rowData.fzr}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>合同编号：</strong></label>
-                <span>${rowData.htbh}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>状态：</strong></label>
-                <span>${rowData.zt}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>购方要求：</strong></label>
-                <span>${rowData.yq}</span>
-            </div>
-            <div class="col-md-4">
-                <label><strong>开票状态：</strong></label>
-                <span>${rowData.kpzt}</span>
-            </div>
-            <div class="col-md-12">
-                <label><strong>备注：</strong></label>
-                <span>${rowData.zbz}</span>
-            </div>
-        `;
-        $('#basicInfo').html(basicInfoHtml);
-    }
-}
 
 // 绑定详情按钮事件
 function bindDetailButtonEvents() {
@@ -537,7 +466,7 @@ function fillBasicInfo(id) {
                 <span>${rowData.zt}</span>
             </div>
             <div class="col-md-12">
-                <label><strong>备注：</strong></label>
+                <label><strong>购方要求：</strong></label>
                 <span>${rowData.zbz}</span>
             </div>
         `;
@@ -684,7 +613,7 @@ function getFieldLabel(field) {
         'zt': '状态',
         'yq': '购方要求', // 新增
         'kpzt': '开票状态', // 新增
-        'zbz': '备注'
+
     };
     return labels[field] || field;
 }
@@ -790,7 +719,13 @@ function showKhxxModal(type, data) {
         $('input[name="khcm"]').val(data.khcm || '');
         $('input[name="lxr"]').val(data.lxr || '');
         $('input[name="lxdh"]').val(data.lxdh || '');
-        $('input[name="ddrq"]').val(data.ddrq || '');
+        // 关键：转换日期格式从 "2025/12/20" 到 "2025-12-20"
+        let ddrqValue = data.ddrq || '';
+        if (ddrqValue && ddrqValue.includes('/')) {
+            ddrqValue = ddrqValue.replace(/\//g, '-');
+        }
+        console.log('转换后的ddrq值:', ddrqValue);
+        $('input[name="ddrq"]').val(ddrqValue);
         $('input[name="hj"]').val(data.hj || '');
         $('input[name="fzr"]').val(data.fzr || '');
         $('input[name="htbh"]').val(data.htbh || '');

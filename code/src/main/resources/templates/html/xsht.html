@@ -399,50 +399,153 @@
             position: relative;
         }
 
-        /* 打印样式 */
+        /* 替换现有的 @media print 部分 */
         @media print {
             @page {
                 size: A4;
-                margin: 20mm;
+                margin: 5mm; /* 减小边距 */
+
             }
 
             body {
-                background: white;
-                padding: 0;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 15px !important;
+                line-height: 1.3 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                width: 100% !important;
+                min-height: 297mm !important;
             }
 
-            .container {
-                max-width: 100%;
-                margin: 0;
+            /* 隐藏不需要打印的元素 */
+            body > *:not(#printContainer) {
+                display: none !important;
             }
 
+            /* 打印容器 */
+            #printContainer {
+                display: block !important;
+                position: static !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 打印页面容器 */
+            .print-page-container {
+                display: block !important;
+                width: 100% !important;
+                min-height: 297mm !important;
+                max-height: 297mm !important;
+                padding: 3mm 5mm !important;
+                margin: 0 !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                box-sizing: border-box !important;
+                position: relative !important;
+                background: white !important;
+                font-family: "Microsoft YaHei", sans-serif !important;
+                overflow: hidden !important;
+            }
+
+            /* 合同内容样式 */
             .invoice-container {
-                box-shadow: none;
-                padding: 0;
+                box-shadow: none !important;
+                padding: 0 !important; /* 确保打印时没有内边距 */
+                margin: 0 !important;
+                border: none !important;
+                font-size: 11px !important;
+                line-height: 1.2 !important;
+                width: 100% !important;
+                height: 100% !important; /* 改为 100% 填充 */
+                min-height: 287mm !important; /* 调整为更接近页面高度 */
             }
 
-            .action-buttons, .header h1, .form-section {
-                display: none;
-            }
-
+            /* 紧凑布局 */
             .invoice-header {
-                margin-bottom: 20px;
+                margin-bottom: 8mm !important;
+                padding-bottom: 4mm !important;
             }
 
-            /* 确保在打印时分页 */
-            .invoice-container {
-                page-break-after: always;
+            .invoice-details {
+                margin-bottom: 8mm !important;
+                gap: 10mm !important;
             }
 
-            .invoice-container:last-child {
-                page-break-after: avoid;
+            /* 优化表格样式 */
+            .items-table {
+                font-size: 9px !important;
+                line-height: 1.1 !important;
+                margin-bottom: 8mm !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+                table-layout: fixed !important;
             }
 
-            /* 打印时印章显示 */
+            .items-table th,
+            .items-table td {
+                padding: 2px 3px !important;
+                height: 16px !important;
+                border: 1px solid #666 !important;
+                word-wrap: break-word;
+                overflow: hidden;
+            }
+
+            .items-table th {
+                background-color: #2c5aa0 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* 压缩其他内容间距 */
+            .notes {
+                margin-bottom: 8mm !important;
+            }
+
+            .notes p {
+                margin-bottom: 3px !important;
+                line-height: 1.2 !important;
+                font-size: 10px !important;
+            }
+
+            .footer {
+                margin-top: 8mm !important;
+                font-size: 10px !important;
+            }
+
+            .signature-table td {
+                height: 18px !important;
+                padding: 1px 2px !important;
+                font-size: 9px !important;
+            }
+
+            .summary {
+                margin-bottom: 8mm !important;
+            }
+
+            /* 页码信息 */
+            .page-info {
+                font-size: 10px !important;
+                color: #000 !important;
+                font-weight: bold !important;
+            }
+
+            /* 印章 */
             .seal-overlay {
-                opacity: 1;
+                opacity: 1 !important;
+            }
+
+            .seal-overlay.hidden {
+                display: none !important;
             }
         }
+
 
         /* 自定义滚动条 */
         ::-webkit-scrollbar {
@@ -759,6 +862,56 @@
                 flex: 2;
             }
         }
+
+        .seal-overlay {
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        .seal-overlay.hidden {
+            display: none;
+        }
+        /* 驳回数据表格样式 */
+        #rejectedDataTable {
+            font-size: 14px;
+        }
+
+        #rejectedDataTable thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        #rejectedDataTable tbody tr {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #rejectedDataTable tbody tr:hover {
+            background-color: rgba(44, 90, 160, 0.05);
+        }
+
+        #rejectedDataTable tbody tr.selected {
+            background-color: rgba(44, 90, 160, 0.1);
+        }
+
+        .rejected-select-radio {
+            cursor: pointer;
+        }
+
+        /* 模态框表格容器 */
+        .table-responsive {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        /* 状态徽章 */
+        .badge {
+            font-size: 12px;
+            padding: 4px 8px;
+        }
     </style>
 </head>
 <body>
@@ -792,7 +945,7 @@
             </div>
             <div class="form-group">
                 <label for="clientAddress">乙方地址</label>
-                <select id="clientAddress" class="form-control">
+                <select id="clientAddress" class="form-control" disabled>
                     <option value="">请选择乙方地址</option>
                     <option value="其他">其他（请在下框中填写）</option>
                 </select>
@@ -886,6 +1039,10 @@
             <button id="generateInvoice" class="btn btn-success">
                 <i class="bi bi-check-lg"></i> 生成合同
             </button>
+
+            <button id="importExcel" class="btn btn-info">
+                <i class="bi bi-file-earmark-excel"></i> 导入Excel
+            </button>
         </div>
     </div>
 
@@ -899,13 +1056,13 @@
             </div>
             <div class="invoice-info">
                 <p class="page-info"><span id="previewPageNumber">第1页</span></p>
-                <p class="page-info"><span id="previewTotalPages">共1页</span></p>
+
             </div>
         </div>
 
         <div class="invoice-details">
             <div class="client-info">
-                <p>甲方(供货方): 昆山翰元星传动科技有限公司</p>
+                <p>甲方(供货方): <span id="ghf">昆山翰元星传动科技有限公司</span></p>
                 <p>乙方(购货方): <span id="previewClientCompany"></span></p>
             </div>
             <div class="invoice-meta">
@@ -953,16 +1110,15 @@
 
         <div class="notes">
             <p><span id="previewTaxRate">13%</span></p>
-            <p><strong>二、甲方收款资料如下</strong> 账号：554739970698 开户行：中国银行股份有限公司昆山综合保税区支行。</p>
-            <p><strong>三、合同履行，付款方式及期限，交货方式。</strong></p>
+            <p><strong>二、合同履行，付款方式及期限，交货方式。</strong></p>
             <p> 1.本合同请乙方于3个工作日内加盖合同章或公章向甲方回传，双方盖章（签字）后合同生效。</p>
             <p> 2.交货地点：甲方负责将货物交付到乙方指定的国内交货地点，并承担运输费用；由乙方负责货物卸车。</p>
             <p> 3.付款方式：<span id="previewPaymentMethod"></span></p>
             <p> 4.交货方式：乙方应在甲方完成加工入库并收到甲方通知（不限书面，微信QQ等亦可）提货后7日内提完相应货物，若乙方未在约定时间内提完，甲方有权自行处置本合同产品，由此给乙方造成的全部损失，由乙方自行承担。</p>
-            <p><strong>四、质保期：</strong>本合同项下货物，自乙方收到之日起保修期为一年。在质保期内，如果因产品质量问题，由甲方负责维修；非产品质量问题，经协商一致，甲方可以提供维修服务，由此产生的费用，由乙方承担。</p>
-            <p><strong>五、货物验收：</strong>乙方收到货物后，应于3日内进行验收确认，如果有质量问题，须以书面形式通知甲方。如逾期未提出任何异议的，视为验收合格。</p>
-            <p><strong>六、其他条款：</strong>本合同产品为加工定制品，不支持加工途中取消或者变更型号，非质量问题不支持退换货。</p>
-            <p><strong>七、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
+            <p><strong>三、质保期：</strong>本合同项下货物，自乙方收到之日起保修期为一年。在质保期内，如果因产品质量问题，由甲方负责维修；非产品质量问题，经协商一致，甲方可以提供维修服务，由此产生的费用，由乙方承担。</p>
+            <p><strong>四、货物验收：</strong>乙方收到货物后，应于3日内进行验收确认，如果有质量问题，须以书面形式通知甲方。如逾期未提出任何异议的，视为验收合格。</p>
+            <p><strong>五、其他条款：</strong>本合同产品为加工定制品，不支持加工途中取消或者变更型号，非质量问题不支持退换货。</p>
+            <p><strong>六、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
         </div>
 
         <div class="footer" style="display: flex; justify-content: space-between; margin-top: 50px;">
@@ -975,23 +1131,23 @@
                 <table class="signature-table">
                     <tr>
                         <td style="width: 30%;">甲方：</td>
-                        <td>昆山翰元星传动科技有限公司</td>
+                        <td id="ghf1">昆山翰元星传动科技有限公司</td>
                     </tr>
                     <tr>
                         <td>开户行：</td>
-                        <td>91320583MABWDA32XA</td>
+                        <td id="khh">中国银行股份有限公司昆山综合保税区支行</td>
                     </tr>
                     <tr>
                         <td>账号：</td>
-                        <td>中国银行股份有限公司昆山综合保税区支行</td>
+                        <td id="zhanghao">554739970698</td>
                     </tr>
                     <tr>
                         <td>税号：</td>
-                        <td>554739970698</td>
+                        <td id="shuihao">91320583MABWDA32XA</td>
                     </tr>
                     <tr>
                         <td>地址：</td>
-                        <td>昆山市张浦镇同舟路188号3号房</td>
+                        <td id="dizhi">昆山市张浦镇同舟路188号3号房</td>
                     </tr>
                     <tr>
                         <td>电话：</td>
@@ -1042,8 +1198,10 @@
         <div class="action-buttons">
             <button id="saveData" class="btn btn-primary">保存数据</button>
             <button id="printInvoice" class="btn btn-primary">打印合同</button>
+            <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
         </div>
     </div>
+    <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
 </div>
 
 <script>
@@ -1070,6 +1228,17 @@
 
         // 下拉选择框事件处理
         setupSelectHandlers();
+        // 在页面加载时调用
+        document.addEventListener('DOMContentLoaded', function() {
+            optimizePrintLayout();
+
+            // 监听窗口大小变化，重新计算每页产品数
+            window.addEventListener('resize', function() {
+                if (window.calculatedItemsPerPage) {
+                    window.calculatedItemsPerPage = calculateItemsPerPage();
+                }
+            });
+        });
 
         // 添加商品行
         document.getElementById('addItem').addEventListener('click', function() {
@@ -1147,6 +1316,8 @@
                 itemsContainer.removeChild(newItemRow);
             });
         });
+
+
 
         // 设置初始商品行的品牌默认值
         document.querySelector('.item-brand').value = 'SHAC';
@@ -1331,6 +1502,7 @@
                 // 如果选择了来自 xialagl 的选项，更新电话和代表人
                 if (selectedValue) {
                     updatePhoneAndRepresentativeFromGL(selectedValue);
+                    sendToBackend(selectedValue);
                 }
 
                 // 隐藏"其他"输入框
@@ -1365,7 +1537,7 @@
 
             // 更新页面显示
             const pageNumberElement = document.getElementById('previewPageNumber');
-            const totalPagesElement = document.getElementById('previewTotalPages');
+            // const totalPagesElement = document.getElementById('previewTotalPages');
 
             if (pageNumberElement) {
                 pageNumberElement.textContent = `第1页`;
@@ -1383,11 +1555,716 @@
             return totalPages;
         }
 
-        // 打印合同
+        // 完全重写打印函数，避免替换整个body
         document.getElementById('printInvoice').addEventListener('click', function() {
-            updatePageInfo();
-            window.print();
+            // 1. 验证数据
+            if (!validatePrintData()) {
+                return;
+            }
+
+            // 2. 确保合同预览是最新的
+            document.getElementById('generateInvoice').click();
+
+            // 3. 延迟执行，确保DOM更新完成
+            setTimeout(() => {
+                executeSmartPrint();
+            }, 300);
         });
+
+        // 智能打印函数 - 不替换整个body
+        function executeSmartPrint() {
+            try {
+                // 1. 收集所有产品数据
+                const itemRows = document.querySelectorAll('.item-row');
+                const allItems = [];
+
+                itemRows.forEach(row => {
+                    const name = row.querySelector('.item-name').value || '_______________';
+                    const model = row.querySelector('.item-model').value || '_______________';
+                    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    const amount = quantity * price;
+                    const remark = row.querySelector('.item-remark').value || '';
+                    const delivery = row.querySelector('.item-delivery').value || '_______________';
+                    const brand = row.querySelector('.item-brand').value || 'SHAC';
+
+                    allItems.push({
+                        name, model, quantity, price, amount, remark, delivery, brand
+                    });
+                });
+
+                // 2. 动态计算每页可容纳的产品行数
+                const itemsPerPage = calculateDynamicItemsPerPage();
+
+                // 3. 计算总页数
+                const totalPages = Math.max(1, Math.ceil(allItems.length / itemsPerPage));
+
+                // 4. 隐藏原始预览和不需要的元素
+                const originalPreview = document.getElementById('invoicePreview');
+                const originalDisplay = originalPreview.style.display;
+                const originalButtons = originalPreview.querySelector('.action-buttons');
+                const originalButtonsDisplay = originalButtons ? originalButtons.style.display : 'block';
+
+                // 5. 创建打印容器
+                const printContainer = document.createElement('div');
+                printContainer.id = 'printContainer';
+                printContainer.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 210mm; background: white;';
+
+                // 6. 为每页创建完整的合同副本
+                for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+                    const pageElement = createPrintPageContent(allItems, itemsPerPage, pageNum, totalPages);
+                    printContainer.appendChild(pageElement);
+                }
+
+                // 7. 添加到页面
+                document.body.appendChild(printContainer);
+
+                // 8. 隐藏原始页面中的打印按钮，避免重复打印
+                if (originalButtons) {
+                    originalButtons.style.display = 'none';
+                }
+
+                // 9. 延迟打印，确保DOM更新完成
+                setTimeout(() => {
+                    // 触发打印
+                    window.print();
+
+                    // 打印完成后恢复
+                    setTimeout(() => {
+                        restoreAfterPrint(printContainer, originalPreview, originalDisplay, originalButtons, originalButtonsDisplay);
+                    }, 500);
+                }, 1000);
+
+            } catch (error) {
+                console.error('打印出错:', error);
+                alert('打印出错: ' + error.message);
+            }
+        }
+
+        // 动态计算每页可容纳的产品行数
+        function calculateDynamicItemsPerPage() {
+            // 获取页面可用高度 (A4: 297mm - 边距)
+            const pageHeight = 297; // mm
+            const margins = 25; // 上下边距合计
+            const availableHeight = pageHeight - margins;
+
+            // 克隆合同内容来测量
+            const originalPreview = document.getElementById('invoicePreview');
+            const tempContainer = originalPreview.cloneNode(true);
+
+            // 清空产品表格，只留一行来测量
+            const tempItems = tempContainer.querySelector('#previewItems');
+            if (tempItems) {
+                tempItems.innerHTML = '';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>1</td>
+            <td>测试产品</td>
+            <td>测试型号</td>
+            <td>1</td>
+            <td>100.00</td>
+            <td>100.00</td>
+            <td>备注</td>
+            <td>7天</td>
+            <td>SHAC</td>
+        `;
+                tempItems.appendChild(tr);
+            }
+
+            // 隐藏不需要的元素
+            const buttons = tempContainer.querySelector('.action-buttons');
+            if (buttons) buttons.remove();
+
+            // 添加临时样式
+            tempContainer.style.cssText = `
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+        width: 210mm;
+        padding: 10mm 15mm;
+        background: white;
+        font-family: "Microsoft YaHei", sans-serif;
+    `;
+
+            // 添加到页面测量
+            document.body.appendChild(tempContainer);
+
+            // 测量高度
+            const contentHeight = tempContainer.offsetHeight;
+            const rowHeight = tempItems ? tempItems.querySelector('tr').offsetHeight : 20;
+
+            // 清理
+            document.body.removeChild(tempContainer);
+
+            // 计算每页可容纳的行数
+            // 可用高度 = 页面高度 - 固定内容高度
+            const fixedContentHeight = contentHeight - rowHeight;
+            const availableRowsHeight = (availableHeight * 3.78) - fixedContentHeight; // mm转px
+
+            // 计算行数，至少保证能放10行
+            let rowsPerPage = Math.floor(availableRowsHeight / rowHeight);
+            rowsPerPage = Math.max(10, rowsPerPage); // 至少10行
+
+            console.log('动态计算每页行数:', {
+                pageHeight: pageHeight,
+                margins: margins,
+                contentHeight: contentHeight,
+                rowHeight: rowHeight,
+                fixedContentHeight: fixedContentHeight,
+                availableRowsHeight: availableRowsHeight,
+                rowsPerPage: rowsPerPage
+            });
+
+            return rowsPerPage;
+        }
+
+        // 创建打印页面内容
+        function createPrintPageContent(allItems, itemsPerPage, pageNum, totalPages) {
+            // 创建页面容器
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'print-page-container';
+            pageContainer.style.cssText = `
+        width: 210mm;
+        min-height: 297mm;
+        padding: 3mm 5mm;
+        page-break-after: always;
+        break-after: page;
+        box-sizing: border-box;
+        font-family: "Microsoft YaHei", sans-serif;
+        position: relative;
+        background: white;
+    `;
+
+            // 克隆原始合同内容
+            const originalPreview = document.getElementById('invoicePreview');
+            const pageContent = originalPreview.cloneNode(true);
+
+            // 移除不需要的元素
+            const buttons = pageContent.querySelector('.action-buttons');
+            if (buttons) buttons.remove();
+
+            // 更新页码信息
+            const invoiceInfo = pageContent.querySelector('.invoice-info');
+            if (invoiceInfo) {
+                const pageInfo = invoiceInfo.querySelector('.page-info');
+                if (pageInfo) {
+                    pageInfo.innerHTML = `
+                <div style="font-size: 10px; font-weight: bold; color: #000;">
+                    第${pageNum + 1}页 / 共${totalPages}页
+                </div>
+            `;
+                }
+            }
+
+            // 更新产品表格
+            const previewItems = pageContent.querySelector('#previewItems');
+            if (previewItems) {
+                previewItems.innerHTML = '';
+
+                // 计算当前页的产品范围
+                const startIndex = pageNum * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, allItems.length);
+
+                // 添加当前页的产品行
+                let pageTotal = 0;
+                for (let i = startIndex; i < endIndex; i++) {
+                    const item = allItems[i];
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td style="font-size: 9px;">${item.name}</td>
+                <td style="font-size: 9px;">${item.model}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price.toFixed(2)}</td>
+                <td>${item.amount.toFixed(2)}</td>
+                <td style="font-size: 9px;">${item.remark}</td>
+                <td>${item.delivery}</td>
+                <td>${item.brand}</td>
+            `;
+                    previewItems.appendChild(tr);
+                    pageTotal += item.amount;
+                }
+
+                // 更新当前页的合计金额
+                const totalElement = pageContent.querySelector('#previewTotal');
+                if (totalElement) {
+                    totalElement.textContent = pageTotal.toFixed(2) + ' 元';
+                }
+
+                // 不添加空行，让内容自然布局
+            }
+
+            // 优化页面布局
+            optimizePrintPageLayout(pageContent);
+
+            // 添加到页面容器
+            pageContainer.appendChild(pageContent);
+
+            return pageContainer;
+        }
+
+        // 优化打印页面布局
+        function optimizePrintPageLayout(pageContent) {
+            if (!pageContent) return;
+
+            // 优化内边距
+            pageContent.style.padding = '0';
+
+            // 优化表格
+            const table = pageContent.querySelector('.items-table');
+            if (table) {
+                table.style.fontSize = '9px';
+                table.style.marginBottom = '6mm';
+                table.style.lineHeight = '1.1';
+            }
+
+            // 优化段落间距
+            const notes = pageContent.querySelector('.notes');
+            if (notes) {
+                const paragraphs = notes.querySelectorAll('p');
+                paragraphs.forEach(p => {
+                    p.style.marginBottom = '2px';
+                    p.style.lineHeight = '1.2';
+                    p.style.fontSize = '10px';
+                });
+            }
+
+            // 优化签名区域
+            const footer = pageContent.querySelector('.footer');
+            if (footer) {
+                footer.style.marginTop = '6mm';
+                footer.style.fontSize = '10px';
+            }
+
+            // 优化其他间距
+            const invoiceHeader = pageContent.querySelector('.invoice-header');
+            if (invoiceHeader) {
+                invoiceHeader.style.marginBottom = '6mm';
+            }
+
+            const invoiceDetails = pageContent.querySelector('.invoice-details');
+            if (invoiceDetails) {
+                invoiceDetails.style.marginBottom = '6mm';
+            }
+
+            const summary = pageContent.querySelector('.summary');
+            if (summary) {
+                summary.style.marginBottom = '6mm';
+            }
+        }
+
+        // 在页面加载时添加打印优化样式
+        function addPrintOptimizationStyles() {
+            const style = document.createElement('style');
+            style.id = 'print-optimization-styles';
+            style.innerHTML = `
+        /* 打印优化样式 */
+        .print-optimized .invoice-container {
+            padding: 5mm 10mm !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+        }
+
+        .print-optimized .items-table {
+            font-size: 9px !important;
+            line-height: 1.1 !important;
+        }
+
+        .print-optimized .items-table th,
+        .print-optimized .items-table td {
+            padding: 2px 3px !important;
+        }
+
+        .print-optimized .notes p {
+            margin-bottom: 3px !important;
+            line-height: 1.2 !important;
+            font-size: 10px !important;
+        }
+
+        .print-optimized .footer {
+            margin-top: 6mm !important;
+            font-size: 10px !important;
+        }
+    `;
+            document.head.appendChild(style);
+        }
+
+// 在DOM加载完成后调用
+        document.addEventListener('DOMContentLoaded', function() {
+            addPrintOptimizationStyles();
+        });
+
+        // 验证打印数据
+        function validatePrintData() {
+            const contractNumber = document.getElementById('contractNumber').value;
+            const clientCompany = document.getElementById('clientCompany').value;
+            const itemRows = document.querySelectorAll('.item-row');
+
+            if (!contractNumber || contractNumber.trim() === '') {
+                alert('请填写合同编号');
+                return false;
+            }
+
+            if (!clientCompany || clientCompany.trim() === '') {
+                alert('请选择乙方公司');
+                return false;
+            }
+
+            if (itemRows.length === 0) {
+                alert('请至少添加一个产品');
+                return false;
+            }
+
+            // 添加确认对话框
+            if (!confirm('确定要打印合同吗？')) {
+                return false;
+            }
+
+            return true;
+        }
+
+        // 执行打印的主要函数
+        function executePrint() {
+            try {
+                // 1. 收集所有产品数据
+                const itemRows = document.querySelectorAll('.item-row');
+                const allItems = [];
+
+                itemRows.forEach(row => {
+                    const name = row.querySelector('.item-name').value || '_______________';
+                    const model = row.querySelector('.item-model').value || '_______________';
+                    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    const amount = quantity * price;
+                    const remark = row.querySelector('.item-remark').value || '';
+                    const delivery = row.querySelector('.item-delivery').value || '_______________';
+                    const brand = row.querySelector('.item-brand').value || 'SHAC';
+
+                    allItems.push({
+                        name, model, quantity, price, amount, remark, delivery, brand
+                    });
+                });
+
+                // 2. 计算每页可容纳的产品行数 - 固定为10行
+                const itemsPerPage = 10; // 固定每页10行产品
+
+                // 3. 计算总页数
+                const totalPages = Math.ceil(allItems.length / itemsPerPage);
+
+                // 4. 保存原始页面内容
+                const originalBody = document.body.innerHTML;
+                const originalPreview = document.getElementById('invoicePreview');
+                const originalDisplay = originalPreview.style.display;
+
+                // 5. 切换到打印模式
+                document.body.classList.add('print-mode');
+
+                // 6. 清空之前的打印页面
+                const existingPrintPages = document.querySelectorAll('.print-page');
+                existingPrintPages.forEach(page => page.remove());
+
+                // 7. 为每页创建完整的合同副本
+                for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+                    createPrintPage(allItems, itemsPerPage, pageNum, totalPages);
+                }
+
+                // 8. 如果没有产品，也要创建一页
+                if (totalPages === 0) {
+                    createEmptyPrintPage();
+                }
+
+                // 9. 延迟打印，确保DOM更新完成
+                setTimeout(() => {
+                    // 触发打印
+                    window.print();
+
+                    // 打印完成后恢复
+                    setTimeout(() => {
+                        restoreAfterPrint(originalBody, originalPreview, originalDisplay);
+                    }, 500);
+                }, 1000);
+
+            } catch (error) {
+                console.error('打印出错:', error);
+                alert('打印出错: ' + error.message);
+                restoreAfterPrint('', document.getElementById('invoicePreview'), 'block');
+            }
+        }
+
+        // 创建打印页面
+        function createPrintPage(allItems, itemsPerPage, pageNum, totalPages) {
+            const printPage = document.createElement('div');
+            printPage.className = 'print-page';
+
+            // 深拷贝原始合同内容
+            const originalPreview = document.getElementById('invoicePreview').cloneNode(true);
+
+            // 移除原始页面中的按钮等不需要的元素
+            const actionButtons = originalPreview.querySelector('.action-buttons');
+            if (actionButtons) {
+                actionButtons.remove();
+            }
+
+            // 更新页码信息 - 确保在页面顶部
+            const invoiceInfo = originalPreview.querySelector('.invoice-info');
+            if (invoiceInfo) {
+                const pageInfo = invoiceInfo.querySelector('.page-info');
+                if (pageInfo) {
+                    pageInfo.innerHTML = `
+                <div style="font-size: 10px; font-weight: bold;">
+                    第${pageNum + 1}页 / 共${totalPages}页
+                </div>
+            `;
+                }
+            }
+
+            // 更新产品表格 - 只显示当前页的产品
+            const previewItems = originalPreview.querySelector('#previewItems');
+            if (previewItems) {
+                previewItems.innerHTML = '';
+
+                // 计算当前页的产品范围
+                const startIndex = pageNum * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, allItems.length);
+
+                // 添加当前页的产品行
+                let pageTotal = 0;
+                for (let i = startIndex; i < endIndex; i++) {
+                    const item = allItems[i];
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td style="font-size: 8px;">${item.name}</td>
+                <td style="font-size: 8px;">${item.model}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price.toFixed(2)}</td>
+                <td>${item.amount.toFixed(2)}</td>
+                <td style="font-size: 8px;">${item.remark}</td>
+                <td>${item.delivery}</td>
+                <td>${item.brand}</td>
+            `;
+                    previewItems.appendChild(tr);
+                    pageTotal += item.amount;
+                }
+
+                // 如果产品数量不足以填满一页，添加空行保持表格完整
+                if (endIndex - startIndex < itemsPerPage) {
+                    const remainingRows = itemsPerPage - (endIndex - startIndex);
+                    for (let i = 0; i < remainingRows; i++) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                `;
+                        previewItems.appendChild(tr);
+                    }
+                }
+
+                // 更新当前页的合计金额
+                const totalElement = originalPreview.querySelector('#previewTotal');
+                if (totalElement) {
+                    totalElement.textContent = pageTotal.toFixed(2) + ' 元';
+                }
+            }
+
+            // 优化内容布局，减小间距
+            optimizePageLayout(originalPreview);
+
+            // 添加到打印页
+            printPage.appendChild(originalPreview);
+            document.body.appendChild(printPage);
+        }
+
+// 创建空页面
+        function createEmptyPrintPage() {
+            const printPage = document.createElement('div');
+            printPage.className = 'print-page';
+
+            const originalPreview = document.getElementById('invoicePreview').cloneNode(true);
+
+            // 移除按钮
+            const actionButtons = originalPreview.querySelector('.action-buttons');
+            if (actionButtons) actionButtons.remove();
+
+            // 更新页码信息
+            const invoiceInfo = originalPreview.querySelector('.invoice-info');
+            if (invoiceInfo) {
+                const pageInfo = invoiceInfo.querySelector('.page-info');
+                if (pageInfo) {
+                    pageInfo.innerHTML = `
+                <div style="font-size: 10px; font-weight: bold;">
+                    第1页 / 共1页
+                </div>
+            `;
+                }
+            }
+
+            // 清空产品表格
+            const previewItems = originalPreview.querySelector('#previewItems');
+            if (previewItems) {
+                previewItems.innerHTML = '';
+                // 添加10个空行
+                for (let i = 0; i < 10; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            `;
+                    previewItems.appendChild(tr);
+                }
+            }
+
+            // 更新合计金额
+            const totalElement = originalPreview.querySelector('#previewTotal');
+            if (totalElement) {
+                totalElement.textContent = '0.00 元';
+            }
+
+            // 优化布局
+            optimizePageLayout(originalPreview);
+
+            printPage.appendChild(originalPreview);
+            document.body.appendChild(printPage);
+        }
+
+// 优化页面布局
+        function optimizePageLayout(pageElement) {
+            if (!pageElement) return;
+
+            // 减小内边距
+            pageElement.style.padding = '10px 15px';
+
+            // 优化表格样式
+            const table = pageElement.querySelector('.items-table');
+            if (table) {
+                table.style.fontSize = '9px';
+                table.style.marginBottom = '8px';
+            }
+
+            // 优化段落间距
+            const notes = pageElement.querySelector('.notes');
+            if (notes) {
+                const paragraphs = notes.querySelectorAll('p');
+                paragraphs.forEach(p => {
+                    p.style.marginBottom = '4px';
+                    p.style.lineHeight = '1.2';
+                });
+            }
+
+            // 优化签名区域
+            const footer = pageElement.querySelector('.footer');
+            if (footer) {
+                footer.style.marginTop = '15px';
+            }
+        }
+
+// 恢复打印后状态
+        function restoreAfterPrint(printContainer, originalPreview, originalDisplay, originalButtons, originalButtonsDisplay) {
+            // 移除打印容器
+            if (printContainer && printContainer.parentNode) {
+                printContainer.parentNode.removeChild(printContainer);
+            }
+
+            // 恢复原始预览显示
+            if (originalPreview) {
+                originalPreview.style.display = originalDisplay;
+            }
+
+            // 恢复按钮显示
+            if (originalButtons) {
+                originalButtons.style.display = originalButtonsDisplay;
+            }
+        }
+
+        // 在页面加载时添加优化打印的CSS
+        function addPrintOptimizationCSS() {
+            const style = document.createElement('style');
+            style.id = 'print-optimization-css';
+            style.innerHTML = `
+        /* 打印预览优化 */
+        @media screen {
+            .print-preview-mode .invoice-container {
+                padding: 15px 20px !important;
+                font-size: 11px !important;
+            }
+
+            .print-preview-mode .items-table {
+                font-size: 9px !important;
+            }
+
+            .print-preview-mode .items-table th,
+            .print-preview-mode .items-table td {
+                padding: 3px 4px !important;
+            }
+
+            .print-preview-mode .notes p {
+                margin-bottom: 6px !important;
+                line-height: 1.2 !important;
+            }
+
+            .print-preview-mode .footer {
+                margin-top: 20px !important;
+            }
+        }
+    `;
+            document.head.appendChild(style);
+        }
+
+// 在页面加载时调用
+        document.addEventListener('DOMContentLoaded', function() {
+            addPrintOptimizationCSS();
+        });
+
+// 修改 calculateItemsPerPage 函数，返回固定值
+        function calculateItemsPerPage() {
+            // 根据测试，优化后的布局一页可以显示10-12行产品
+            return 10; // 固定每页10行
+        }
+
+        // 清理打印页
+        function cleanUpPrintPages() {
+            const printPages = document.querySelectorAll('.print-page');
+            printPages.forEach(page => page.remove());
+            document.getElementById('invoicePreview').style.display = 'block';
+        }
+
+        document.getElementById('yincanggongzhang').addEventListener('click', function() {
+            const sealElement = document.querySelector('.seal-overlay');
+            const button = this;
+
+            // 切换hidden类
+            sealElement.classList.toggle('hidden');
+
+            // 更新按钮状态
+            updateButtonState1(button, sealElement.classList.contains('hidden'));
+        });
+
+        // 更新按钮文本和样式
+        function updateButtonState1(button, isHidden) {
+            if (isHidden) {
+                button.innerHTML = '<i class="bi bi-eye"></i> 显示印章';
+                button.classList.remove('btn-secondary');
+                button.classList.add('btn-success');
+            } else {
+                button.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏印章';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-secondary');
+            }
+        }
 
         // // 付款方式
         // document.getElementById('paymentMethod').addEventListener('change', function() {
@@ -1754,6 +2631,125 @@
         });
     }
 
+    function getghf() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/ghf',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的供货方信息", res);
+
+                    // 使用返回的数据更新页面元素
+                    if (res.data && res.data.length > 0) {
+                        // 1. 提取第一条有效的ghf数据
+                        const validSupplier = extractFirstValidSupplier(res.data);
+
+                        if (validSupplier) {
+                            // 2. 更新供货方信息到页面元素
+                            updateGonghuofangInfo(validSupplier);
+                        } else {
+                            console.warn("没有找到有效的供货方数据");
+                        }
+
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+    // 从数据数组中提取第一条有效的供货方数据
+    function extractFirstValidSupplier(dataArray) {
+        if (!dataArray || !Array.isArray(dataArray)) {
+            return null;
+        }
+
+        // 遍历数组，找到第一个有ghf字段且不为空的对象
+        for (let i = 0; i < dataArray.length; i++) {
+            const item = dataArray[i];
+
+            // 检查item是否为有效对象且包含ghf字段
+            if (item && typeof item === 'object' && item.ghf && item.ghf.trim() !== '') {
+                console.log(`找到有效供货方数据，索引: ${i}, ghf: ${item.ghf}`);
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    // 更新供货方信息到页面
+    function updateGonghuofangInfo(supplierData) {
+        if (!supplierData) {
+            console.warn("供货方数据为空");
+            return;
+        }
+
+        const companyName = supplierData.ghf || '';
+        const khh = supplierData.khh || '';
+        const zhanghao = supplierData.zhanghao || '';
+        const shuihao = supplierData.shuihao || '';
+        const dizhi = supplierData.dizhi || '';
+        console.log("更新供货方名称:", companyName);
+
+        // 1. 更新 <p>甲方(供货方): <span id="ghf"></span></p>
+        const ghfSpan = document.getElementById('ghf');
+        if (ghfSpan) {
+            ghfSpan.textContent = companyName;
+            console.log("已更新ghf元素:", companyName);
+        } else {
+            console.error("未找到ID为'ghf'的元素");
+        }
+
+        // 2. 更新 <td id="ghf1">昆山翰元星传动科技有限公司</td>
+        const ghf1Td = document.getElementById('ghf1');
+        if (ghf1Td) {
+            ghf1Td.textContent = companyName;
+            console.log("已更新ghf1元素:", companyName);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+        const khhTd = document.getElementById('khh');
+        if (khhTd) {
+            khhTd.textContent = khh;
+            console.log("已更新khh元素:", khh);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+        const zhanghaoTd = document.getElementById('zhanghao');
+        if (zhanghaoTd) {
+            zhanghaoTd.textContent = zhanghao;
+            console.log("已更新zhanghao元素:", zhanghao);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+        const shuihaoTd = document.getElementById('shuihao');
+        if (shuihaoTd) {
+            shuihaoTd.textContent = shuihao;
+            console.log("已更新shuihao元素:", shuihao);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+        const dizhiTd = document.getElementById('dizhi');
+        if (dizhiTd) {
+            dizhiTd.textContent = dizhi;
+            console.log("已更新dizhi元素:", dizhi);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+    }
 
     // 填充乙方公司名称下拉框
     function fillCustomerCompanyDropdown(data) {
@@ -1991,15 +2987,7 @@
         sameAddressOption.textContent = '同乙方地址';
         deliveryAddressSelect.appendChild(sameAddressOption);
 
-        // 首先添加 dz 字段作为第一个选项
-        if (customerData.dz && customerData.dz.trim() !== '') {
-            const dzOption = document.createElement('option');
-            dzOption.value = customerData.dz.trim();
-            dzOption.textContent = customerData.dz.trim();
-            deliveryAddressSelect.appendChild(dzOption);
-        }
-
-        // 然后添加 dz1-dz5 字段作为其他选项
+        // 收集 dz1-dz5 字段
         const addresses = [];
         for (let i = 1; i <= 5; i++) {
             const addressField = `dz${i}`;
@@ -2008,8 +2996,8 @@
             }
         }
 
-        // 添加地址选项
-        addresses.forEach(address => {
+        // 添加 dz1-dz5 地址选项（不添加 dz 字段）
+        addresses.forEach((address, index) => {
             const option = document.createElement('option');
             option.value = address;
             option.textContent = address;
@@ -2022,12 +3010,23 @@
         otherOption.textContent = '其他（请在下框中填写）';
         deliveryAddressSelect.appendChild(otherOption);
 
-        // 设置默认值为 dz 字段
-        if (customerData.dz && customerData.dz.trim() !== '') {
-            deliveryAddressSelect.value = customerData.dz.trim();
-        } else if (addresses.length > 0) {
-            deliveryAddressSelect.value = addresses[0];
+        // 设置默认值为 dz1 字段（如果存在）
+        let defaultAddress = '';
+
+        // 优先使用 dz1
+        if (customerData.dz1 && customerData.dz1.trim() !== '') {
+            defaultAddress = customerData.dz1.trim();
         }
+        // 如果没有 dz1，使用 dz2-dz5 中第一个有值的
+        else if (addresses.length > 0) {
+            defaultAddress = addresses[0];
+        }
+        // 如果都没有，使用"同乙方地址"
+        else {
+            defaultAddress = '同乙方地址';
+        }
+
+        deliveryAddressSelect.value = defaultAddress;
     }
 
     // 更新乙方要求输入框
@@ -2203,14 +3202,13 @@
             dataType: 'json',
             success: function(res) {
                 if (res.success) {
-                    console.log("返回的客户信息", res);
+                    console.log("返回的驳回信息", res);
 
                     // 检查返回的数组长度
                     if (res.data && res.data.length > 0) {
-                        // 显示弹窗
-                        showRejectedAlert(res.data.length);
+                        // 显示弹窗（传入整个数据数组）
+                        showRejectedAlert(res.data);
                     }
-
                 } else {
                     console.error("查询失败:", res.message);
                 }
@@ -2222,61 +3220,157 @@
         });
     }
 
-    // 显示驳回数据弹窗
-    function showRejectedAlert(dataLength) {
+    // 显示驳回数据弹窗 - 显示列表供选择
+    function showRejectedAlert(rejectedDataList) {
         // 创建弹窗HTML
         var alertHtml = `
-    <div class="modal fade" id="rejectedAlertModal" tabindex="-1" aria-labelledby="rejectedAlertLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rejectedAlertLabel">驳回通知</h5>
-                    <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close">×</button>
-                </div>
-                <div class="modal-body">
-                    <p>有 <strong style="color: #ff6b35;">${dataLength}</strong> 条数据被驳回，是否立即查看？</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
-                    <button type="button" class="btn btn-primary" id="confirmViewBtn">确定查看</button>
-                </div>
+<div class="modal fade" id="rejectedAlertModal" tabindex="-1" aria-labelledby="rejectedAlertLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectedAlertLabel">驳回通知</h5>
+                <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close">×</button>
             </div>
+            <div class="modal-body">
+                <p>有 <strong style="color: #ff6b35;">${rejectedDataList.length}</strong> 条数据被驳回，请选择要查看的数据：</p>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm" id="rejectedDataTable">
+                        <thead>
+                            <tr>
+                                <th>选择</th>
+                                <th>合同编号</th>
+                                <th>客户名称</th>
+                                <th>负责人</th>
+                                <th>订单日期</th>
+                                <th>合计金额</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectedDataBody">
+                            <!-- 动态生成驳回数据行 -->
+        </tbody>
+        </table>
         </div>
-    </div>
-`;
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+        <button type="button" class="btn btn-primary" id="selectBtn" disabled>选择查看</button>
+        </div>
+        </div>
+        </div>
+        </div>
+        `;
 
-        // 移除已存在的弹窗并添加新的
-        $('#rejectedAlertModal').remove();
-        $('body').append(alertHtml);
+    // 移除已存在的弹窗并添加新的
+    $('#rejectedAlertModal').remove();
+    $('body').append(alertHtml);
 
-        // 获取modal元素
-        var modalElement = document.getElementById('rejectedAlertModal');
-        var modal = new bootstrap.Modal(modalElement);
+    // 填充数据表格
+    populateRejectedDataTable(rejectedDataList);
 
-        // 显示弹窗
-        modal.show();
+    // 获取modal元素
+    var modalElement = document.getElementById('rejectedAlertModal');
+    var modal = new bootstrap.Modal(modalElement);
 
-        // 绑定事件 - 使用事件委托
-        $(document).off('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn').on('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn', function(e) {
-            var targetId = e.target.id;
+    // 显示弹窗
+    modal.show();
 
-            if (targetId === 'confirmViewBtn') {
-                // 确定查看 - 获取驳回数据并填充
-                loadRejectedData();
+    // 绑定事件
+    bindRejectedAlertEvents(modal, rejectedDataList);
+}
+
+// 绑定驳回弹窗事件
+        function bindRejectedAlertEvents(modal, rejectedDataList) {
+            const modalElement = document.getElementById('rejectedAlertModal');
+
+            // 单选按钮点击事件
+            $(modalElement).on('change', '.rejected-select-radio', function() {
+                const selectBtn = document.getElementById('selectBtn');
+                selectBtn.disabled = !this.checked;
+            });
+
+            // 表格行点击事件（增强用户体验）
+            $(modalElement).on('click', 'tbody tr', function(e) {
+                // 如果点击的不是单选按钮本身，则选中该行的单选按钮
+                if (!$(e.target).is('input[type="radio"]')) {
+                    const radio = $(this).find('.rejected-select-radio');
+                    radio.prop('checked', true);
+                    radio.trigger('change');
+                }
+            });
+
+            // 选择按钮点击事件
+            $(modalElement).on('click', '#selectBtn', function() {
+                const selectedRadio = document.querySelector('.rejected-select-radio:checked');
+                if (selectedRadio) {
+                    const dataIndex = parseInt(selectedRadio.getAttribute('data-index'));
+                    const selectedData = rejectedDataList[dataIndex];
+
+                    if (selectedData) {
+                        modal.hide();
+                        loadSelectedRejectedData(selectedData);
+                    }
+                }
+            });
+
+            // 取消按钮点击事件
+            $(modalElement).on('click', '#cancelBtn, #closeModalBtn', function() {
                 modal.hide();
-            } else if (targetId === 'cancelBtn' || targetId === 'closeModalBtn') {
-                // 取消或关闭
-                modal.hide();
+            });
+
+            // 弹窗关闭时清理
+            $(modalElement).on('hidden.bs.modal', function() {
+                $(this).remove();
+                // 移除事件绑定
+                $(modalElement).off('change', '.rejected-select-radio');
+                $(modalElement).off('click', 'tbody tr');
+                $(modalElement).off('click', '#selectBtn');
+                $(modalElement).off('click', '#cancelBtn, #closeModalBtn');
+            });
+        }
+
+        // 加载选择的驳回数据
+        function loadSelectedRejectedData(rejectedData) {
+            console.log("选择的驳回数据:", rejectedData);
+
+            if (rejectedData) {
+                // 填充数据到表单
+                fillFormWithRejectedData(rejectedData);
+
+                // 修改打印单上的按钮状态
+                updatePrintButtonsState(rejectedData.id);
+            } else {
+                alert("没有找到选择的驳回数据");
             }
-        });
+        }
 
-        // 弹窗关闭时清理
-        $(modalElement).on('hidden.bs.modal', function () {
-            $(this).remove();
-            // 移除事件绑定
-            $(document).off('click', '#confirmViewBtn, #cancelBtn, #closeModalBtn');
-        });
-    }
+
+// 填充驳回数据表格
+        function populateRejectedDataTable(dataList) {
+            const tbody = document.getElementById('rejectedDataBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            dataList.forEach((data, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>
+                <input type="radio" name="selectedRejected" value="${data.id || index}"
+                       data-index="${index}" class="rejected-select-radio">
+            </td>
+            <td>${data.htbh || '无'}</td>
+            <td>${data.khcm || '无'}</td>
+            <td>${data.fzr || '无'}</td>
+            <td>${data.ddrq || '无'}</td>
+            <td>${data.hj ? '¥' + parseFloat(data.hj).toFixed(2) : '¥0.00'}</td>
+            <td><span class="badge bg-warning">被驳回</span></td>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+
 
     // 加载驳回数据
     function loadRejectedData() {
@@ -2344,8 +3438,15 @@
                 if (paymentSelect) {
                     const event = new Event('change');
                     paymentSelect.dispatchEvent(event);
+
+                    // 修改点2：在 fzr 更新后，再填充 htbh（合同编号）
+                    setTimeout(() => {
+                        if (data.htbh) {
+                            document.getElementById('contractNumber').value = data.htbh;
+                        }
+                    }, 100);
                 }
-            }, 200);
+            }, 100);
         }
 
         // 填充产品信息
@@ -2471,35 +3572,36 @@
 
 
     // 修改按钮状态
-    function updateButtonState(dataId) {
-        const actionButtons = document.querySelector('.action-buttons');
-
-        // 保存原始ID到全局变量
-        window.currentRejectedDataId = dataId;
-
-        // 修改按钮HTML
-        actionButtons.innerHTML = `
-        <button id="updateData" class="btn btn-warning">修改数据</button>
-        <button id="deleteData" class="btn btn-danger">删除数据</button>
-        <button id="printInvoice" class="btn btn-primary">打印合同</button>
-    `;
-
-        // 绑定修改数据事件
-        document.getElementById('updateData').addEventListener('click', function() {
-            updateRejectedData(dataId);
-        });
-
-        // 绑定删除数据事件
-        document.getElementById('deleteData').addEventListener('click', function() {
-            deleteRejectedData(dataId);
-        });
-
-        // 绑定打印事件
-        document.getElementById('printInvoice').addEventListener('click', function() {
-            updatePageInfo();
-            window.print();
-        });
-    }
+    // function updateButtonState(dataId) {
+    //     const actionButtons = document.querySelector('.action-buttons');
+    //
+    //     // 保存原始ID到全局变量
+    //     window.currentRejectedDataId = dataId;
+    //
+    //     // 修改按钮HTML
+    //     actionButtons.innerHTML = `
+    //     <button id="updateData" class="btn btn-warning">修改数据</button>
+    //     <button id="deleteData" class="btn btn-danger">删除数据</button>
+    //     <button id="printInvoice" class="btn btn-primary">打印合同</button>
+    //      <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
+    // `;
+    //
+    //     // 绑定修改数据事件
+    //     document.getElementById('updateData').addEventListener('click', function() {
+    //         updateRejectedData(dataId);
+    //     });
+    //
+    //     // 绑定删除数据事件
+    //     document.getElementById('deleteData').addEventListener('click', function() {
+    //         deleteRejectedData(dataId);
+    //     });
+    //
+    //     // 绑定打印事件
+    //     document.getElementById('printInvoice').addEventListener('click', function() {
+    //         updatePageInfo();
+    //         window.print();
+    //     });
+    // }
 
     function updatePrintButtonsState(dataId) {
         const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
@@ -2512,6 +3614,7 @@
         <button id="updateData" class="btn btn-warning">修改数据</button>
         <button id="deleteData" class="btn btn-danger">删除数据</button>
         <button id="printInvoiceBtn" class="btn btn-primary">打印合同</button>
+         <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
     `;
 
         // 使用事件委托绑定所有按钮事件
@@ -2709,6 +3812,7 @@
             printActionButtons.innerHTML = `
             <button id="saveData" class="btn btn-primary">保存数据</button>
             <button id="printInvoice" class="btn btn-primary">打印合同</button>
+             <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
         `;
 
             // 使用事件委托重新绑定事件
@@ -2733,49 +3837,69 @@
     }
 
     // 恢复原始按钮状态
-    function resetButtonState() {
-        const actionButtons = document.querySelector('.action-buttons');
-        actionButtons.innerHTML = `
-        <button id="saveData" class="btn btn-primary">保存数据</button>
-        <button id="printInvoice" class="btn btn-primary">打印合同</button>
-    `;
+    // function resetButtonState() {
+    //     const actionButtons = document.querySelector('.action-buttons');
+    //     actionButtons.innerHTML = `
+    //     <button id="saveData" class="btn btn-primary">保存数据</button>
+    //     <button id="printInvoice" class="btn btn-primary">打印合同</button>
+    //      <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
+    // `;
+    //
+    //     // 重新绑定保存数据事件
+    //     document.getElementById('saveData').addEventListener('click', function() {
+    //         if (!validateSaveData()) {
+    //             return;
+    //         }
+    //         if (confirm('确定要保存销售订单数据吗？')) {
+    //             saveDataToDatabase();
+    //         }
+    //     });
+    //
+    //     // 重新绑定打印事件
+    //     document.getElementById('printInvoice').addEventListener('click', function() {
+    //         updatePageInfo();
+    //         window.print();
+    //     });
+    //
+    //     // 清除全局ID
+    //     window.currentRejectedDataId = null;
+    // }
 
-        // 重新绑定保存数据事件
-        document.getElementById('saveData').addEventListener('click', function() {
-            if (!validateSaveData()) {
-                return;
-            }
-            if (confirm('确定要保存销售订单数据吗？')) {
-                saveDataToDatabase();
-            }
-        });
-
-        // 重新绑定打印事件
-        document.getElementById('printInvoice').addEventListener('click', function() {
-            updatePageInfo();
-            window.print();
-        });
-
-        // 清除全局ID
-        window.currentRejectedDataId = null;
-    }
-
-    // 更新页码信息函数
+    // 修改 updatePageInfo 函数
     function updatePageInfo() {
-        const contentHeight = document.getElementById('invoicePreview').scrollHeight;
-        const pageHeight = 1123; // A4纸张高度约1123px (297mm)
-
-        let totalPages = Math.ceil(contentHeight / pageHeight);
-        totalPages = Math.max(1, totalPages);
-
-        if (document.getElementById('previewPageNumber')) {
-            document.getElementById('previewPageNumber').textContent = `第1页`;
-        }
-        if (document.getElementById('previewTotalPages')) {
-            document.getElementById('previewTotalPages').textContent = `共${totalPages}页`;
+        const invoicePreview = document.getElementById('invoicePreview');
+        if (!invoicePreview) {
+            console.error('未找到合同预览容器');
+            return;
         }
 
-        console.log("页码信息已更新:", totalPages);
+        // 获取产品行数
+        const itemRows = document.querySelectorAll('.item-row');
+        const totalItems = itemRows.length;
+
+        // 计算总页数（每页10行产品）
+        const itemsPerPage = 10;
+        let totalPages = Math.ceil(totalItems / itemsPerPage);
+        totalPages = Math.max(1, totalPages); // 至少1页
+
+        // 更新页面显示
+        const pageNumberElement = document.getElementById('previewPageNumber');
+        // const totalPagesElement = document.getElementById('previewTotalPages');
+
+        if (pageNumberElement) {
+            pageNumberElement.textContent = `第1页`;
+        }
+        if (totalPagesElement) {
+            totalPagesElement.textContent = `共${totalPages}页`;
+        }
+
+        console.log("页码信息已更新:", {
+            totalItems: totalItems,
+            itemsPerPage: itemsPerPage,
+            totalPages: totalPages
+        });
+
+        return totalPages;
     }
 
 
@@ -2926,7 +4050,49 @@
         console.log("甲方选项已更新，新增了:", Array.from(uniqueFuzeren));
     }
 
+    function sendToBackend(selectedFuzeren) {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/ddh', // 需要后端提供删除接口
+            contentType: 'application/json',
+            data: JSON.stringify({ fzr: selectedFuzeren }),
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的客户信息", res);
 
+                    // 修改位置：如果有数据，使用第一条数据填充字段
+                    if (res.data && res.data.length > 0) {
+                        const firstData = res.data[0];
+
+                        // 修改位置：使用 bianhao 字段作为合同编号前缀
+                        if (firstData.bianhao) {
+                            const currentDate = new Date();
+                            const year = currentDate.getFullYear();
+                            const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                            const day = currentDate.getDate().toString().padStart(2, '0');
+                            const dateString = year + month + day;
+
+                            // 从 bianhao 中提取编号部分（去掉"合同编号: "前缀）
+                            let contractPrefix = firstData.bianhao;
+                            if (contractPrefix.includes(':')) {
+                                contractPrefix = contractPrefix.split(':')[1].trim();
+                            }
+
+                            document.getElementById('contractNumber').value = contractPrefix + dateString;
+                        }
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
 
     // 新增函数：根据选择的甲方更新电话和代表人
     function updatePhoneAndRepresentativeFromGL(selectedFuzeren) {
@@ -2975,11 +4141,468 @@
         }
     }
 
+    // Excel导入功能初始化
+    function initExcelImport() {
+        const importExcelBtn = document.getElementById('importExcel');
+        const excelFileInput = document.getElementById('excelFileInput');
+
+        if (!importExcelBtn || !excelFileInput) {
+            console.error('导入功能初始化失败：未找到必要的DOM元素');
+            return;
+        }
+
+        // 点击导入按钮触发文件选择
+        importExcelBtn.addEventListener('click', function() {
+            excelFileInput.click();
+        });
+
+        // 文件选择事件
+        excelFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 验证文件类型
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel'
+            ];
+
+            if (!validTypes.includes(file.type)) {
+                alert('请选择Excel文件（.xlsx或.xls格式）');
+                this.value = '';
+                return;
+            }
+
+            // 确认导入
+            if (confirm(`确定要导入文件 "${file.name}" 吗？导入后将覆盖所有现有产品数据。`)) {
+                readExcelFile(file);
+            }
+
+            // 清空文件选择，以便下次可以选择同一个文件
+            this.value = '';
+        });
+    }
+
+    // 读取Excel文件
+    function readExcelFile(file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // 获取第一个工作表
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // 将工作表转换为JSON（从A2到G列）
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                    range: 1, // 从第二行开始（跳过标题行）
+                    header: ['A', 'B', 'C', 'D', 'E', 'F', 'G'], // 只读取A到G列
+                    defval: '', // 默认值
+                    blankrows: false // 不包含空行
+                });
+
+                console.log('Excel数据:', jsonData);
+
+                // 验证数据
+                if (!jsonData || jsonData.length === 0) {
+                    alert('Excel文件中没有数据或格式不正确！');
+                    return;
+                }
+
+                // 处理导入的数据
+                processExcelData(jsonData);
+
+            } catch (error) {
+                console.error('读取Excel文件失败:', error);
+                alert('读取Excel文件失败，请检查文件格式是否正确。\n错误信息: ' + error.message);
+            }
+        };
+
+        reader.onerror = function(e) {
+            console.error('文件读取错误:', e);
+            alert('文件读取失败，请重试。');
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    function processExcelData(excelData) {
+        const itemsContainer = document.getElementById('itemsContainer');
+
+        // 1. 先删除已有的空产品行（产品名称是"请选择产品名称"的下拉框）
+        removeEmptyProductRows();
+
+        // 2. 处理每一行Excel数据
+        let importedCount = 0;
+
+        excelData.forEach((row, index) => {
+            // 跳过空行
+            if (!row.A && !row.B && !row.C && !row.D && !row.E && !row.F && !row.G) {
+                return;
+            }
+
+            // 创建产品行
+            const newItemRow = createExcelProductRow(row);
+            if (newItemRow) {
+                itemsContainer.appendChild(newItemRow);
+                importedCount++;
+            }
+        });
+
+        // 3. 显示结果
+        if (importedCount > 0) {
+            alert(`导入完成！成功导入 ${importedCount} 条产品数据。`);
+        } else {
+            alert('没有导入任何数据，请检查Excel文件格式。');
+        }
+    }
+
+    // 删除已有的空产品行
+    // 删除已有的空产品行
+    function removeEmptyProductRows() {
+        const itemsContainer = document.getElementById('itemsContainer');
+        const itemRows = Array.from(itemsContainer.querySelectorAll('.item-row'));
+
+        console.log('开始删除空行，共有', itemRows.length, '行');
+
+        // 遍历所有产品行（从后往前遍历，避免删除时索引问题）
+        for (let i = itemRows.length - 1; i >= 0; i--) {
+            const row = itemRows[i];
+            const nameElement = row.querySelector('.item-name');
+
+            let shouldDelete = false;
+
+            if (nameElement && nameElement.tagName === 'SELECT') {
+                // 如果是下拉框
+                const selectedValue = nameElement.value;
+                const isDefaultOption = selectedValue === ''; // "请选择产品名称"的value是空字符串
+
+                // 如果产品名称是默认选项，则删除这一行
+                if (isDefaultOption) {
+                    shouldDelete = true;
+                }
+            } else if (nameElement && nameElement.tagName === 'INPUT') {
+                // 如果是输入框
+                const inputValue = nameElement.value.trim();
+                const modelInput = row.querySelector('.item-model');
+                const quantityInput = row.querySelector('.item-quantity');
+                const priceInput = row.querySelector('.item-price');
+                const remarkInput = row.querySelector('.item-remark');
+                const deliveryInput = row.querySelector('.item-delivery');
+                const brandInput = row.querySelector('.item-brand');
+
+                const modelValue = modelInput ? modelInput.value.trim() : '';
+                const quantityValue = quantityInput ? quantityInput.value : '';
+                const priceValue = priceInput ? priceInput.value : '';
+                const remarkValue = remarkInput ? remarkInput.value.trim() : '';
+                const deliveryValue = deliveryInput ? deliveryInput.value.trim() : '';
+                const brandValue = brandInput ? brandInput.value.trim() : '';
+
+                // 检查是否所有字段都是空的或默认值
+                const isQuantityDefault = !quantityValue || quantityValue === '1' || quantityValue === '0';
+                const isPriceDefault = !priceValue || priceValue === '0' || priceValue === '0.00';
+                const isBrandDefault = !brandValue || brandValue === 'SHAC';
+
+                if (!inputValue &&
+                    !modelValue &&
+                    !remarkValue &&
+                    !deliveryValue &&
+                    isQuantityDefault &&
+                    isPriceDefault &&
+                    isBrandDefault) {
+                    shouldDelete = true;
+                }
+            }
+
+            // 执行删除
+            if (shouldDelete) {
+                itemsContainer.removeChild(row);
+            }
+        }
+
+        // 注意：这里不添加空行！
+        // 导入Excel时不应该自动添加空行
+        console.log('删除空行后剩余行数:', itemsContainer.children.length);
+    }
+
+    // 创建空的产品行（当容器为空时）
+    function createEmptyProductRow() {
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+
+        // 构建产品名称HTML
+        let productNameHtml = '';
+        if (productList && productList.length > 0) {
+            productNameHtml = `
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <select class="form-control item-name">
+                        <option value="">请选择产品名称</option>
+                        ${productList.map(product =>
+                `<option value="${product}">${product}</option>`
+            ).join('')}
+                        <option value="其他">其他（手动输入）</option>
+                    </select>
+                </div>`;
+        } else {
+            productNameHtml = `
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <input type="text" class="form-control item-name" placeholder="产品名称">
+                </div>`;
+        }
+
+        itemRow.innerHTML = `
+            ${productNameHtml}
+            <div class="form-group">
+                <label>产品型号</label>
+                <input type="text" class="form-control item-model" placeholder="产品型号">
+            </div>
+            <div class="form-group">
+                <label>订购数量</label>
+                <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>单价 (元)</label>
+                <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <input type="text" class="form-control item-remark" placeholder="备注">
+            </div>
+            <div class="form-group">
+                <label>货期</label>
+                <input type="text" class="form-control item-delivery" placeholder="货期">
+            </div>
+            <div class="form-group">
+                <label>品牌</label>
+                <input type="text" class="form-control item-brand" placeholder="品牌" value="SHAC">
+            </div>
+            <div class="form-group">
+                <label>操作</label>
+                <button type="button" class="btn btn-danger remove-item">
+                    <i class="bi bi-trash"></i> 删除
+                </button>
+            </div>
+        `;
+
+        // 绑定事件
+        bindExcelRowEvents(itemRow, '');
+
+        return itemRow;
+    }
+
+    // 根据Excel数据创建产品行
+    function createExcelProductRow(row) {
+        try {
+            const itemRow = document.createElement('div');
+            itemRow.className = 'item-row';
+
+            // 提取数据
+            const productName = String(row.A || '').trim();
+            const productModel = String(row.B || '').trim();
+            const quantity = parseFloat(row.C) || 1;
+            const price = parseFloat(row.D) || 0;
+            const remark = String(row.E || '').trim();
+            const delivery = String(row.F || '').trim();
+            const brand = String(row.G || '').trim() || 'SHAC';
+
+            // 构建产品名称HTML
+            let productNameHtml = '';
+            if (productList && productList.length > 0 && productList.includes(productName)) {
+                // 如果在列表中，使用下拉框并选中
+                productNameHtml = `
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <select class="form-control item-name">
+                        <option value="">请选择产品名称</option>
+                        ${productList.map(product =>
+                    `<option value="${product}" ${product === productName ? 'selected' : ''}>${product}</option>`
+                ).join('')}
+                        <option value="其他">其他（手动输入）</option>
+                    </select>
+                </div>`;
+            } else {
+                // 如果不在列表中，使用输入框并填入产品名称
+                productNameHtml = `
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <input type="text" class="form-control item-name" placeholder="产品名称" value="${productName}">
+                </div>`;
+            }
+
+            // 构建完整的HTML
+            itemRow.innerHTML = `
+            ${productNameHtml}
+            <div class="form-group">
+                <label>产品型号</label>
+                <input type="text" class="form-control item-model" placeholder="产品型号" value="${productModel}">
+            </div>
+            <div class="form-group">
+                <label>订购数量</label>
+                <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="${quantity}">
+            </div>
+            <div class="form-group">
+                <label>单价 (元)</label>
+                <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="${price}">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <input type="text" class="form-control item-remark" placeholder="备注" value="${remark}">
+            </div>
+            <div class="form-group">
+                <label>货期</label>
+                <input type="text" class="form-control item-delivery" placeholder="货期" value="${delivery}">
+            </div>
+            <div class="form-group">
+                <label>品牌</label>
+                <input type="text" class="form-control item-brand" placeholder="品牌" value="${brand}">
+            </div>
+            <div class="form-group">
+                <label>操作</label>
+                <button type="button" class="btn btn-danger remove-item">
+                    <i class="bi bi-trash"></i> 删除
+                </button>
+            </div>
+        `;
+
+            // 绑定事件
+            bindExcelRowEvents(itemRow, productName);
+
+            return itemRow;
+
+        } catch (error) {
+            console.error('创建产品行失败:', error, row);
+            return null;
+        }
+    }
+
+    // 绑定产品行事件
+    function bindExcelRowEvents(itemRow, productName) {
+        // 绑定删除按钮事件
+        const removeBtn = itemRow.querySelector('.remove-item');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                const itemsContainer = document.getElementById('itemsContainer');
+                const itemRows = itemsContainer.querySelectorAll('.item-row');
+
+                if (itemRows.length > 1) {
+                    itemsContainer.removeChild(itemRow);
+                } else {
+                    alert('至少需要保留一个产品行！');
+                }
+            });
+        }
+
+        // 如果产品名称是下拉框，绑定change事件
+        const productSelect = itemRow.querySelector('.item-name');
+        if (productSelect && productSelect.tagName === 'SELECT') {
+            // 添加change事件
+            productSelect.addEventListener('change', function() {
+                if (this.value === '其他') {
+                    // 替换为输入框
+                    const parent = this.parentNode;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control item-name';
+                    input.value = productName || ''; // 填入原始产品名称
+                    input.placeholder = '请输入产品名称';
+                    parent.replaceChild(input, this);
+                }
+            });
+        }
+    }
+
+    // 优化打印布局
+    function optimizePrintLayout() {
+        // 打印时调整字体大小
+        const style = document.createElement('style');
+        style.innerHTML = `
+        @media print {
+            body {
+                font-size: 12px !important;
+            }
+
+            .invoice-container {
+                font-size: 11px !important;
+            }
+
+            .items-table {
+                font-size: 10px !important;
+            }
+
+            .notes p {
+                margin-bottom: 8px !important;
+                line-height: 1.3 !important;
+            }
+
+            .footer {
+                margin-top: 30px !important;
+            }
+
+            .signature-table td {
+                height: 25px !important;
+                font-size: 10px !important;
+            }
+        }
+    `;
+        document.head.appendChild(style);
+    }
+
+    // 计算每页可以显示的产品行数
+    function calculateItemsPerPage() {
+        // A4页面可用高度（约1123px，减去页边距）
+        const pageHeight = 1123 - 40; // 减去上下边距
+
+        // 测量一页中非产品部分的高度
+        const invoicePreview = document.getElementById('invoicePreview');
+        const tempContainer = invoicePreview.cloneNode(true);
+
+        // 移除产品表格内容来测量其他部分的高度
+        const tempItemsTable = tempContainer.querySelector('#previewItems');
+        if (tempItemsTable) {
+            tempItemsTable.innerHTML = '';
+            tempItemsTable.innerHTML = '<tr><td colspan="9">测量用</td></tr>';
+        }
+
+        // 添加到DOM中测量（隐藏）
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.visibility = 'hidden';
+        tempContainer.style.opacity = '0';
+        tempContainer.style.top = '-9999px';
+        document.body.appendChild(tempContainer);
+
+        // 获取非产品部分的高度
+        const nonProductHeight = tempContainer.offsetHeight;
+        document.body.removeChild(tempContainer);
+
+        // 计算可用空间
+        const availableHeight = pageHeight - nonProductHeight;
+
+        // 每行产品的高度（估算）
+        const rowHeight = 24; // 稍微留有余地
+
+        // 计算每页可容纳的行数
+        const itemsPerPage = Math.floor(availableHeight / rowHeight);
+
+        // 确保至少有空间显示一些产品
+        return Math.max(5, itemsPerPage);
+    }
+
+
+
     $(document).ready(function() {
         getKH();
         getXL();
         getList();
+        getghf();
         returnlist();
+
+        // 初始化Excel导入
+        initExcelImport();
         setTimeout(function() {
             getXLGL();
         }, 100);

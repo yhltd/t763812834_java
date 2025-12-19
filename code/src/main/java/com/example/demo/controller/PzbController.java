@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Pzb;
+import com.example.demo.entity.Ygxx;
 import com.example.demo.service.PzbService;
 import com.example.demo.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -142,6 +143,54 @@ public class PzbController {
         } catch (Exception e) {
             log.error("更新异常: {}", e.getMessage());
             return Result.error("更新异常: " + e.getMessage());
+        }
+    }
+
+
+
+    @RequestMapping(value = "/updateghf", method = RequestMethod.POST)
+    public Result<Pzb> update(@RequestBody HashMap map, HttpSession session) {
+
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
+        try {
+            GsonUtil gsonUtil = new GsonUtil(GsonUtil.toJson(map));
+            Pzb pzb = GsonUtil.toEntity(gsonUtil.get("updateInfo"), Pzb.class);
+
+
+            if (pzbService.updateghf(pzb)) {
+                return Result.success(pzb);
+            } else {
+                return Result.error("修改失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("修改失败：{}", e.getMessage());
+            log.error("修改参数：{}", map);
+            return Result.error("修改失败");
+        }
+    }
+
+
+    @RequestMapping("/getListghf")
+    public Result<List<Pzb>> getListghf(HttpSession session) {
+        // 权限检查
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
+        try {
+            List<Pzb> getListghf = pzbService.getListghf();
+            return Result.success(getListghf);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("获取失败：{}", e.getMessage());
+            return Result.error("获取失败!");
         }
     }
 }
