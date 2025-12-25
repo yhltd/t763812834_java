@@ -467,7 +467,8 @@
                     <label class="form-label" for="username">账号</label>
                     <div class="input-with-icon">
                         <i class="fas fa-user input-icon"></i>
-                        <input id="username" name="username" type="text" class="form-input" placeholder="请输入账号" required>
+                        <input id="username" name="username" type="text" class="form-input"
+                               placeholder="请输入账号" required autocomplete="off">
                     </div>
                 </div>
 
@@ -475,14 +476,13 @@
                     <label class="form-label" for="password">密码</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock input-icon"></i>
-                        <input id="password" name="password" type="password" class="form-input" placeholder="请输入密码" required>
-
+                        <input id="password" name="password" type="password" class="form-input"
+                               placeholder="请输入密码" required
+                               autocomplete="new-password"
+                               readonly
+                               onfocus="this.removeAttribute('readonly');">
                     </div>
                 </div>
-
-
-
-
 
             </form>
             <button id="submit-btn" class="login-button">
@@ -494,6 +494,6 @@
     </div>
 
 </div>
-<div style="font-size: 18px;color: black;position: absolute; top: 0; right: 20px;">V 1.0.0</div>
+<div style="font-size: 18px;color: black;position: absolute; top: 0; right: 20px;">V 1.0.1</div>
 </body>
 </html>

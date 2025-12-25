@@ -14,4 +14,9 @@ public class PageRequest {
     private String bm;
     private String startDate;
     private String endDate;
+    private String yingfuStartDate;  // 付款开始日期
+    private String yingfuEndDate;    // 付款结束日期
+    private Boolean weifuZero;       // 未付金额为0
+    private String sortField;
+    private String sortOrder;
 }

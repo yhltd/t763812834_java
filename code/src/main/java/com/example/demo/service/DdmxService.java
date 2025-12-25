@@ -16,6 +16,14 @@ public interface DdmxService extends IService<Ddmx> {
     /**
      * 分页查询去重数据
      */
+
+    Page<Map<String, Object>> daochuexcel(Page<Map<String, Object>> page,
+                                                      @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper);
+
+    Page<Map<String, Object>> daochuexcely(Page<Map<String, Object>> page,
+                                                       @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,String fuzeren);
+
+
     Page<Map<String, Object>> selectDistinctByDdhPage(Page<Map<String, Object>> page,
                                                       @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper);
 
@@ -44,6 +52,10 @@ public interface DdmxService extends IService<Ddmx> {
     boolean deletePdf(String ddh);
     Map<String, Object> getPdfInfo(String ddh);
 
+
+    String getCurrentPdfFileName(String ddh);
+
+    // 修改更新方法，保持原接口签名不变
     boolean updatePdfFileNameByDdh(String ddh, String pdfFileName);
 
 }

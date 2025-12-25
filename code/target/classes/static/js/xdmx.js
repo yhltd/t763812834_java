@@ -154,7 +154,7 @@ function initDetailModalEvents() {
 
         var rowData = getSelectedRow();
         if (rowData) {
-            // 只打印选中的产品
+            // 批量打印选中的产品
             printSelectedProducts(rowData, selectedWorkOrders);
         } else {
             swal('无法获取打印数据');
@@ -1062,10 +1062,19 @@ function generateWorkOrderNumber() {
 
     var workOrderNumber = 'GD' + today + String(sequence).padStart(3, '0');
 
-    sequence++;
-    localStorage.setItem(storageKey, sequence.toString());
+    // sequence++;
+    // localStorage.setItem(storageKey, sequence.toString());
 
     return workOrderNumber;
+}
+
+function incrementWorkOrderSequence() {
+    var today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    var storageKey = 'workOrderSequence_' + today;
+    var sequence = parseInt(localStorage.getItem(storageKey)) || 1;
+
+    sequence++;
+    localStorage.setItem(storageKey, sequence.toString());
 }
 
 // 填充基础信息
@@ -1185,7 +1194,7 @@ function generateDetailForm(data) {
             formHtml += `
                         <tr class="product-row" data-index="${i}">
                             <td style="text-align: center;">
-                                <input type="radio" class="form-check-input product-radio" 
+                                <input type="checkbox" class="form-check-input product-radio" 
                                        name="productSelect" data-index="${i}" ${isChecked}>
                             </td>
                             <td style="text-align: center;">${i + 1}</td>
@@ -1257,25 +1266,24 @@ function generateDetailForm(data) {
     bindProductRadioEvents();
 }
 
-// 修改绑定产品选择事件，改为单选逻辑
+// 修改绑定产品选择事件，改为多选逻辑
 function bindProductRadioEvents() {
     $('.product-radio').off('change').on('change', function() {
         var productIndex = $(this).data('index');
         var productKey = productIndex.toString();
 
         if ($(this).is(':checked')) {
-            // 单选逻辑：清空之前的选择，只保留当前选择
-            selectedWorkOrders = [productKey];
-
-            // 取消其他单选按钮的选中状态
-            $('.product-radio').not(this).prop('checked', false);
-
-            // 更新所有行的选中样式
-            $('.product-row').removeClass('selected');
+            // 多选逻辑：添加当前选择到选中数组
+            if (!selectedWorkOrders.includes(productKey)) {
+                selectedWorkOrders.push(productKey);
+            }
             $(this).closest('.product-row').addClass('selected');
         } else {
-            // 如果取消选中，清空选择
-            selectedWorkOrders = [];
+            // 取消选中
+            var index = selectedWorkOrders.indexOf(productKey);
+            if (index > -1) {
+                selectedWorkOrders.splice(index, 1);
+            }
             $(this).closest('.product-row').removeClass('selected');
         }
 
@@ -1284,9 +1292,9 @@ function bindProductRadioEvents() {
 
     // 绑定行点击事件
     $('.product-row').off('click').on('click', function(e) {
-        if (!$(e.target).is('input[type="radio"]')) {
-            var radio = $(this).find('.product-radio');
-            radio.prop('checked', true).trigger('change');
+        if (!$(e.target).is('input[type="checkbox"]')) {
+            var checkbox = $(this).find('.product-radio');
+            checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
         }
     });
 }
@@ -1294,6 +1302,13 @@ function bindProductRadioEvents() {
 // 更新选中数量显示
 function updateSelectedCountDisplay() {
     $('#selectedCount').text(selectedWorkOrders.length);
+
+    // 如果选中了多个产品，显示提示信息
+    if (selectedWorkOrders.length > 1) {
+        $('#printHint').show().html(`已选择 <strong>${selectedWorkOrders.length}</strong> 个产品，将按选择顺序批量打印`);
+    } else {
+        $('#printHint').hide();
+    }
 }
 
 // 获取选中行数据
@@ -1343,17 +1358,129 @@ function getSelectedRow() {
     return null;
 }
 
-// 打印选中的产品
+// 批量打印选中的产品
 function printSelectedProducts(rowData, selectedProductIndexes) {
     if (selectedProductIndexes.length === 0) {
-        swal('请选择一个产品进行打印');
+        swal('请选择至少一个产品进行打印');
         return;
     }
 
-    // 只打印选中的产品（单选模式下只有一个）
-    var selectedIndex = selectedProductIndexes[0];
-    printSingleProduct(rowData, selectedIndex);
+    // 检查哪些选中的产品没有工单号
+    var productsWithoutWorkOrder = [];
+    selectedProductIndexes.forEach(function(productKey) {
+        // 只处理没有工单号的产品
+        if (!productWorkOrders[productKey] || productWorkOrders[productKey].trim() === '') {
+            productsWithoutWorkOrder.push(productKey);
+        }
+    });
+
+    // 如果没有需要分配工单号的产品，直接生成预览
+    if (productsWithoutWorkOrder.length === 0) {
+        console.log('所有选中产品已有工单号，直接预览');
+        if (currentDetailData) {
+            generateBatchPrintPreview(rowData, selectedProductIndexes);
+        } else {
+            // 如果没有详情数据，重新请求
+            fetchDetailAndGeneratePreview(rowData, selectedProductIndexes);
+        }
+        return;
+    }
+
+    // 只为没有工单号的产品生成新的统一工单号
+    var commonWorkOrderNumber = generateWorkOrderNumber();
+
+    console.log('为新选中的产品生成统一工单号:', commonWorkOrderNumber);
+    console.log('需要分配工单号的产品索引:', productsWithoutWorkOrder);
+
+    // 只为没有工单号的产品分配新工单号
+    productsWithoutWorkOrder.forEach(function(productKey) {
+        productWorkOrders[productKey] = commonWorkOrderNumber;
+
+        // 更新界面显示新生成的工单号
+        $('.product-row[data-index="' + productKey + '"] .work-order-number').text(commonWorkOrderNumber);
+    });
+
+    // 显示提示信息
+    if (productsWithoutWorkOrder.length > 0) {
+        console.log('为新选的 ' + productsWithoutWorkOrder.length + ' 个产品分配了工单号: ' + commonWorkOrderNumber);
+    }
+
+    // 如果有已存在工单号的产品，显示提示
+    var existingWorkOrderCount = selectedProductIndexes.length - productsWithoutWorkOrder.length;
+    if (existingWorkOrderCount > 0) {
+        console.log(existingWorkOrderCount + ' 个产品已有工单号，保持原值');
+    }
+
+    if (currentDetailData) {
+        // 生成批量打印预览
+        generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
+    } else {
+        // 如果没有详情数据，重新请求
+        fetchDetailAndGeneratePreview(rowData, selectedProductIndexes);
+    }
 }
+
+// 辅助函数：获取详情并生成预览
+function fetchDetailAndGeneratePreview(rowData, selectedProductIndexes) {
+    $.ajax({
+        url: '/xiadan/detail',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: rowData.id }),
+        success: function(result) {
+            if (result.success) {
+                generateBatchPrintPreview(rowData, selectedProductIndexes);
+            } else {
+                swal('获取打印数据失败: ' + result.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            swal('请求失败: ' + error);
+        }
+    });
+}
+
+// // 批量打印选中的产品
+// function printSelectedProducts(rowData, selectedProductIndexes) {
+//     if (selectedProductIndexes.length === 0) {
+//         swal('请选择至少一个产品进行打印');
+//         return;
+//     }
+//
+//     // 生成一个统一的工单号
+//     var commonWorkOrderNumber = generateWorkOrderNumber();
+//
+//     // 为所有选中的产品分配同一个工单号
+//     selectedProductIndexes.forEach(function(productKey) {
+//         productWorkOrders[productKey] = commonWorkOrderNumber;
+//
+//         // 更新界面显示新生成的工单号
+//         $('.product-row[data-index="' + productKey + '"] .work-order-number').text(commonWorkOrderNumber);
+//     });
+//
+//     if (currentDetailData) {
+//         // 生成批量打印预览
+//         generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
+//     } else {
+//         // 如果没有详情数据，重新请求
+//         $.ajax({
+//             url: '/xiadan/detail',
+//             type: 'POST',
+//             contentType: 'application/json',
+//             data: JSON.stringify({ id: rowData.id }),
+//             success: function(result) {
+//                 if (result.success) {
+//                     generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
+//                 } else {
+//                     swal('获取打印数据失败: ' + result.message);
+//                 }
+//             },
+//             error: function(xhr, status, error) {
+//                 swal('请求失败: ' + error);
+//             }
+//         });
+//     }
+// }
 
 
 // 打印单个产品
@@ -1417,9 +1544,8 @@ function printSingleProduct(rowData, productIndex) {
         });
     }
 }
-// 保存工单号和打印次数到数据库
+
 function saveWorkOrdersAndPrintCounts(orderId) {
-    // 构建工单号字符串（格式：GD20240101001,GD20240101002,...）
     var workOrdersArray = [];
     var printCountsArray = [];
 
@@ -1540,7 +1666,18 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             <div class="info-item"><span class="info-label">订单号：</span>${rowData.htbh || ''}</div>
         </div>
         
-        <table class="form-table">                   
+        <div class="info-row">
+            <div class="info-item"><span class="info-label">客户：</span>${rowData.khcm || ''}</div>
+            <div class="info-item"><span class="info-label">业务员：</span>${rowData.fzr || ''}</div>
+            <div class="info-item"><span class="info-label">电话：</span>${rowData.lxdh || ''}</div>
+        </div>
+        
+        <div class="info-row">
+            <div class="info-item"><span class="info-label">购方要求：</span>${rowData.yq || ''}</div>
+        </div>
+        
+        <table class="form-table">
+            <tr><th class="label-cell">序号（自增）</th><th class="label-cell">产品型号（cpxh）</th><th class="label-cell">产品名称（pp）</th><th class="label-cell">数量（sl）</th><th class="label-cell">备注（bz）</th></tr>
             <tr><td class="label-cell">品名</td><td class="value-cell" colspan="3">${currentProduct.pp}</td><td class="label-cell">数量</td><td class="value-cell">${currentProduct.sl}</td></tr>
             <tr><td class="label-cell">规格</td><td class="value-cell" colspan="3">${currentProduct.cpxh}</td><td class="label-cell">负责</td><td class="value-cell">${rowData.fzr || ''}</td></tr>
             <tr><td class="label-cell">客户</td><td class="value-cell" colspan="3">${rowData.khcm || ''}</td><td class="label-cell">电话</td><td class="value-cell">${rowData.lxdh || ''}</td></tr>
@@ -1793,4 +1930,488 @@ function addTableStyles() {
             }
         `)
         .appendTo('head');
+}
+
+// 生成批量打印预览内容
+function generateBatchPrintPreview(rowData, selectedProductIndexes) {
+    try {
+        var previewWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,toolbar=yes,location=no,status=no');
+
+        if (!previewWindow) {
+            swal('预览窗口被浏览器拦截，请允许弹出窗口后重试。');
+            return null;
+        }
+
+        // 准备产品数据（按照选择的顺序）
+        var selectedProducts = [];
+        selectedProductIndexes.forEach(function(productKey, index) {
+            var productIndex = parseInt(productKey);
+            var productData = getProductDataByIndex(productIndex);
+            if (productData) {
+                selectedProducts.push({
+                    ...productData,
+                    workOrderNumber: productWorkOrders[productKey] || generateWorkOrderNumber(),
+                    printCount: productPrintCounts[productKey] || "0",
+                    originalIndex: productIndex,
+                    displayIndex: index + 1 // 显示序号从1开始
+                });
+            }
+        });
+
+        // 计算分页
+        var itemsPerPage = 10; // 每页显示10条数据
+        var totalPages = Math.ceil(selectedProducts.length / itemsPerPage);
+
+        var previewContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>批量打印预览 - ${rowData.khcm || ''}</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'SimSun', '宋体', serif; 
+            font-size: 12px; 
+            line-height: 1.4; 
+            color: #000; 
+            background: white;
+        }
+        
+        /* 打印控制栏样式 */
+        .print-control-bar {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .print-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .print-btn:hover {
+            background: #218838;
+        }
+        .cancel-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .cancel-btn:hover {
+            background: #c82333;
+        }
+        .preview-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        .info-label {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #495057;
+        }
+        .info-value {
+            color: #212529;
+        }
+        
+        /* 打印内容样式 */
+        .print-content {
+            width: 210mm;
+            margin: 0 auto;
+        }
+        
+        /* 单页样式 */
+        .print-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            break-inside: avoid;
+        }
+        
+        /* 表头样式 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .data-table th {
+            border: 1px solid #000;
+            background: #f8f9fa;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold;
+            height: 30px;
+            vertical-align: middle;
+        }
+        .data-table td {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            height: 30px;
+            vertical-align: middle;
+        }
+        .col-1 { width: 5%; }   /* 序号 */
+        .col-2 { width: 15%; }  /* 产品型号 */
+        .col-3 { width: 20%; }  /* 产品名称 */
+        .col-4 { width: 10%; }  /* 数量 */
+        .col-5 { width: 50%; }  /* 备注 */
+        
+        /* 页脚样式 */
+        .page-footer {
+            margin-top: 30px;
+        }
+        .signature-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .signature {
+            text-align: center;
+            min-width: 100px;
+            display: flex;
+
+        }
+        .signature-label {
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        
+        /* 页码样式 */
+        .page-number {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 打印时隐藏控制栏 */
+        @media print {
+            .print-control-bar { 
+                display: none !important; 
+            }
+            body { 
+                font-size: 11px; 
+                background: white !important;
+            }
+            .print-content {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .print-page {
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 15mm;
+                border: none;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+        }
+        
+        /* 屏幕预览样式 */
+        @media screen {
+            body { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+            .preview-container {
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+        }
+        
+        /* 提示信息 */
+        .print-hint {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            padding: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        /* 产品分隔线 */
+        .product-separator {
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <!-- 打印控制栏 -->
+        <div class="print-control-bar">
+            <div class="preview-info">
+                <div class="info-item">
+                    <span class="info-label">客户：</span>
+                    <span class="info-value">${rowData.khcm || ''}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">选中数量：</span>
+                    <span class="info-value">${selectedProducts.length} 个产品</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">总页数：</span>
+                    <span class="info-value">${totalPages} 页</span>
+                </div>
+            </div>
+            <div>
+                <button id="cancelBtn" class="cancel-btn">关闭预览</button>
+                <button id="printBtn" class="print-btn">确认打印</button>
+            </div>
+        </div>
+                
+        <div class="print-content">`;
+
+        // 生成每一页的内容
+        for (var pageNum = 0; pageNum < totalPages; pageNum++) {
+            var startIndex = pageNum * itemsPerPage;
+            var endIndex = Math.min(startIndex + itemsPerPage, selectedProducts.length);
+            var pageProducts = selectedProducts.slice(startIndex, endIndex);
+
+            // 每页的序号从 (pageNum * itemsPerPage + 1) 开始
+            var pageStartNumber = pageNum * itemsPerPage + 1;
+
+            previewContent += `
+            <div class="print-page" id="page-${pageNum + 1}">
+                <div class="page-header">
+                    <div class="page-title">制造工单物控档</div>
+                    <div class="header-info">
+                        <div>订单号：${rowData.htbh || ''}</div>
+                        <div>客户：${rowData.khcm || ''}</div>
+                        <div>日期：${rowData.ddrq || ''}</div>
+                    </div>
+                    <div class="header-info">
+                        <div>负责人：${rowData.fzr || ''}</div>
+                        <div>部门：${rowData.bm || ''}</div>
+                        <div>联系电话：${rowData.lxdh || ''}</div>
+                    </div>
+                    <div class="header-info">
+                        <div>购方要求：${rowData.yq || ''}</div>
+                    </div>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="col-1">序号</th>
+                            <th class="col-2">产品型号</th>
+                            <th class="col-3">产品名称</th>
+                            <th class="col-4">数量</th>
+                            <th class="col-5">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            // 生成表格行
+            pageProducts.forEach(function(product, index) {
+                var displayNumber = pageStartNumber + index;
+
+                previewContent += `
+                        <tr>
+                            <td class="col-1" style="text-align: center;">${displayNumber}</td>
+                            <td class="col-2">${product.cpxh}</td>
+                            <td class="col-3">${product.pp}</td>
+                            <td class="col-4" style="text-align: right;">${product.sl}</td>
+                            <td class="col-5">${product.bz || ''}</td>
+                        </tr>`;
+            });
+
+            previewContent += `
+                    </tbody>
+                </table>
+                
+                <div class="page-footer">
+                    <div class="signature-area">
+                        <div class="signature">
+                            <div class="signature-label">制作：</div>
+                            <div>___________________</div>
+                        </div>
+                        <div class="signature">
+                            <div class="signature-label">审核：</div>
+                            <div>___________________</div>
+                        </div>
+                        <div class="signature">
+                            <div class="signature-label">入库：</div>
+                            <div>___________________</div>
+                        </div>
+                    </div>
+                    
+                    <div class="page-number">
+                        第 ${pageNum + 1} 页 / 共 ${totalPages} 页
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        previewContent += `
+        </div>
+       
+    </div>
+    
+    <script>
+        // 打印按钮点击事件
+        document.getElementById('printBtn').onclick = function() {
+            
+            // 更新所有选中产品的打印次数
+            ${selectedProductIndexes.map(productKey => `
+                window.opener.updateProductPrintCount('${productKey}');
+            `).join('')}
+            
+            // 保存到数据库
+            window.opener.saveWorkOrdersAndPrintCounts('${rowData.id}');
+            
+            // 增加工单序列号 - 只递增一次
+            window.opener.incrementWorkOrderSequence()
+            
+            // 执行打印
+            setTimeout(function() {
+                window.print();
+                
+                // 打印完成后提示
+                setTimeout(function() {
+                    if (confirm('是否已成功打印所有页面？')) {
+                        window.close();
+                    }
+                }, 500);
+            }, 300);
+        };
+        
+        // 关闭按钮点击事件
+        document.getElementById('cancelBtn').onclick = function() {
+            if (confirm('确定要关闭预览吗？')) {
+                window.close();
+            }
+        };
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.close();
+            }
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                document.getElementById('printBtn').click();
+            }
+        });
+        
+        // 滚动到顶部
+        window.scrollTo(0, 0);
+    </script>
+</body>
+</html>`;
+
+        previewWindow.document.write(previewContent);
+        previewWindow.document.close();
+
+        // 聚焦到预览窗口
+        previewWindow.focus();
+
+        return previewWindow;
+    } catch (error) {
+        console.error('生成批量打印预览失败:', error);
+        swal('预览生成失败: ' + error);
+        return null;
+    }
+}
+
+// 根据索引获取产品数据
+function getProductDataByIndex(index) {
+    if (!currentDetailData) return null;
+
+    var ppArray = currentDetailData.pp.split(',');
+    var cpxhArray = currentDetailData.cpxh.split(',');
+    var slArray = currentDetailData.sl ? currentDetailData.sl.split(',') : [];
+    var bzArray = currentDetailData.bz ? currentDetailData.bz.split(',') : [];
+
+    if (index < 0 || index >= ppArray.length) return null;
+
+    return {
+        pp: ppArray[index] || '',
+        cpxh: cpxhArray[index] || '',
+        sl: slArray[index] || '',
+        bz: bzArray[index] || ''
+    };
+}
+
+// 更新多个产品的打印次数并保存
+function updateMultipleProductPrintCounts(productKeys, orderId) {
+    productKeys.forEach(function(productKey) {
+        var currentCount = parseInt(productPrintCounts[productKey] || '0');
+        productPrintCounts[productKey] = (currentCount + 1).toString();
+    });
+
+    // 更新选中数量显示
+    updateSelectedCountDisplay();
+
+    // 保存到数据库
+    saveWorkOrdersAndPrintCounts(orderId);
+}
+
+// 修改原有的更新打印次数函数
+function updateProductPrintCountAndSave(productKey, orderId) {
+    var currentCount = parseInt(productPrintCounts[productKey] || '0');
+    productPrintCounts[productKey] = (currentCount + 1).toString();
+
+    // 更新选中数量显示
+    updateSelectedCountDisplay();
+
+    // 保存到数据库
+    saveWorkOrdersAndPrintCounts(orderId);
+
 }

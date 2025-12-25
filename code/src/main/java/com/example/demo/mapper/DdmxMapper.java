@@ -14,36 +14,14 @@ import java.util.Map;
 @Mapper
 public interface DdmxMapper extends BaseMapper<Ddmx> {
 
-    /**
-     * 分页查询（根据ddh和ddrq去重，有PDF文件的优先显示）
-     */
-//    @Select("<script>" +
-//            "SELECT * FROM (" +
-//            "   SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
-//            "          ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
-//            "   FROM (" +
-//            "       SELECT ROW_NUMBER() OVER (PARTITION BY ddh, ddrq ORDER BY " +
-//            "           CASE WHEN pdf_file_name IS NOT NULL AND pdf_file_name != '' THEN 0 ELSE 1 END, " +  // 有PDF文件的优先
-//            "           id DESC" +  // 其次按ID降序
-//            "       ) as row_num, " +
-//            "              ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
-//            "       FROM dingdanmingx " +
-//            "       <where>" +
-//            "         <if test='ew != null'>${ew.sqlSegment}</if>" +
-//            "       </where>" +
-//            "   ) as inner_temp " +
-//            "   WHERE row_num = 1" +
-//            ") as outer_temp " +
-//            "WHERE rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
-//            "</script>")
-//    List<Map<String, Object>> selectDistinctByDdhForPage(@Param("start") long start,
-//                                                         @Param("end") long end,
-//                                                         @Param("ew") Wrapper<Map<String, Object>> wrapper);
-
     @Select("<script>" +
             "SELECT * FROM (" +
             "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
-            "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
+            "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name, " +
+            "           CASE " +
+            "               WHEN ISNULL(fahuozhuangtai, '') = '' THEN '全部未发货' " +
+            "               ELSE fahuozhuangtai " +
+            "           END AS fahuozhuangtai " +
             "    FROM (" +
             "        SELECT d1.* " +
             "        FROM dingdanmingx d1 " +
@@ -61,6 +39,21 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
             "</script>")
     List<Map<String, Object>> selectDistinctByDdhForPage(@Param("start") long start,
+                                                         @Param("end") long end,
+                                                         @Param("ew") Wrapper<Map<String, Object>> wrapper);
+
+    @Select("<script>" +
+            "SELECT * FROM (" +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC, id ASC) as rn, " +
+            "           * " +
+            "    FROM dingdanmingx " +
+            "    <where>" +
+            "      <if test='ew != null'>${ew.sqlSegment}</if>" +
+            "    </where>" +
+            ") temp " +
+            "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
+            "</script>")
+    List<Map<String, Object>> daochuexcel(@Param("start") long start,
                                                          @Param("end") long end,
                                                          @Param("ew") Wrapper<Map<String, Object>> wrapper);
 
@@ -82,37 +75,14 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
     /**
      * 分页查询（根据ddh和ddrq去重，有PDF文件的优先显示）
      */
-//    @Select("<script>" +
-//            "SELECT * FROM (" +
-//            "   SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
-//            "          ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
-//            "   FROM (" +
-//            "       SELECT ROW_NUMBER() OVER (PARTITION BY ddh, ddrq ORDER BY " +
-//            "           CASE WHEN pdf_file_name IS NOT NULL AND pdf_file_name != '' THEN 0 ELSE 1 END, " +  // 有PDF文件的优先
-//            "           id DESC" +  // 其次按ID降序
-//            "       ) as row_num, " +
-//            "              ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
-//            "       FROM dingdanmingx " +
-//            "       <where>" +
-//            "           fzr = #{fuzeren} " +
-//            "           <if test='ew != null and ew.sqlSegment != null and ew.sqlSegment != \"\"'>" +
-//            "               AND ${ew.sqlSegment}" +
-//            "           </if>" +
-//            "       </where>" +
-//            "   ) as inner_temp " +
-//            "   WHERE row_num = 1" +
-//            ") as outer_temp " +
-//            "WHERE rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
-//            "</script>")
-//    List<Map<String, Object>> selectDistinctByDdhForPageY(@Param("start") long start,
-//                                                          @Param("end") long end,
-//                                                          @Param("ew") Wrapper<Map<String, Object>> wrapper,
-//                                                          @Param("fuzeren") String fuzeren);
-
     @Select("<script>" +
             "SELECT * FROM (" +
             "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
-            "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name " +
+            "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name, " +
+            "           CASE " +
+            "               WHEN ISNULL(fahuozhuangtai, '') = '' THEN '全部未发货' " +
+            "               ELSE fahuozhuangtai " +
+            "           END AS fahuozhuangtai " +
             "    FROM (" +
             "        SELECT d1.* " +
             "        FROM dingdanmingx d1 " +
@@ -133,6 +103,23 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
             "</script>")
     List<Map<String, Object>> selectDistinctByDdhForPageY(@Param("start") long start,
+                                                          @Param("end") long end,
+                                                          @Param("ew") Wrapper<Map<String, Object>> wrapper,
+                                                          @Param("fuzeren") String fuzeren);
+
+    @Select("<script>" +
+            "SELECT * FROM (" +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
+            "           * " +  // 改为 * 返回所有字段
+            "    FROM dingdanmingx " +
+            "    <where>" +
+            "      fzr = #{fuzeren} " +
+            "      <if test='ew != null'>AND ${ew.sqlSegment}</if>" +
+            "    </where>" +
+            ") temp " +
+            "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
+            "</script>")
+    List<Map<String, Object>> daochuexcely(@Param("start") long start,
                                                           @Param("end") long end,
                                                           @Param("ew") Wrapper<Map<String, Object>> wrapper,
                                                           @Param("fuzeren") String fuzeren);
@@ -160,6 +147,9 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
 
     @Update("update dingdanmingx set pdf_file_name = #{pdfFileName} where ddh = #{ddh}")
     boolean updatePdfFileNameByDdh(@Param("ddh") String ddh, @Param("pdfFileName") String pdfFileName);
+
+    @Select("SELECT pdf_file_name FROM dingdanmingx  WHERE ddh = #{ddh}")
+    String getpdffilename(@Param("ddh") String ddh);
 
 
 }

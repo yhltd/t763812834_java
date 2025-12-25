@@ -65,7 +65,7 @@ public class DyshdController {
 
 
     @PostMapping("/shipProducts")
-    public Result updateShipDate(HttpSession session,@RequestBody Map<String, Object> params) {
+    public Result updateShipDate(HttpSession session, @RequestBody Map<String, Object> params) {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
@@ -79,10 +79,12 @@ public class DyshdController {
 
             // 检查是否是批量发货（包含ids数组）
             Object idsObj = params.get("ids");
-            Object fhrqObj = params.get("fhrq");  // 改为fhrq
+            Object fhrqObj = params.get("fhrq");
+            Object ddhObj = params.get("ddh"); // 新增：获取合同号
 
             System.out.println("ids参数: " + idsObj);
             System.out.println("fhrq参数: " + fhrqObj);
+            System.out.println("ddh参数: " + ddhObj);
             System.out.println("fhrq参数类型: " + (fhrqObj != null ? fhrqObj.getClass().getSimpleName() : "null"));
 
             if (idsObj instanceof List) {
@@ -112,8 +114,15 @@ public class DyshdController {
                 String fhrq = fhrqObj.toString();
                 System.out.println("发货日期: " + fhrq);
 
+                // 获取合同号
+                String ddh = null;
+                if (ddhObj != null) {
+                    ddh = ddhObj.toString();
+                    System.out.println("合同号: " + ddh);
+                }
+
                 // 调用批量更新服务，传入fhrq
-                boolean success = dyshdService.batchUpdateShipDate(validIds, fhrq);
+                boolean success = dyshdService.batchUpdateShipDate(validIds, fhrq, ddh);
                 if (success) {
                     return Result.success("批量发货成功");
                 } else {
@@ -123,9 +132,10 @@ public class DyshdController {
             } else {
                 // 单个发货逻辑
                 Integer id = convertToInteger(params.get("id"));
-                String fhrq = (String) params.get("fhrq");  // 改为fhrq
+                String fhrq = (String) params.get("fhrq");
+                String ddh = (String) params.get("ddh"); // 新增：获取合同号
 
-                System.out.println("单个发货 - ID: " + id + ", 发货日期: " + fhrq);
+                System.out.println("单个发货 - ID: " + id + ", 发货日期: " + fhrq + ", 合同号: " + ddh);
 
                 if (id == null) {
                     return Result.error("ID不能为空");
@@ -134,8 +144,8 @@ public class DyshdController {
                     return Result.error("发货日期不能为空");
                 }
 
-                // 调用更新服务，传入fhrq
-                boolean success = dyshdService.updateShipDate(id, fhrq);
+                // 调用更新服务，传入fhrq和ddh
+                boolean success = dyshdService.updateShipDate(id, fhrq, ddh);
                 if (success) {
                     return Result.success("发货日期更新成功");
                 } else {

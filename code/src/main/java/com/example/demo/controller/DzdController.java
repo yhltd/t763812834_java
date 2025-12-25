@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,71 @@ public class DzdController {
      */
     @PostMapping("/distinctPage")
     public Result<Page<Map<String, Object>>> distinctPage(HttpSession session,@RequestBody PageRequest pageRequest) {
+
+        if (pageRequest != null) {
+            // 转换空字符串为null
+            if (pageRequest.getStartDate() != null && pageRequest.getStartDate().trim().isEmpty()) {
+                pageRequest.setStartDate(null);
+            }
+            if (pageRequest.getEndDate() != null && pageRequest.getEndDate().trim().isEmpty()) {
+                pageRequest.setEndDate(null);
+            }
+
+            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
+                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
+            }
+            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
+                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
+            }
+        }
+
+        // 创建分页对象
+        Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+
+        // 构建查询条件
+        QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
+
+        queryWrapper.eq("sfkp", "未开票")
+                .eq("fahuozhuangtai", "全部发货");
+
+        // 添加查询条件
+        if (StringUtils.isNotBlank(pageRequest.getDdh())) {
+            queryWrapper.like("ddh", pageRequest.getDdh());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
+            queryWrapper.like("khmc", pageRequest.getKhmc());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getFzr())) {
+            queryWrapper.eq("fzr", pageRequest.getFzr());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getBm())) {
+            queryWrapper.eq("bm", pageRequest.getBm());
+        }
+        if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
+            queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+        }
+
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            String fuzeren = (String) session.getAttribute("D");
+            if (fuzeren == null || fuzeren.trim().isEmpty()) {
+                return Result.error("为获取身份信息，请重新登录");
+            }
+
+            Page<Map<String, Object>> result = dzdService.selectDistinctByDdhPageY(page, queryWrapper,fuzeren);
+
+            return Result.success(result);
+        }
+
+        // 执行查询 - 通过Service调用
+        Page<Map<String, Object>> result = dzdService.selectDistinctByDdhPage(page, queryWrapper);
+
+        logDetailedResult(result);
+        return Result.success(result);
+    }
+
+    @PostMapping("/daochuexcel")
+    public Result<Page<Map<String, Object>>> daochu(HttpSession session,@RequestBody PageRequest pageRequest) {
 
         if (pageRequest != null) {
             // 转换空字符串为null
@@ -80,13 +146,13 @@ public class DzdController {
                 return Result.error("为获取身份信息，请重新登录");
             }
 
-            Page<Map<String, Object>> result = dzdService.selectDistinctByDdhPageY(page, queryWrapper,fuzeren);
+            Page<Map<String, Object>> result = dzdService.daochuexcely(page, queryWrapper,fuzeren);
 
             return Result.success(result);
         }
 
         // 执行查询 - 通过Service调用
-        Page<Map<String, Object>> result = dzdService.selectDistinctByDdhPage(page, queryWrapper);
+        Page<Map<String, Object>> result = dzdService.daochuexcel(page, queryWrapper);
 
         logDetailedResult(result);
         return Result.success(result);
@@ -276,6 +342,34 @@ public class DzdController {
             e.printStackTrace();
             return Result.error("更新对账状态失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 批量更新开票状态
+     * @param request 开票请求
+     * @return 操作结果
+     */
+    @PostMapping("/batchUpdateInvoiceStatusByDdh")
+    public Map<String, Object> batchUpdateInvoiceStatus(@RequestBody BatchInvoiceRequest request) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            boolean success = dzdService.batchUpdateInvoiceStatus(request);
+
+            if (success) {
+                result.put("code", 200);
+                result.put("message", "开票成功");
+                result.put("data", null);
+            } else {
+                result.put("code", 500);
+                result.put("message", "开票失败");
+            }
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
     }
 
 }

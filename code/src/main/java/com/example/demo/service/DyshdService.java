@@ -14,6 +14,6 @@ public interface DyshdService extends IService<Dyshd> {
     List<Dyshd> getddh();
     PageResult<Dyshd> getshdlist(PageRequestDTO request);
 
-    boolean updateShipDate(Integer id, String shipDate);
-    boolean batchUpdateShipDate(List<Integer> ids, String shipDate);
+    boolean updateShipDate(Integer id, String shipDate,String ddh);
+    boolean batchUpdateShipDate(List<Integer> ids, String shipDate,String ddh);
 }

@@ -197,6 +197,18 @@
             <input id="endDate" type="date" class="form-control" placeholder="结束日期">
         </div>
         <div class="col-md-2 mb-2">
+            <input id="yingfuStartDate" type="date" class="form-control" placeholder="付款开始日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <input id="yingfuEndDate" type="date" class="form-control" placeholder="付款结束日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="weifuZero">
+                <label class="form-check-label" for="weifuZero">未付金额为0</label>
+            </div>
+        </div>
+        <div class="col-md-2 mb-2">
             <button id="select-btn" class="btn btn-color" style="color: white">
                 <i class="bi bi-search icon"></i>
                 查询
@@ -209,15 +221,20 @@
                 刷新
             </button>
             <span style="border-right: 20px solid white"></span>
+            <button id="export-btn" class="btn btn-color" style="border-radius: 5px;">
+                <i class="bi bi-plus-square icon"></i>
+                导出excel
+            </button>
+            <span style="border-right: 20px solid white"></span>
             <button id="add-btn" class="btn btn-color" style="border-radius: 5px;">
                 <i class="bi bi-plus-square icon"></i>
                 上传文件
             </button>
-            <span style="border-right: 20px solid white"></span>
-            <button id="delete-btn" class="btn btn-color-delete" style="border-radius: 5px;">
-                <i class="bi bi-trash icon"></i>
-                删除上传文件
-            </button>
+<!--            <span style="border-right: 20px solid white"></span>-->
+<!--            <button id="delete-btn" class="btn btn-color-delete" style="border-radius: 5px;">-->
+<!--                <i class="bi bi-trash icon"></i>-->
+<!--                删除上传文件-->
+<!--            </button>-->
             <span style="border-right: 20px solid white"></span>
             <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：订单明细</a>
         </div>
@@ -231,7 +248,7 @@
 </div>
 
 <!-- 在表格div之前添加统计区域 -->
-<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;margin-top: 50px;">
+<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;margin-top: 80px;">
     <div class="card">
         <div class="card-body p-0">
             <div class="row text-center align-items-center h-100">
@@ -383,7 +400,10 @@
                 <h6><i class="bi bi-1-circle me-2"></i>基本操作</h6>
                 <ul>
                     <li>可根据订单号，客户名称，负责人，日期进行查询。</li>
+                    <li>表头中后两个日期框为付款时间日期框，用来查询付款日期。</li>
+                    <li>表头中前两个日期框为订单日期框，用来查询订单日期。</li>
                     <li>可修改提成点，已付，开票状态，物流单号，折扣。</li>
+                    <li>上传文件文件名应保持没有相同的文件名</li>
                     <li>表格拉到最后，点击上传PDF按钮，会生成PDF文件。</li>
                     <li>表格拉到最后，点击撤回按钮，会把该条数据撤回到下单明细。</li>
                     <li>表格拉到最后，点击详情按钮，进入订单详情。</li>
@@ -411,6 +431,12 @@
                             <label for="add-orderNumber">订单号</label>
                             <input id="add-orderNumber" name="orderNumber" type="text"
                                    class="form-control" autocomplete="off" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-fileName">文件名称</label>
+                            <input id="add-fileName" name="fileName" type="text"
+                                   class="form-control" autocomplete="off"
+                                   placeholder="请输入文件名称，如：合同、发票等">
                         </div>
 
                         <div class="form-group">

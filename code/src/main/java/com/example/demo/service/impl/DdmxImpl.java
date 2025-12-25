@@ -69,6 +69,74 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
     private final Map<String, List<String>> chunkUploadMap = new ConcurrentHashMap<>();
 
     @Override
+    public Page<Map<String, Object>> daochuexcel(Page<Map<String, Object>> page,
+                                                             Wrapper<Map<String, Object>> queryWrapper) {
+
+        // 计算分页参数
+        long start = (page.getCurrent() - 1) * page.getSize();
+        long end = page.getSize();
+
+        // 查询数据
+        List<Map<String, Object>> records = ddmxMapper.daochuexcel(start, end, queryWrapper);
+
+        // 查询总数
+        Long total = ddmxMapper.selectDistinctCount(queryWrapper);
+
+        // 为每条记录添加PDF文件访问URL
+        records = records.stream().map(record -> {
+            if (record.get("pdf_file_path") != null && !record.get("pdf_file_path").toString().isEmpty()) {
+                String filePath = record.get("pdf_file_path").toString();
+                String fileName = new File(filePath).getName();
+                record.put("pdfFile", accessBaseUrl + fileName);
+            } else {
+                record.put("pdfFile", "");
+            }
+            return record;
+        }).collect(Collectors.toList());
+
+        // 设置分页结果
+        page.setRecords(records);
+        page.setTotal(total);
+
+        return page;
+    }
+
+    @Override
+    public Page<Map<String, Object>> daochuexcely(Page<Map<String, Object>> page,
+                                                              Wrapper<Map<String, Object>> queryWrapper,String fuzeren) {
+
+        // 计算分页参数
+        long start = (page.getCurrent() - 1) * page.getSize();
+        long end = page.getSize();
+
+        // 查询数据
+        List<Map<String, Object>> records = ddmxMapper.daochuexcely(start, end, queryWrapper,fuzeren);
+
+        // 查询总数
+        Long total = ddmxMapper.selectDistinctCountY(queryWrapper,fuzeren);
+
+        // 为每条记录添加PDF文件访问URL
+        records = records.stream().map(record -> {
+            if (record.get("pdf_file_path") != null && !record.get("pdf_file_path").toString().isEmpty()) {
+                String filePath = record.get("pdf_file_path").toString();
+                String fileName = new File(filePath).getName();
+                record.put("pdfFile", accessBaseUrl + fileName);
+            } else {
+                record.put("pdfFile", "");
+            }
+            return record;
+        }).collect(Collectors.toList());
+
+        // 设置分页结果
+        page.setRecords(records);
+        page.setTotal(total);
+
+        return page;
+    }
+
+
+
+    @Override
     public Page<Map<String, Object>> selectDistinctByDdhPage(Page<Map<String, Object>> page,
                                                              Wrapper<Map<String, Object>> queryWrapper) {
 
@@ -166,6 +234,12 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
         }
         if (updateParams.containsKey("yifu")) {
             updateEntity.setYifu((String) updateParams.get("yifu"));
+        }
+        if (updateParams.containsKey("yfsj")) {
+            updateEntity.setYfsj((String) updateParams.get("yfsj"));
+        }
+        if (updateParams.containsKey("yingfu")) {
+            updateEntity.setYingfu((String) updateParams.get("yingfu"));
         }
         if (updateParams.containsKey("sfkp")) {
             updateEntity.setSfkp((String) updateParams.get("sfkp"));
@@ -828,5 +902,13 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
     public boolean updatePdfFileNameByDdh(String ddh, String pdfFileName) {
         return baseMapper.updatePdfFileNameByDdh(ddh,pdfFileName);
     }
+
+    // 添加查询当前文件名的方法
+    @Override
+    public String getCurrentPdfFileName(String ddh) {
+        return baseMapper.getpdffilename(ddh);
+    }
+
+
 
 }

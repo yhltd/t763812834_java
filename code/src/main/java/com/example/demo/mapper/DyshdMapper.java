@@ -30,4 +30,13 @@ public interface DyshdMapper extends BaseMapper<Dyshd> {
             "</script>"
     })
     int batchUpdateShipDate(@Param("ids") List<Integer> ids, @Param("shipDate") String shipDate);
+
+    @Select("SELECT COUNT(*) FROM dingdanmingx WHERE ddh = #{ddh}")
+    Integer countByDdh(@Param("ddh") String ddh);
+
+    @Select("SELECT COUNT(*) FROM dingdanmingx WHERE ddh = #{ddh} AND (fhsj = '待发货' OR fhsj IS NULL OR fhsj = '')")
+    Integer countPendingByDdh(@Param("ddh") String ddh);
+
+    @Update("UPDATE dingdanmingx SET fahuozhuangtai = #{status} WHERE ddh = #{ddh}")
+    void updateShipStatus(@Param("ddh") String ddh, @Param("status") String status);
 }

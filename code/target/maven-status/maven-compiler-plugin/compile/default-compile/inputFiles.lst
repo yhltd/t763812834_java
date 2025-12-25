@@ -25,6 +25,7 @@ E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\AuthUtil.jav
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\KhxxPageRequestDTO.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\YjbbMapper.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\PageRequest.java
+E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\DzdjlService.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\entity\Yjbb.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\entity\Caigou.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\MybatisPlusConfig.java
@@ -37,6 +38,7 @@ E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\DzdMapper.
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\impl\DdmxImpl.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\DyshdMapper.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\StringUtils.java
+E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\impl\DzdjlImpl.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\configuration\WebConfig.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\DzdController.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\entity\Scgd.java
@@ -80,6 +82,7 @@ E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\CgdzdMappe
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\impl\CgdzdImpl.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\CgdzdController.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\QxglController.java
+E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\DzdjlMapper.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\CgmxController.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\YgxxService.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\entity\UserInfo.java
@@ -103,4 +106,6 @@ E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\service\QxglServi
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\SaveToOrderDetailRequest.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\mapper\YgxxMapper.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\IntTypeAdapter.java
+E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\DzdjlController.java
+E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\util\BatchInvoiceRequest.java
 E:\yh_soft\t763812834_java\code\src\main\java\com\example\demo\controller\ScgdController.java

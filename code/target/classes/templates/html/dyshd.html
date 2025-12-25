@@ -446,7 +446,7 @@
 <!-- 送货单内容 - 会打印出来 -->
 <div class="delivery-note">
     <div class="header">
-        <div class="company-name">昆山翰元星传动科技有限公司-送货单</div>
+        <div class="company-name">-送货单</div>
         <div class="address">地址：昆山市张浦镇同舟路188号3号厂房</div>
     </div>
 
@@ -951,6 +951,13 @@
             return;
         }
 
+        // 获取合同号
+        const contractNumber = getSelectedContract();
+        if (!contractNumber) {
+            alert('请先选择合同编号！');
+            return;
+        }
+
         if (confirm(`确定发货吗？`)) {
             // 生成发货标签
             const validRows = Array.from(allRows).filter(row =>
@@ -964,7 +971,8 @@
                 contentType: 'application/json',
                 data: JSON.stringify({
                     ids: allIds,      // 发送所有行的ID（排除已删除的）
-                    fhrq: shipDate   // 使用fhrq字段发送发货日期
+                    fhrq: shipDate,   // 使用fhrq字段发送发货日期
+                    ddh: contractNumber // 新增：发送合同号
                 }),
                 dataType: 'json',
                 success: function(res) {
@@ -1073,6 +1081,53 @@
         printWindow.document.close();
     }
 
+    function getghf() {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/ghf',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的供货方信息", res);
+
+                    // 使用返回的数据更新页面元素
+                    if (res.data && res.data.length > 0) {
+                        // 1. 提取第一条有效的ghf数据
+                        const validSupplier = res.data[0];
+
+                        if (validSupplier && validSupplier.ghf) {
+                            // 2. 直接更新公司名称
+                            updateCompanyName(validSupplier.ghf);
+                        } else {
+                            console.warn("没有找到有效的供货方数据");
+                        }
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("请求失败，请检查网络连接");
+            }
+        });
+    }
+
+    // 新增：更新公司名称的函数
+    function updateCompanyName(companyName) {
+        if (companyName && companyName.trim() !== '') {
+            // 更新页面中的公司名称（送货单上的）
+            const companyNameElement = document.querySelector('.delivery-note .company-name');
+            if (companyNameElement) {
+                companyNameElement.textContent = companyName + '-送货单';
+                console.log('公司名称已更新为:', companyName + '-送货单');
+            }
+        } else {
+            console.warn('供货方名称为空，未更新公司名称');
+        }
+    }
+
     // 修改初始化代码
     document.addEventListener('DOMContentLoaded', function() {
         // 初始化第一行 - 全部设为空
@@ -1101,6 +1156,8 @@
 
         // 更新总计行数
         updateTotalCount();
+
+        getghf();
 
         // 然后调用 getddh()
         getddh();

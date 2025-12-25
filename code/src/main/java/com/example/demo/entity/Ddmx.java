@@ -140,6 +140,11 @@ public class Ddmx {
      */
     private String fhsj;
 
+    /**
+     * 发货状态
+     */
+    private String fahuozhuangtai;
+
 
     // 用于前端显示的虚拟字段
     @TableField(exist = false)

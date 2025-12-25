@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.demo.entity.Ddmx;
 import com.example.demo.entity.Dzd;
+import com.example.demo.util.BatchInvoiceRequest;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -24,6 +25,14 @@ public interface DzdService extends IService<Dzd> {
                                                       @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,String fuzeren);
 
 
+
+    Page<Map<String, Object>> daochuexcel(Page<Map<String, Object>> page,
+                                                      @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper);
+
+
+    Page<Map<String, Object>> daochuexcely(Page<Map<String, Object>> page,
+                                                       @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,String fuzeren);
+
     /**
      * 根据订单号获取详细信息
      */
@@ -33,5 +42,12 @@ public interface DzdService extends IService<Dzd> {
      * 更新对账状态
      */
     boolean updateDzztStatus(String ddh, String dzzt);
+
+    /**
+     * 批量更新开票状态
+     * @param request 开票请求
+     * @return 是否成功
+     */
+    boolean batchUpdateInvoiceStatus(BatchInvoiceRequest request);
 
 }

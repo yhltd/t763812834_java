@@ -5,6 +5,29 @@ var totalCount = 0;
 var totalPages = 0;
 var currentId = '';
 
+// 清空选择状态
+var selectedDdhs = []; // 存储选择的订单号
+var selectedRows = [];
+
+
+// 在文件顶部添加导出配置变量
+var exportColumnsConfig = {
+    mainColumns: [],      // 用户选择的主表列
+    detailColumns: ['品名', '规格型号', '单位', '数量', '单价', '发货时间'], // 详情表固定列
+    allMainColumns: [
+        { key: 'ddrq', name: '订单日期' },
+        { key: 'ddh', name: '订单号' },
+        { key: 'khmc', name: '客户名称' },
+        { key: 'fzr', name: '负责人' },
+        { key: 'yfsj', name: '总价' },
+        { key: 'yifu', name: '已付' },
+        { key: 'wf', name: '未付' },
+        { key: 'kpsj', name: '开票时间' },
+        { key: 'sfkp', name: '开票状态' },
+        { key: 'dzzt', name: '对账状态' }
+    ]
+};
+
 // 页面加载完成后初始化
 $(document).ready(function() {
     console.log('页面加载完成，初始化订单明细页面...');
@@ -12,6 +35,14 @@ $(document).ready(function() {
     initDdmxPage();
     initToolbarEvents();
     initDetailModalEvents();
+
+    // 添加导出按钮
+    $('#export-btn').off('click').on('click', function() {
+        showExportModal();
+    });
+
+    // 初始化导出配置
+    initExportConfig();
 
     // 添加按钮点击事件 - 使用更可靠的事件委托
     $(document).on('click', '#add-btn', function(e) {
@@ -141,6 +172,12 @@ function initToolbarEvents() {
         printDzd(selectedRow);
     });
 
+    // 开票按钮
+    $('#invoice-btn').off('click').on('click', function() {
+        console.log('开票按钮点击');
+        batchInvoice();
+    });
+
     // 删除上传文件按钮
     $('#delete-btn').off('click').on('click', function() {
         console.log('删除上传文件按钮点击');
@@ -158,6 +195,8 @@ function initToolbarEvents() {
         // 调用撤回对账功能
         withdrawDzd(selectedRow);
     });
+
+    // 导出按钮已经在ready函数中绑定
 }
 
 function printDzd(rowData) {
@@ -527,6 +566,7 @@ function getSearchParams() {
     return {
         khmc: $('#khmc').val() || '',    // 乙方名称
         htbh: $('#htbh').val() || '',    // 合同编号
+        fzr: $('#fzr').val() || '',    // 合同编号
         startDate: $('#startDate').val() || '',
         endDate: $('#endDate').val() || ''
     };
@@ -549,6 +589,7 @@ function getList(page, size, searchParams) {
             pageNum: currentPage,
             pageSize: pageSize,
             khmc: searchParams.khmc || '',    // 乙方名称
+            fzr: searchParams.fzr || '',
             ddh: searchParams.htbh || '',    // 合同编号
             startDate: searchParams.startDate || '',
             endDate: searchParams.endDate || ''
@@ -562,7 +603,10 @@ function getList(page, size, searchParams) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
-        }else if(res.code == 403){
+
+            // 刷新后更新开票按钮状态
+            updateInvoiceButtonState();
+        } else if(res.code == 403){
             swal("权限不足，无法访问此功能！")
         } else {
             console.error("查询失败:", res.message);
@@ -602,7 +646,7 @@ function calculateWeifu(yfsj, yifu) {
     return (yfsjValue - yifuValue).toFixed(2);
 }
 
-// 填充表格 - 渲染订单明细字段（所有字段只读）
+// 修改表格渲染
 function fillTable(data) {
     console.log("返回数据", data)
     $('#ddmxTable').empty();
@@ -610,6 +654,7 @@ function fillTable(data) {
     var tableHeader = `
         <thead>
             <tr>
+                <th width="40"><input type="checkbox" id="selectAllRows"></th>
                 <th width="60">序号</th>
                 <th width="100">订单日期</th>
                 <th width="160">订单号</th>
@@ -621,7 +666,6 @@ function fillTable(data) {
                 <th width="100">开票时间</th>
                 <th width="80">开票状态</th>
                 <th width="100">对账状态</th>
-                <th width="350">PDF文件</th>
                 <th width="90">操作</th>
             </tr>
         </thead>
@@ -637,54 +681,20 @@ function fillTable(data) {
             // 计算当前页的序号（考虑分页）
             var serialNumber = (currentPage - 1) * pageSize + index + 1;
 
-            // 判断是否有PDF文件
-            var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
+            // 使用订单号作为唯一标识
+            var ddh = item.ddh || '';
 
-            // 从文件路径中提取文件扩展名和文件名
-            var fileIcon = 'bi-file-earmark';
-            var fileExt = '';
-            var fileName = '';
-
-            if (hasPdf) {
-                // 从文件路径中提取扩展名
-                var filePath = item.pdf_file_name;
-                var lastDotIndex = filePath.lastIndexOf('.');
-                if (lastDotIndex > -1) {
-                    fileExt = filePath.substring(lastDotIndex + 1).toLowerCase();
-                    fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-                }
-
-                // 根据文件类型设置图标
-                switch(fileExt) {
-                    case 'pdf':
-                        fileIcon = 'bi-file-earmark-pdf';
-                        break;
-                    case 'jpg':
-                    case 'jpeg':
-                    case 'png':
-                    case 'gif':
-                        fileIcon = 'bi-file-earmark-image';
-                        break;
-                    case 'doc':
-                    case 'docx':
-                        fileIcon = 'bi-file-earmark-word';
-                        break;
-                    case 'xls':
-                    case 'xlsx':
-                        fileIcon = 'bi-file-earmark-excel';
-                        break;
-                    default:
-                        fileIcon = 'bi-file-earmark';
-                }
-            }
+            // 检查当前行是否已被选中
+            var isChecked = selectedDdhs.includes(ddh) ? 'checked' : '';
 
             tableBody += `
-                <tr data-id="${item.id || index}" 
-                    data-ddh="${item.ddh || ''}" 
-                    data-lxr="${item.lxr || ''}">
+                <tr data-ddh="${ddh}" 
+                    data-lxr="${item.lxr || ''}"
+                    class="${isChecked ? 'selected-row' : ''}">
+                    <td><input type="checkbox" class="row-checkbox" data-ddh="${ddh}" ${isChecked}></td>
                     <td>${serialNumber}</td>
                     <td>${item.ddrq || ''}</td>
-                    <td>${item.ddh || ''}</td>
+                    <td>${ddh}</td>
                     <td>${item.khmc || ''}</td>
                     <td>${item.fzr || ''}</td>
                     <td>${item.yfsj || ''}</td>
@@ -693,25 +703,9 @@ function fillTable(data) {
                     <td>${item.kpsj || ''}</td>
                     <td>${item.sfkp || ''}</td>
                     <td>${item.dzzt || ''}</td>
-                    <td class="pdf-upload-cell">
-                        ${hasPdf ? `
-                            <!-- 有PDF文件时的按钮 -->
-                            <div>
-                                <button class="btn btn-sm btn-success view-file-btn" 
-                                        data-filepath="${item.pdf_file_name || ''}"
-                                        data-filename="${fileName || (item.ddh + '-10.' + fileExt)}"
-                                        title="查看文件：${item.pdf_file_name || ''}">
-                                    <i class="bi ${fileIcon}"></i> 查看文件
-                                </button>
-                            </div>
-                        ` : `
-                            <!-- 没有文件时显示提示 -->
-                            <span class="text-muted">暂无文件</span>
-                        `}
-                    </td>
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
-                                data-ddh="${item.ddh || ''}">
+                                data-ddh="${ddh}">
                             <i class="bi bi-eye"></i> 详情
                         </button>
                     </td>
@@ -721,20 +715,21 @@ function fillTable(data) {
     } else {
         tableBody += `
             <tr>
-                <td colspan="13" style="text-align: center; color: #999;">暂无订单数据</td>
+                <td colspan="14" style="text-align: center; color: #999;">暂无订单数据</td>
             </tr>
         `;
     }
 
     tableBody += '</tbody>';
     $('#ddmxTable').html(tableHeader + tableBody);
+
+    // 绑定新的事件
     addRowClickEvent();
+    bindCheckboxEvents();
     bindDetailButtonEvents();
     bindViewFileEvents();
 
-    // 添加调试信息
-    console.log('表格渲染完成，数据条数:', data ? data.length : 0);
-    console.log('第一条数据样例:', data && data.length > 0 ? data[0] : '无数据');
+    console.log('表格渲染完成，选中订单号:', selectedDdhs);
 }
 
 function bindViewFileEvents() {
@@ -851,62 +846,6 @@ function bindUploadPdfEvents() {
 
         // 触发文件选择
         $fileInput.trigger('click');
-    });
-
-    // 文件选择变化事件
-    $('.pdf-file-input').off('change.upload').on('change.upload', function(e) {
-        console.log('文件选择框变化事件触发');
-
-        var file = e.target.files[0];
-        var ddh = $(this).data('ddh');
-
-        console.log('选择的文件:', file ? file.name : '无文件', '订单号:', ddh);
-
-        if (!file) {
-            return;
-        }
-
-        // 验证文件类型
-        if (file.type !== 'application/pdf') {
-            swal('请选择PDF文件');
-            $(this).val('');
-            return;
-        }
-
-        // 验证文件大小（限制为10MB）
-        if (file.size > 10 * 1024 * 1024) {
-            swal('文件大小不能超过10MB');
-            $(this).val('');
-            return;
-        }
-
-        // 上传文件
-        uploadPdfFile(ddh, file);
-
-        // 清空文件输入，允许重复选择同一个文件
-        $(this).val('');
-    });
-}
-
-// 绑定删除PDF按钮事件
-function bindDeletePdfEvents() {
-    $('.delete-pdf-btn').off('click').on('click', function(e) {
-        e.stopPropagation();
-
-        var $btn = $(this);
-        var ddh = $btn.data('ddh');
-
-        if (!ddh) {
-            swal('订单号不能为空');
-            return;
-        }
-
-        // 确认删除操作
-        if (!confirm('确定要删除订单 ' + ddh + ' 的PDF文件吗？此操作不可恢复！')) {
-            return;
-        }
-
-        deletePdfFile(ddh, $btn);
     });
 }
 
@@ -1258,6 +1197,11 @@ function fillBasicInfo(rowData) {
     }
 }
 
+function getSelectedRows() {
+    return selectedRows;
+}
+
+
 // 获取选中行数据
 function getSelectedRow() {
     var selectedRow = $('.selected-row');
@@ -1266,17 +1210,17 @@ function getSelectedRow() {
     }
 
     var rowData = {
-        serialNumber: selectedRow.find('td:eq(0)').text().trim(),
-        ddrq: selectedRow.find('td:eq(1)').text().trim(),
-        ddh: selectedRow.find('td:eq(2)').text().trim(),
-        khmc: selectedRow.find('td:eq(3)').text().trim(),
-        fzr: selectedRow.find('td:eq(4)').text().trim(),
-        yfsj: selectedRow.find('td:eq(5)').text().trim(),
-        yifu: selectedRow.find('td:eq(6)').text().trim(),
-        wf: selectedRow.find('td:eq(7)').text().trim(),
-        kpsj: selectedRow.find('td:eq(8)').text().trim(),
-        sfkp: selectedRow.find('td:eq(9)').text().trim(),
-        dzzt: selectedRow.find('td:eq(10)').text().trim(),
+        serialNumber: selectedRow.find('td:eq(1)').text().trim(),
+        ddrq: selectedRow.find('td:eq(2)').text().trim(),
+        ddh: selectedRow.find('td:eq(3)').text().trim(),
+        khmc: selectedRow.find('td:eq(4)').text().trim(),
+        fzr: selectedRow.find('td:eq(5)').text().trim(),
+        yfsj: selectedRow.find('td:eq(6)').text().trim(),
+        yifu: selectedRow.find('td:eq(7)').text().trim(),
+        wf: selectedRow.find('td:eq(8)').text().trim(),
+        kpsj: selectedRow.find('td:eq(9)').text().trim(),
+        sfkp: selectedRow.find('td:eq(10)').text().trim(),
+        dzzt: selectedRow.find('td:eq(11)').text().trim(),
         pdf_file_name: selectedRow.find('.view-file-btn').data('filepath') || ''
     };
 
@@ -1291,11 +1235,18 @@ function getSelectedRow() {
 
 // 添加行点击事件
 function addRowClickEvent() {
-    $('#ddmxTable tbody tr').click(function() {
-        $('#ddmxTable tbody tr').removeClass('selected-row');
-        $(this).addClass('selected-row');
-        var ddh = $(this).find('td:eq(2)').text().trim();
-        console.log('选中订单号:', ddh);
+    $('#ddmxTable tbody tr').click(function(e) {
+        // 如果点击的是复选框，不执行行选中逻辑
+        if ($(e.target).is('input[type="checkbox"]') || $(e.target).closest('input[type="checkbox"]').length) {
+            return;
+        }
+
+        var $row = $(this);
+        var $checkbox = $row.find('.row-checkbox');
+        var isChecked = !$checkbox.prop('checked');
+
+        // 切换复选框状态
+        $checkbox.prop('checked', isChecked).trigger('change');
     });
 }
 
@@ -1409,7 +1360,7 @@ function bindPaginationEvents() {
     });
 }
 
-// 在CSS中添加选中行样式
+// 在 addTableStyles 函数中添加样式
 function addTableStyles() {
     if ($('#table-styles').length) return;
 
@@ -1429,6 +1380,17 @@ function addTableStyles() {
                 background-color: #409EFF !important;
                 color: white !important;
                 font-weight: bold;
+            }
+            
+            /* 复选框列样式 */
+            .row-checkbox {
+                margin: 0;
+                cursor: pointer;
+            }
+            
+            /* 开票按钮样式 */
+            #invoice-btn {
+                margin-right: 10px;
             }
             
             /* PDF按钮样式 */
@@ -1471,10 +1433,6 @@ function addTableStyles() {
         `)
         .appendTo('head');
 }
-
-
-
-
 
 // 文件上传核心功能
 $(function () {
@@ -1614,8 +1572,6 @@ $(function () {
             }
         });
     }
-
-
 
     // 提交上传 - 统一绑定事件
     $("#add-submit-btn").off('click').on('click', function () {
@@ -1770,7 +1726,6 @@ function formToJson(formSelector) {
 
     return json;
 }
-
 
 // 删除
 function extractAndDeleteFromUrl(filePath, ddh) {
@@ -1984,4 +1939,740 @@ function deleteUploadedFile() {
     } else {
         console.log('用户取消删除操作');
     }
+}
+
+// ========== 新增导出Excel功能 ==========
+
+// 初始化导出配置（默认选择所有列）
+function initExportConfig() {
+    exportColumnsConfig.mainColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+}
+
+// 显示导出模态框
+function showExportModal() {
+    var modalHtml = `
+        <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportModalLabel">导出Excel设置</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> 导出的Excel将包含您选择的主表字段，并固定拼接详情表字段。
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6><i class="bi bi-list-check"></i> 主表字段选择</h6>
+                                <div class="export-columns-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="selectAllColumns">
+                                        <label class="form-check-label" for="selectAllColumns">
+                                            <strong>全选/全不选</strong>
+                                        </label>
+                                    </div>
+                                    <div id="mainColumnsList">
+                                        <!-- 主表列复选框将在这里动态生成 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="exportFileName">导出文件名：</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="exportFileName" value="对账单_${formatDate(new Date())}">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">.xlsx</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" id="confirmExport">
+                            <i class="bi bi-file-earmark-excel"></i> 导出Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 如果模态框已存在，先移除
+    $('#exportModal').remove();
+
+    // 添加到页面
+    $('body').append(modalHtml);
+
+    // 显示模态框
+    $('#exportModal').modal('show');
+
+    // 渲染主表列复选框
+    renderMainColumnsList();
+
+    // 绑定事件
+    bindExportModalEvents();
+}
+
+// 渲染主表列复选框
+function renderMainColumnsList() {
+    var columnsHtml = '';
+    exportColumnsConfig.allMainColumns.forEach(function(column) {
+        var isChecked = exportColumnsConfig.mainColumns.includes(column.key) ? 'checked' : '';
+        columnsHtml += `
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input main-column-checkbox" 
+                       id="col_${column.key}" value="${column.key}" ${isChecked}>
+                <label class="form-check-label" for="col_${column.key}">
+                    ${column.name}
+                </label>
+            </div>
+        `;
+    });
+
+    $('#mainColumnsList').html(columnsHtml);
+
+    // 更新全选复选框状态
+    updateSelectAllCheckbox();
+}
+
+// 绑定导出模态框事件
+function bindExportModalEvents() {
+    // 全选/全不选
+    $('#selectAllColumns').off('change').on('change', function() {
+        var isChecked = $(this).prop('checked');
+        $('.main-column-checkbox').prop('checked', isChecked);
+
+        if (isChecked) {
+            exportColumnsConfig.mainColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+        } else {
+            exportColumnsConfig.mainColumns = [];
+        }
+    });
+
+    // 单个复选框变化
+    $('.main-column-checkbox').off('change').on('change', function() {
+        var columnKey = $(this).val();
+
+        if ($(this).prop('checked')) {
+            if (!exportColumnsConfig.mainColumns.includes(columnKey)) {
+                exportColumnsConfig.mainColumns.push(columnKey);
+            }
+        } else {
+            var index = exportColumnsConfig.mainColumns.indexOf(columnKey);
+            if (index > -1) {
+                exportColumnsConfig.mainColumns.splice(index, 1);
+            }
+        }
+
+        // 更新全选复选框状态
+        updateSelectAllCheckbox();
+    });
+
+    // 确认导出
+    $('#confirmExport').off('click').on('click', function() {
+        var fileName = $('#exportFileName').val().trim();
+        if (!fileName) {
+            fileName = `对账单_${formatDate(new Date())}`;
+        }
+
+        // 确保文件名有.xlsx扩展名
+        if (!fileName.endsWith('.xlsx')) {
+            fileName += '.xlsx';
+        }
+
+        $('#exportModal').modal('hide');
+        exportToExcel(fileName);
+    });
+}
+
+// 更新全选复选框状态
+function updateSelectAllCheckbox() {
+    var allChecked = $('.main-column-checkbox').length ===
+        $('.main-column-checkbox:checked').length;
+    $('#selectAllColumns').prop('checked', allChecked);
+}
+
+// 导出到Excel
+function exportToExcel(fileName) {
+    // 显示导出进度
+    swal({
+        title: '正在导出...',
+        text: '正在获取数据并生成Excel文件，请稍候...',
+        icon: 'info',
+        buttons: false,
+        closeOnClickOutside: false,
+        closeOnEsc: false
+    });
+
+    // 获取用户选择的字段
+    var selectedColumns = exportColumnsConfig.mainColumns;
+
+    // 如果没有选择任何字段，使用所有字段
+    if (selectedColumns.length === 0) {
+        selectedColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+    }
+
+    console.log('=== 导出配置信息 ===');
+    console.log('用户选择的主表列:', selectedColumns);
+    console.log('固定的详情列:', exportColumnsConfig.detailColumns);
+
+    // 获取字段显示名称的映射
+    var selectedColumnNames = {};
+    exportColumnsConfig.allMainColumns.forEach(col => {
+        if (selectedColumns.includes(col.key)) {
+            selectedColumnNames[col.key] = col.name;
+        }
+    });
+    console.log('字段名称映射:', selectedColumnNames);
+
+    // 获取当前搜索条件
+    var searchParams = getSearchParams();
+
+    // 调用后端接口获取全部数据
+    $ajax({
+        type: 'post',
+        url: '/dzd/daochuexcel',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1,
+            pageSize: 99999999,
+            // 传递搜索条件
+            khmc: searchParams.khmc || '',
+            ddh: searchParams.htbh || '',
+            startDate: searchParams.startDate || '',
+            endDate: searchParams.endDate || ''
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        swal.close();
+
+        console.log('=== 导出接口响应 ===');
+        console.log('响应码:', res.code);
+        console.log('响应数据:', res.data);
+
+        if (res.code === 200 && res.data) {
+            // 根据返回的数据结构处理数据并导出
+            processExportData(res.data, selectedColumns, selectedColumnNames, fileName);
+        } else {
+            console.error('导出失败:', res.message);
+            swal('导出失败', res.message || '数据获取失败', 'error');
+        }
+    });
+}
+
+// 处理导出数据
+function processExportData(apiData, selectedColumns, columnMapping, fileName) {
+    try {
+        var exportData = [];
+
+        // 判断数据结构 - 根据实际返回的数据结构处理
+        var dataList = [];
+
+        if (Array.isArray(apiData)) {
+            // 如果返回的是数组
+            dataList = apiData;
+        } else if (apiData.records && Array.isArray(apiData.records)) {
+            // 如果返回的是分页格式
+            dataList = apiData.records;
+        } else if (apiData.list && Array.isArray(apiData.list)) {
+            // 如果返回的是list格式
+            dataList = apiData.list;
+        } else {
+            console.log('API返回数据:', apiData);
+            throw new Error('数据格式不正确，请检查数据结构');
+        }
+
+        console.log('=== 数据调试信息 ===');
+        console.log('处理数据条数:', dataList.length);
+        if (dataList.length > 0) {
+            console.log('第一条完整数据:', JSON.stringify(dataList[0], null, 2));
+
+            // 检查数据字段
+            var sample = dataList[0];
+            console.log('数据包含的字段:', Object.keys(sample).sort());
+
+            // 检查详情字段是否存在
+            var detailFields = ['pm', 'ggxh', 'dw', 'sl', 'dj', 'fhsj', 'zj'];
+            detailFields.forEach(function(field) {
+                console.log(`字段 ${field}: ${sample[field] || '空'}`);
+            });
+        }
+
+        // 处理每条数据
+        dataList.forEach(function(item, index) {
+            var exportRow = createExportRowForDzd(item, selectedColumns, columnMapping);
+            exportData.push(exportRow);
+        });
+
+        console.log('导出数据条数:', exportData.length);
+        if (exportData.length > 0) {
+            console.log('第一条导出数据:', exportData[0]);
+        }
+
+        // 导出到Excel
+        if (exportData.length > 0) {
+            exportDataToExcel(exportData, fileName);
+        } else {
+            swal('导出失败', '没有找到可导出的数据', 'warning');
+        }
+
+    } catch (error) {
+        console.error('数据处理失败:', error);
+        swal('导出失败', '数据处理过程中发生错误: ' + error.message, 'error');
+    }
+}
+
+// 创建对账单导出行
+function createExportRowForDzd(item, selectedColumns, columnMapping) {
+    var row = {};
+
+    // 1. 添加用户选择的主表列
+    selectedColumns.forEach(function(colKey) {
+        var displayName = columnMapping[colKey] || colKey;
+        var value = '';
+
+        // 根据字段名从数据中获取值
+        switch(colKey) {
+            case 'wf':
+                // wf需要计算：总价 - 已付
+                var totalValue = parseFloat(item.yfsj) || 0;
+                var paidValue = parseFloat(item.yifu) || 0;
+                value = (totalValue - paidValue).toFixed(2);
+                break;
+            default:
+                // 其他字段直接获取
+                value = item[colKey] || '';
+        }
+
+        row[displayName] = value;
+    });
+
+    // 2. 添加固定的详情列
+    exportColumnsConfig.detailColumns.forEach(function(detailCol) {
+        var value = '';
+
+        // 根据中文列名获取对应的字段值
+        switch(detailCol) {
+            case '品名':
+                value = item.pm || '';
+                break;
+            case '规格型号':
+                value = item.ggxh || '';
+                break;
+            case '单位':
+                value = item.dw || '';
+                break;
+            case '数量':
+                value = item.sl || '';
+                break;
+            case '单价':
+                value = item.dj || '';
+                break;
+            case '发货时间':
+                value = item.fhsj || '';
+                break;
+            default:
+                // 尝试使用映射
+                var fieldName = mapDetailColumnName(detailCol);
+                value = item[fieldName] || '';
+        }
+
+        row[detailCol] = value;
+    });
+
+    return row;
+}
+
+// 映射详情列中文名到字段名 - 简化版
+function mapDetailColumnName(chineseName) {
+    // 更直接的映射关系
+    var mapping = {
+        '品名': 'pm',
+        '规格型号': 'ggxh',
+        '单位': 'dw',
+        '数量': 'sl',
+        '单价': 'dj',
+        '发货时间': 'fhsj',
+        '总价': 'zj'
+    };
+
+    return mapping[chineseName];
+}
+
+// 使用SheetJS导出Excel
+function exportDataToExcel(data, fileName) {
+    try {
+        // 检查是否加载了SheetJS库
+        if (typeof XLSX === 'undefined') {
+            // 动态加载SheetJS库
+            loadSheetJS().then(function() {
+                createExcelFile(data, fileName);
+            }).catch(function(error) {
+                console.error('加载SheetJS库失败:', error);
+                swal('导出失败', '请检查网络连接或联系管理员', 'error');
+            });
+        } else {
+            createExcelFile(data, fileName);
+        }
+    } catch (error) {
+        console.error('Excel导出失败:', error);
+        swal('导出失败', '生成Excel文件时发生错误', 'error');
+    }
+}
+
+// 创建Excel文件
+function createExcelFile(data, fileName) {
+    // 创建工作簿
+    var wb = XLSX.utils.book_new();
+
+    // 准备工作表数据
+    var wsData = [];
+
+    // 添加表头
+    if (data.length > 0) {
+        var headers = Object.keys(data[0]);
+        wsData.push(headers);
+    }
+
+    // 添加数据行
+    data.forEach(function(row) {
+        var rowData = [];
+        var headers = Object.keys(data[0]);
+        headers.forEach(function(header) {
+            rowData.push(row[header] || '');
+        });
+        wsData.push(rowData);
+    });
+
+    // 创建工作表
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // 设置列宽
+    var colWidths = [];
+    var headers = Object.keys(data[0] || {});
+    headers.forEach(function(header) {
+        colWidths.push({ wch: Math.max(header.length, 10) });
+    });
+    ws['!cols'] = colWidths;
+
+    // 将工作表添加到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '对账单明细');
+
+    // 导出Excel文件
+    XLSX.writeFile(wb, fileName);
+
+    swal('导出成功', `文件 ${fileName} 已生成并开始下载`, 'success');
+}
+
+// 动态加载SheetJS库
+function loadSheetJS() {
+    return new Promise(function(resolve, reject) {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// 为对账单页面添加导出样式
+function addExportModalStyles() {
+    if ($('#export-modal-styles').length) return;
+
+    $('<style id="export-modal-styles">')
+        .prop('type', 'text/css')
+        .html(`
+            .export-columns-container {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 15px;
+            }
+            .export-columns-container .form-check {
+                margin-bottom: 8px;
+            }
+            .export-columns-container .form-check-input {
+                margin-top: 0.3rem;
+            }
+            .export-columns-container .form-check-label {
+                padding-left: 5px;
+                cursor: pointer;
+            }
+            #exportFileName {
+                font-weight: bold;
+            }
+            .input-group-text {
+                background-color: #e9ecef;
+                font-weight: bold;
+            }
+        `)
+        .appendTo('head');
+}
+
+// 在页面加载时添加导出样式
+$(document).ready(function() {
+    addExportModalStyles();
+});
+
+
+// 绑定复选框事件（使用订单号）
+function bindCheckboxEvents() {
+    // 全选/全不选
+    $('#selectAllRows').off('change').on('change', function() {
+        var isChecked = $(this).prop('checked');
+        $('.row-checkbox').prop('checked', isChecked);
+
+        if (isChecked) {
+            // 选中当前页所有行
+            $('#ddmxTable tbody tr').each(function() {
+                var $row = $(this);
+                var ddh = $row.data('ddh'); // 获取订单号
+                var rowData = getRowData($row);
+
+                if (ddh && !selectedDdhs.includes(ddh)) {
+                    selectedDdhs.push(ddh);
+                    selectedRows.push(rowData);
+                    $row.addClass('selected-row');
+                }
+            });
+        } else {
+            // 取消选中当前页所有行
+            $('#ddmxTable tbody tr').each(function() {
+                var $row = $(this);
+                var ddh = $row.data('ddh'); // 获取订单号
+                var index = selectedDdhs.indexOf(ddh);
+
+                if (index > -1) {
+                    selectedDdhs.splice(index, 1);
+                    selectedRows.splice(index, 1);
+                    $row.removeClass('selected-row');
+                }
+            });
+        }
+
+        updateInvoiceButtonState();
+        console.log('全选操作，当前选中订单号:', selectedDdhs);
+    });
+
+    // 单个复选框选择
+    $('.row-checkbox').off('change').on('change', function(e) {
+        e.stopPropagation(); // 阻止事件冒泡
+
+        var $checkbox = $(this);
+        var isChecked = $checkbox.prop('checked');
+        var ddh = $checkbox.data('ddh'); // 改为获取订单号
+        var $row = $checkbox.closest('tr');
+        var rowData = getRowData($row);
+
+        console.log('复选框选择 - 订单号:', ddh, '状态:', isChecked);
+
+        if (isChecked) {
+            // 添加到选中列表
+            if (ddh && !selectedDdhs.includes(ddh)) {
+                selectedDdhs.push(ddh);
+                selectedRows.push(rowData);
+                $row.addClass('selected-row');
+            }
+        } else {
+            // 从选中列表移除
+            var index = selectedDdhs.indexOf(ddh);
+            if (index > -1) {
+                selectedDdhs.splice(index, 1);
+                selectedRows.splice(index, 1);
+                $row.removeClass('selected-row');
+            }
+        }
+
+        // 更新全选复选框状态
+        updateSelectAllCheckboxState();
+        updateInvoiceButtonState();
+
+        console.log('单个选择，当前选中订单号:', selectedDdhs);
+    });
+}
+
+// 获取行数据
+function getRowData($row) {
+    // 获取订单号
+    var ddh = $row.data('ddh') ||
+        $row.find('.row-checkbox').data('ddh') ||
+        $row.find('td:eq(2)').text().trim(); // 从订单号列获取
+
+    console.log('getRowData - 获取订单号:', {
+        'data-ddh': $row.data('ddh'),
+        'checkbox-data-ddh': $row.find('.row-checkbox').data('ddh'),
+        '文本订单号': $row.find('td:eq(2)').text().trim(),
+        '最终订单号': ddh
+    });
+
+    return {
+        ddh: ddh, // 返回订单号
+        khmc: $row.find('td:eq(3)').text().trim(),
+        sfkp: $row.find('td:eq(10)').text().trim(),
+        ddrq: $row.find('td:eq(2)').text().trim(),
+        fzr: $row.find('td:eq(4)').text().trim(),
+        yfsj: $row.find('td:eq(5)').text().trim(),
+        yifu: $row.find('td:eq(6)').text().trim(),
+        wf: $row.find('td:eq(7)').text().trim(),
+        kpsj: $row.find('td:eq(9)').text().trim(),
+        dzzt: $row.find('td:eq(11)').text().trim()
+    };
+}
+
+// 更新全选复选框状态
+function updateSelectAllCheckboxState() {
+    var totalCheckboxes = $('#ddmxTable tbody tr .row-checkbox').length;
+    var checkedCheckboxes = $('#ddmxTable tbody tr .row-checkbox:checked').length;
+    var allChecked = totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes;
+    $('#selectAllRows').prop('checked', allChecked);
+}
+
+// 更新开票按钮状态
+function updateInvoiceButtonState() {
+    if (selectedDdhs.length > 0) {
+        $('#invoice-btn').prop('disabled', false);
+    } else {
+        $('#invoice-btn').prop('disabled', true);
+    }
+}
+
+// 批量开票功能
+function batchInvoice() {
+    if (selectedDdhs.length === 0) {
+        swal('请先选择要开票的订单');
+        return;
+    }
+
+    // 检查选中的订单是否都满足开票条件
+    var canInvoice = true;
+    var errorMessages = [];
+
+    selectedRows.forEach(function(row, index) {
+        if (row.sfkp === '已开票') {
+            canInvoice = false;
+            errorMessages.push(`订单 ${row.ddh} 已经开票`);
+        }
+    });
+
+    if (!canInvoice) {
+        swal({
+            title: '开票失败',
+            text: '以下订单已经开票，无法重复开票：\n' + errorMessages.join('\n'),
+            icon: 'warning',
+            buttons: {
+                confirm: '确定'
+            }
+        });
+        return;
+    }
+
+     performBatchInvoice();
+}
+
+// 执行批量开票
+function performBatchInvoice() {
+    showLoading();
+
+    // 获取当前时间
+    var currentTime = formatDateTime(new Date());
+
+    // 直接使用订单号数组
+    var ddhsToSend = selectedDdhs.filter(function(ddh) {
+        return ddh !== undefined && ddh !== null && ddh !== '';
+    });
+
+    if (ddhsToSend.length === 0) {
+        hideLoading();
+        swal({
+            title: '开票失败',
+            text: '未获取到有效的订单号',
+            icon: 'error',
+            buttons: {
+                confirm: '确定'
+            }
+        });
+        return;
+    }
+
+    // 准备开票数据 - 使用订单号
+    var invoiceData = {
+        ddhs: ddhsToSend,  // 订单号数组
+        kpsj: currentTime,  // 开票时间
+        sfkp: '已开票'      // 开票状态
+    };
+
+    console.log('提交开票数据:', invoiceData);
+    console.log('原始选中的订单号:', selectedDdhs);
+    console.log('处理后的订单号:', ddhsToSend);
+
+    // 调用开票接口 - 注意：后端接口需要支持订单号数组
+    $ajax({
+        type: 'post',
+        url: '/dzd/batchUpdateInvoiceStatusByDdh',
+        contentType: 'application/json',
+        data: JSON.stringify(invoiceData),
+        dataType: 'json'
+    }, false, '', function (res) {
+        hideLoading();
+        if (res.code === 200) {
+            console.log("批量开票成功:", res);
+            swal({
+                title: '开票成功',
+                text: `成功为 ${ddhsToSend.length} 个订单更新开票状态`,
+                icon: 'success',
+                buttons: {
+                    confirm: '确定'
+                }
+            });
+
+            // 清空选择状态
+            selectedDdhs = [];
+            selectedRows = [];
+
+            // 刷新数据
+            forceRefresh();
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！");
+        } else {
+            console.error("批量开票失败:", res.message);
+            swal({
+                title: '开票失败',
+                text: res.message || '未知错误',
+                icon: 'error',
+                buttons: {
+                    confirm: '确定'
+                }
+            });
+        }
+    }).fail(function(xhr, status, error) {
+        hideLoading();
+        console.error("开票请求失败:", error);
+        swal({
+            title: '开票失败',
+            text: '请求失败，请检查网络连接',
+            icon: 'error',
+            buttons: {
+                confirm: '确定'
+            }
+        });
+    });
 }

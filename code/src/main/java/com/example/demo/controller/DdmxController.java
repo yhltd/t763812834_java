@@ -72,6 +72,39 @@ public class DdmxController {
                 );
             }
         }
+        // 新增：yingfu日期筛选
+        if (StringUtils.isNotBlank(pageRequest.getYingfuStartDate()) ||
+                StringUtils.isNotBlank(pageRequest.getYingfuEndDate())) {
+            String yingfuStart = convertToSlashFormat(pageRequest.getYingfuStartDate());
+            String yingfuEnd = convertToSlashFormat(pageRequest.getYingfuEndDate());
+
+            if (yingfuStart != null && yingfuEnd != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) " +
+                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+                        yingfuStart, yingfuEnd
+                );
+            } else if (yingfuStart != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) >= CONVERT(DATE, {0})",
+                        yingfuStart
+                );
+            } else if (yingfuEnd != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) <= CONVERT(DATE, {0})",
+                        yingfuEnd
+                );
+            }
+        }
+
+        // 新增：未付金额为0的筛选（yfsj - yifu = 0）
+        if (Boolean.TRUE.equals(pageRequest.getWeifuZero())) {
+            // 使用TRY_CAST处理可能的非数字值
+            queryWrapper.apply("yfsj = yifu");
+        }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
@@ -88,8 +121,160 @@ public class DdmxController {
         // 执行查询 - 通过Service调用
         Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(page, queryWrapper);
 
+        // 在查询结果后，手动进行排序
+        if (result != null && result.getRecords() != null &&
+                StringUtils.isNotBlank(pageRequest.getSortField())) {
+
+            List<Map<String, Object>> sortedList = manualSort(
+                    result.getRecords(),
+                    pageRequest.getSortField(),
+                    pageRequest.getSortOrder()
+            );
+
+            // 更新分页结果
+            result.setRecords(sortedList);
+        }
+
         return Result.success(result);
     }
+
+    // 手动排序方法
+    private List<Map<String, Object>> manualSort(List<Map<String, Object>> list, String sortField, String sortOrder) {
+        if (list == null || list.isEmpty()) {
+            return list;
+        }
+
+        List<Map<String, Object>> sortedList = new ArrayList<>(list);
+
+        sortedList.sort((map1, map2) -> {
+            Object value1 = map1.get(sortField);
+            Object value2 = map2.get(sortField);
+
+            // 处理null值
+            if (value1 == null && value2 == null) return 0;
+            if (value1 == null) return 1;
+            if (value2 == null) return -1;
+
+            int result;
+
+            // 根据字段类型进行比较
+            if (value1 instanceof Number && value2 instanceof Number) {
+                // 数字类型比较
+                double num1 = ((Number) value1).doubleValue();
+                double num2 = ((Number) value2).doubleValue();
+                result = Double.compare(num1, num2);
+            } else {
+                // 字符串类型比较
+                String str1 = value1.toString();
+                String str2 = value2.toString();
+
+                // 尝试解析为日期
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date1 = sdf.parse(str1);
+                    Date date2 = sdf.parse(str2);
+                    result = date1.compareTo(date2);
+                } catch (Exception e) {
+                    // 不是日期，按字符串比较
+                    result = str1.compareTo(str2);
+                }
+            }
+
+            // 根据排序方向调整
+            return "asc".equalsIgnoreCase(sortOrder) ? result : -result;
+        });
+
+        return sortedList;
+    }
+
+
+    @PostMapping("/daochuexcel")
+    public Result<Page<Map<String, Object>>> daochu(HttpSession session,@RequestBody PageRequest pageRequest) {
+        // 创建分页对象
+        Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+
+        // 构建查询条件
+        QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
+
+        // 添加查询条件
+        if (StringUtils.isNotBlank(pageRequest.getDdh())) {
+            queryWrapper.like("ddh", pageRequest.getDdh());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
+            queryWrapper.like("khmc", pageRequest.getKhmc());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getFzr())) {
+            queryWrapper.like("fzr", pageRequest.getFzr());
+        }
+        if (StringUtils.isNotBlank(pageRequest.getBm())) {
+            queryWrapper.like("bm", pageRequest.getBm());
+        }
+        if (pageRequest.getStartDate() != null || pageRequest.getEndDate() != null) {
+            String startDate = convertToSlashFormat(pageRequest.getStartDate());
+            String endDate = convertToSlashFormat(pageRequest.getEndDate());
+
+            if (startDate != null && endDate != null) {
+                // 使用apply方法处理日期查询
+                queryWrapper.apply(
+                        "ISDATE(ddrq) = 1 AND " +
+                                "CONVERT(DATE, ddrq) " +
+                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+                        startDate, endDate
+                );
+            }
+        }
+
+        // 新增：yingfu日期筛选
+        if (StringUtils.isNotBlank(pageRequest.getYingfuStartDate()) ||
+                StringUtils.isNotBlank(pageRequest.getYingfuEndDate())) {
+            String yingfuStart = convertToSlashFormat(pageRequest.getYingfuStartDate());
+            String yingfuEnd = convertToSlashFormat(pageRequest.getYingfuEndDate());
+
+            if (yingfuStart != null && yingfuEnd != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) " +
+                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+                        yingfuStart, yingfuEnd
+                );
+            } else if (yingfuStart != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) >= CONVERT(DATE, {0})",
+                        yingfuStart
+                );
+            } else if (yingfuEnd != null) {
+                queryWrapper.apply(
+                        "ISDATE(yingfu) = 1 AND " +
+                                "CONVERT(DATE, yingfu) <= CONVERT(DATE, {0})",
+                        yingfuEnd
+                );
+            }
+        }
+
+        // 新增：未付金额为0的筛选（yfsj - yifu = 0）
+        if (Boolean.TRUE.equals(pageRequest.getWeifuZero())) {
+            queryWrapper.apply("yfsj = yifu");
+        }
+
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            // 从 Session 中获取 D 值（管理员名称）
+            String fuzeren = (String) session.getAttribute("D");
+            if (fuzeren == null || fuzeren.trim().isEmpty()) {
+                return Result.error("为获取身份信息，请重新登录");
+            }
+
+            Page<Map<String, Object>> result = ddmxService.daochuexcely(page, queryWrapper,fuzeren);
+            return Result.success(result);
+        }
+
+        // 执行查询 - 通过Service调用
+        Page<Map<String, Object>> result = ddmxService.daochuexcel(page, queryWrapper);
+
+        return Result.success(result);
+    }
+
 
     private String convertToSlashFormat(String dateStr) {
         if (StringUtils.isBlank(dateStr)) {
@@ -622,6 +807,26 @@ public class DdmxController {
             return Result.error("PDF文件名更新失败");
         }
     }
+
+    // 添加查询当前文件名的接口
+    @PostMapping("/getCurrentPdfFileName")
+    public Result<String> getCurrentPdfFileName(@RequestBody Map<String, Object> params) {
+        String ddh = (String) params.get("ddh");
+
+        if (ddh == null || ddh.trim().isEmpty()) {
+            return Result.error("订单号不能为空");
+        }
+
+        try {
+            // 查询当前的文件名
+            String currentFileName = ddmxService.getCurrentPdfFileName(ddh);
+            return Result.success(currentFileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("查询文件名失败: " + e.getMessage());
+        }
+    }
+
 
 
 

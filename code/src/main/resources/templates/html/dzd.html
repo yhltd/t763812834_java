@@ -184,6 +184,9 @@
         <div class="col-md-3 mb-2">
             <input id="khmc" type="text" class="form-control" placeholder="客户名称" autocomplete="off">
         </div>
+        <div class="col-md-3 mb-2">
+            <input id="fzr" type="text" class="form-control" placeholder="负责人" autocomplete="off">
+        </div>
         <div class="col-md-2 mb-2">
             <input id="htbh" type="text" class="form-control" placeholder="订单号" autocomplete="off">
         </div>
@@ -206,6 +209,11 @@
                 刷新
             </button>
             <span style="border-right: 20px solid white"></span>
+            <button id="export-btn" class="btn btn-color" style="border-radius: 5px;">
+                <i class="bi bi-plus-square icon"></i>
+                导出excel
+            </button>
+            <span style="border-right: 20px solid white"></span>
             <!-- 添加打印按钮 -->
             <button id="print-btn" class="btn btn-color" style="border-radius:5px;">
                 <i class="bi bi-printer icon"></i>
@@ -218,15 +226,18 @@
                 撤回对账
             </button>
             <span style="border-right: 20px solid white"></span>
-            <button id="add-btn" class="btn btn-color" style="border-radius: 5px;">
-                <i class="bi bi-plus-square icon"></i>
-                上传文件
+            <button id="invoice-btn" class="btn btn-success" disabled>
+                <i class="bi bi-receipt"></i> 批量开票
             </button>
-            <span style="border-right: 20px solid white"></span>
-            <button id="delete-btn" class="btn btn-color-delete" style="border-radius: 5px;">
-                <i class="bi bi-trash icon"></i>
-                删除上传文件
-            </button>
+<!--            <button id="add-btn" class="btn btn-color" style="border-radius: 5px;">-->
+<!--                <i class="bi bi-plus-square icon"></i>-->
+<!--                上传文件-->
+<!--            </button>-->
+<!--            <span style="border-right: 20px solid white"></span>-->
+<!--            <button id="delete-btn" class="btn btn-color-delete" style="border-radius: 5px;">-->
+<!--                <i class="bi bi-trash icon"></i>-->
+<!--                删除上传文件-->
+<!--            </button>-->
             <span style="border-right: 20px solid white"></span>
             <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：销售对账单</a>
         </div>
