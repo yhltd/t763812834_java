@@ -12,7 +12,7 @@ public interface PzbMapper extends BaseMapper<Pzb> {
 
     @Select("SELECT fuzeren,dianhua,bianhao FROM peizhibiao WHERE fuzeren = #{fuzeren}")
     List<Pzb> getList(@Param("fuzeren") String fuzeren);
-    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi FROM ghfxinxi")
+    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi,shuilv FROM ghfxinxi")
     List<Pzb> getghf();
     @Select("SELECT chanpinmingcheng,fukuanfangshi FROM peizhibiao")
     List<Pzb> getXL();
@@ -27,7 +27,7 @@ public interface PzbMapper extends BaseMapper<Pzb> {
     /**
      * 获取所有配置信息，按负责人排序
      */
-    @Select("SELECT id, fuzeren, fukuanfangshi, dianhua, bianhao, bumen, chanpinmingcheng, danwei, zhiwei,cgyf FROM peizhibiao ORDER BY fuzeren DESC")
+    @Select("SELECT id, fuzeren, fukuanfangshi, dianhua, bianhao, bumen, chanpinmingcheng, danwei, zhiwei,cgyf,shuilv FROM peizhibiao ORDER BY fuzeren DESC")
     List<Pzb> getListArr();
 
     @Insert("insert into peizhibiao default values")
@@ -61,10 +61,10 @@ public interface PzbMapper extends BaseMapper<Pzb> {
     @Update("update peizhibiao set ${column} = #{value} where id = #{id}")
     boolean update(String column, String value, int id);
 
-    @Update("UPDATE ghfxinxi SET  ghf = #{ghf},khh = #{khh}, shuihao = #{shuihao}, zhanghao = #{zhanghao}, dizhi = #{dizhi} WHERE id = 1")
+    @Update("UPDATE ghfxinxi SET  ghf = #{ghf},khh = #{khh}, shuihao = #{shuihao}, zhanghao = #{zhanghao}, dizhi = #{dizhi},shuilv = #{shuilv} WHERE id = 1")
     Integer updateghf(Pzb pzb);
 
-    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi FROM ghfxinxi WHERE id = 1")
+    @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi,shuilv FROM ghfxinxi WHERE id = 1")
     List<Pzb> getListghf();
 
 }

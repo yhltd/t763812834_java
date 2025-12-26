@@ -1390,9 +1390,17 @@
             // 修改位置：获取增值税率并更新显示文本
             let taxRateText = '';
             const taxRateValue = document.getElementById('taxRate').value;
-
+            const taxElement = document.getElementById('previewTaxRate');
+            const taxValue = taxElement.textContent;
             if (taxRateValue === '1') {
+
                 taxRateText = '以上报价含税（13%增值税）';
+                if (taxElement) {
+                    // 提取数字部分
+                    const taxValue = taxElement.textContent;
+                    // 更新文本
+                    taxRateText = `以上报价含税（${taxValue}%增值税）`;
+                }
             } else if (taxRateValue === '2') {
                 taxRateText = '以上报价未税';
             } else if (taxRateValue === '其他') {
@@ -1402,7 +1410,7 @@
                     `以上报价含税（${otherTaxRate}增值税）` :
                     `以上报价含税（${otherTaxRate}%增值税）`;
             } else {
-                taxRateText = '以上报价含税（13%增值税）'; // 默认值
+                taxRateText = `以上报价含税（${taxValue}%增值税）`; // 默认值
             }
 
             document.getElementById('previewTaxRate').textContent = taxRateText;
@@ -2697,6 +2705,7 @@
         const zhanghao = supplierData.zhanghao || '';
         const shuihao = supplierData.shuihao || '';
         const dizhi = supplierData.dizhi || '';
+        const shuilv = supplierData.shuilv || '';
         console.log("更新供货方名称:", companyName);
 
         // 1. 更新 <p>甲方(供货方): <span id="ghf"></span></p>
@@ -2745,6 +2754,15 @@
         if (dizhiTd) {
             dizhiTd.textContent = dizhi;
             console.log("已更新dizhi元素:", dizhi);
+        } else {
+            console.error("未找到ID为'ghf1'的元素");
+        }
+
+        // 2. 更新 <td id="ghf1">昆山翰元星传动科技有限公司</td>
+        const shuilvTd = document.getElementById('previewTaxRate');
+        if (shuilvTd) {
+            shuilvTd.textContent = shuilv;
+            console.log("已更新ghf1元素:", shuilv);
         } else {
             console.error("未找到ID为'ghf1'的元素");
         }
@@ -3423,8 +3441,16 @@
         }
 
         if (data.ddrq) {
-            document.getElementById('contractDate').value = data.ddrq;
+            // 修复日期格式化问题
+            const contractDateElement = document.getElementById('contractDate');
+            if (contractDateElement) {
+                // 将各种格式的日期转换为YYYY-MM-DD格式
+                const formattedDate = formatDateForInput(data.ddrq);
+                contractDateElement.value = formattedDate;
+                console.log("设置合同日期:", data.ddrq, "=>", formattedDate);
+            }
         }
+
 
         if (data.yq) {
             document.getElementById('clientRequirements').value = data.yq;
@@ -3457,6 +3483,50 @@
             document.getElementById('generateInvoice').click();
         }, 1000);
     }
+
+        // 新增函数：格式化日期为YYYY-MM-DD格式
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+
+            try {
+                let dateObj;
+
+                // 处理不同的日期格式
+                if (dateString.includes('/')) {
+                    // 处理 "YYYY/MM/DD" 格式
+                    const parts = dateString.split('/');
+                    if (parts.length === 3) {
+                        const year = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1; // JavaScript月份是0-11
+                        const day = parseInt(parts[2], 10);
+                        dateObj = new Date(year, month, day);
+                    }
+                } else if (dateString.includes('-')) {
+                    // 处理 "YYYY-MM-DD" 格式
+                    dateObj = new Date(dateString);
+                } else {
+                    // 尝试直接解析
+                    dateObj = new Date(dateString);
+                }
+
+                // 验证日期是否有效
+                if (isNaN(dateObj.getTime())) {
+                    console.warn("无效的日期格式:", dateString);
+                    return '';
+                }
+
+                // 格式化为YYYY-MM-DD
+                const year = dateObj.getFullYear();
+                const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                const day = dateObj.getDate().toString().padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+
+            } catch (error) {
+                console.error("日期格式化失败:", error, dateString);
+                return '';
+            }
+        }
 
 
     // 填充产品信息

@@ -173,6 +173,7 @@ function initToolbarEvents() {
                 $('#update-zhanghao').val(firstData.zhanghao || '');
                 $('#update-shuihao').val(firstData.shuihao || '');
                 $('#update-dizhi').val(firstData.dizhi || '');
+                $('#update-shuilv').val(firstData.shuilv || '');
             } else {
                 // 处理权限错误
                 if (res.code === 401) {
@@ -362,7 +363,8 @@ function setTable(data) {
                     <th width="80">单位</th>
                     <th width="150">职位</th>
                     <th width="180">采购乙方</th>
-                    <th width="180">供货方</th>
+             
+                     <th width="100">税率</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -383,7 +385,8 @@ function setTable(data) {
                     <td class="editable-cell" data-field="danwei">${item.danwei || ''}</td>
                     <td class="editable-cell" data-field="zhiwei">${item.zhiwei || ''}</td>
                     <td class="editable-cell" data-field="cgyf">${item.cgyf || ''}</td>
-                    <td class="editable-cell" data-field="ghf">${item.ghf || ''}</td>
+                
+                     <td class="editable-cell" data-field="shuilv">${item.shuilv || ''}</td>
                     
                 </tr>`;
         });
