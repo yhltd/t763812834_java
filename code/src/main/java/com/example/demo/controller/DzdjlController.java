@@ -42,12 +42,12 @@ public class DzdjlController {
                 pageRequest.setEndDate(null);
             }
 
-            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
-                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
-            }
-            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
-                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
-            }
+//            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
+//                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
+//            }
+//            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
+//                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
+//            }
         }
 
         // 创建分页对象
@@ -56,12 +56,18 @@ public class DzdjlController {
         // 构建查询条件
         QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
 
-        queryWrapper.eq("sfkp", "已开票")
-                .eq("fahuozhuangtai", "全部发货");
+        queryWrapper.and(wrapper -> wrapper
+                .eq("sfkp", "已开票")
+                .or()
+                .eq("sfkp", "未开票")
+        )
+                .eq("fahuozhuangtai", "全部发货")
+                .isNotNull("duizhangriqi")  // duizhangriqi IS NOT NULL
+                .ne("duizhangriqi", "");    // duizhangriqi != ''
 
         // 添加查询条件
         if (StringUtils.isNotBlank(pageRequest.getDdh())) {
-            queryWrapper.like("ddh", pageRequest.getDdh());
+            queryWrapper.like("duizhangdanhao", pageRequest.getDdh());
         }
         if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
             queryWrapper.like("khmc", pageRequest.getKhmc());
@@ -73,7 +79,12 @@ public class DzdjlController {
             queryWrapper.eq("bm", pageRequest.getBm());
         }
         if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
-            queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+            queryWrapper.between("duizhangriqi", pageRequest.getStartDate(), pageRequest.getEndDate());
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+                return Result.error("权限不足");
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -107,12 +118,12 @@ public class DzdjlController {
                 pageRequest.setEndDate(null);
             }
 
-            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
-                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
-            }
-            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
-                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
-            }
+//            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
+//                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
+//            }
+//            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
+//                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
+//            }
         }
 
         // 创建分页对象
@@ -131,11 +142,19 @@ public class DzdjlController {
         if (StringUtils.isNotBlank(pageRequest.getFzr())) {
             queryWrapper.eq("fzr", pageRequest.getFzr());
         }
+        if (StringUtils.isNotBlank(pageRequest.getDuizhangdanhao())) {
+            queryWrapper.eq("duizhangdanhao", pageRequest.getDuizhangdanhao());
+        }
         if (StringUtils.isNotBlank(pageRequest.getBm())) {
             queryWrapper.eq("bm", pageRequest.getBm());
         }
         if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
             queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+                return Result.error("为获取身份信息，请重新登录");
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -299,12 +318,20 @@ public class DzdjlController {
     @PostMapping("/getDetailByDdh")
     public Result getDetailByDdh(@RequestBody Map<String, Object> params) {
         try {
-            String ddh = (String) params.get("ddh");
-            if (ddh == null) {
-                return Result.error("订单号和订单日期不能为空");
+            Object ddhObj = params.get("duizhangdanhao");
+
+            if (ddhObj == null) {
+                return Result.error("对账单号不能为空");
             }
 
-            List<Ddmx> detailList = dzdService.getDetailByDdh(ddh);
+            // 统一转换为字符串
+            String duizhangdanhao = ddhObj.toString();
+
+            if (duizhangdanhao.trim().isEmpty()) {
+                return Result.error("对账单号不能为空");
+            }
+
+            List<Ddmx> detailList = dzdService.getDetailByDdh(duizhangdanhao);
             return Result.success(detailList);
         } catch (Exception e) {
             e.printStackTrace();
@@ -316,22 +343,25 @@ public class DzdjlController {
      * 更新对账状态
      */
     @PostMapping("/updateDzztStatus")
-    public Result updateDzztStatus(HttpSession session,@RequestBody Map<String, Object> params) {
-
+    public Result updateDzztStatus(HttpSession session, @RequestBody Map<String, Object> params) {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
-            String ddh = (String) params.get("ddh");
-            String dzzt = (String) params.get("dzzt");
+            String duizhangdanhao = (String) params.get("duizhangdanhao");
+            String sfkp = (String) params.get("sfkp");
 
-            if (ddh == null || dzzt == null) {
-                return Result.error("订单号和对账状态不能为空");
+            if (duizhangdanhao == null || sfkp == null) {
+                return Result.error("对账单号和对账状态不能为空");
             }
 
-            boolean success = dzdService.updateDzztStatus(ddh, dzzt);
+            boolean success = dzdService.updateDzztStatusByDuizhangdanhao(duizhangdanhao, sfkp);
             if (success) {
                 return Result.success("更新对账状态成功");
             } else {
@@ -369,6 +399,83 @@ public class DzdjlController {
         }
 
         return result;
+    }
+
+    // 添加查询当前文件名的接口
+    @PostMapping("/getCurrentPdfFileName")
+    public Result<String> getCurrentPdfFileName(@RequestBody Map<String, Object> params) {
+        String duizhangdanhao = (String) params.get("duizhangdanhao");
+
+        if (duizhangdanhao == null || duizhangdanhao.trim().isEmpty()) {
+            return Result.error("对账单号不能为空");
+        }
+
+        try {
+            // 查询当前的文件名
+            String currentFileName = dzdService.getCurrentPdfFileName(duizhangdanhao);
+            return Result.success(currentFileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("查询文件名失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/updatePdfFileName")
+    public Result updatePdfFileName(@RequestBody Map<String, Object> params) {
+        String duizhangdanhao = (String) params.get("duizhangdanhao");
+        String dzscwj = (String) params.get("dzscwj");
+
+        boolean success = dzdService.updatePdfFileNameByDdh(duizhangdanhao, dzscwj);
+
+        if (success) {
+            return Result.success("PDF文件名更新成功");
+        } else {
+            return Result.error("PDF文件名更新失败");
+        }
+    }
+
+    /**
+     * 根据订单号更新字段
+     */
+    @PostMapping("/updateByDdh")
+    public Result updateByDdh(HttpSession session,@RequestBody Map<String, Object> updateParams) {
+        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
+        try {
+            String duizhangdanhao = (String) updateParams.get("duizhangdanhao");
+            String fieldName = (String) updateParams.get("fieldName");
+            Object fieldValue = updateParams.get("fieldValue");
+
+            if (duizhangdanhao == null || fieldName == null) {
+                return Result.error("订单号和字段名不能为空");
+            }
+
+            // 特殊处理开票状态和开票时间
+            if ("sfkp".equals(fieldName) && "已开票".equals(fieldValue)) {
+                // 同时更新开票时间
+                Map<String, Object> multiUpdateParams = new HashMap<>();
+                multiUpdateParams.put("duizhangdanhao", duizhangdanhao);
+                int result = dzdService.updateByDdh(multiUpdateParams);
+                return Result.success(result);
+            } else {
+                Map<String, Object> updateMap = new HashMap<>();
+                updateMap.put("duizhangdanhao", duizhangdanhao);
+                updateMap.put(fieldName, fieldValue);
+
+                int result = dzdService.updateByDdh(updateMap);
+                return Result.success(result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("更新失败: " + e.getMessage());
+        }
     }
 
 }

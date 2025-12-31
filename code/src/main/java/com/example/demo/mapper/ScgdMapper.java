@@ -2,6 +2,7 @@ package com.example.demo.mapper;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.example.demo.entity.Qxgl;
 import com.example.demo.entity.Scgd;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
@@ -107,4 +108,8 @@ public interface ScgdMapper extends BaseMapper<Scgd> {
             "VALUES (#{khcm}, #{lxr}, #{lxdh}, #{ddrq}, #{pp}, #{cpxh}, #{sl}, #{dj}, #{hj}, #{fzr}, #{htbh}, #{zt}, #{bz}, #{zbz}, #{yq}, #{kpzt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Scgd shengchan);
+
+
+    @Select("SELECT * FROM shengchangongdan WHERE id= #{id} ")
+    List<Scgd> daochuexcel(@Param("id") String id);
 }

@@ -8,6 +8,7 @@ import com.example.demo.service.KhxxService;
 import com.example.demo.service.PzbService;
 import com.example.demo.service.ScgdService;
 import com.example.demo.util.AuthUtil2;
+import com.example.demo.util.AuthUtil3;
 import com.example.demo.util.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,11 @@ public class XshtController {
     public Result<List<Pzb>> getList(HttpSession session) {
         try {
             // 从 Session 中获取 D 值（管理员名称）
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error("权限不足");
+            }
+
             String fuzeren = (String) session.getAttribute("D");
             if (fuzeren == null || fuzeren.trim().isEmpty()) {
                 return Result.error("为获取身份信息，请重新登录");
@@ -57,7 +63,12 @@ public class XshtController {
     }
 
     @PostMapping("/ddh")
-    public Result<List<Pzb>> getddh(@RequestBody Map<String, Object> params) {
+    public Result<List<Pzb>> getddh(@RequestBody Map<String, Object> params,HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
+
         try {
             String fuzeren = (String) params.get("fzr");
 
@@ -73,6 +84,10 @@ public class XshtController {
 
     @PostMapping("/ghf")
     public Result<List<Pzb>> getghf(HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
 
             // 执行查询，传入负责人作为查询条件
@@ -90,6 +105,10 @@ public class XshtController {
      */
     @PostMapping("/xiala")
     public Result<List<Pzb>> getXL(HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
             // 执行查询下拉内容
             List<Pzb> result = pzbService.getXL();
@@ -105,10 +124,15 @@ public class XshtController {
      */
     @PostMapping("/xialagl")
     public Result<List<Pzb>> getXLGL(HttpSession session) {
+
         try {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -127,6 +151,10 @@ public class XshtController {
      */
     @PostMapping("/kehu")
     public Result<List<Khxx>> getKH(HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
             // 从 Session 中获取 D 值（管理员名称）
             String quanxian = (String) session.getAttribute("C");
@@ -152,6 +180,10 @@ public class XshtController {
      */
     @PostMapping("/saveScgd")
     public Result<?> saveScgd(@RequestBody Scgd scgd, HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
 
             boolean success = scgdService.save(scgd);
@@ -171,6 +203,10 @@ public class XshtController {
      */
     @PostMapping("/returnlist")
     public Result<List<Scgd>> getListRE(HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
             String quanxian = (String) session.getAttribute("C");
             // 从 Session 中获取 D 值（管理员名称）
@@ -193,7 +229,11 @@ public class XshtController {
     }
 
     @PostMapping("/updateScgd")
-    public Result updateScgd(@RequestBody Scgd scgd) {
+    public Result updateScgd(@RequestBody Scgd scgd,HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
             boolean success = scgdService.updateById(scgd);
             if (success) {
@@ -207,7 +247,11 @@ public class XshtController {
     }
 
     @PostMapping("/deleteScgd")
-    public Result deleteScgd(@RequestBody Map<String, Object> params) {
+    public Result deleteScgd(@RequestBody Map<String, Object> params,HttpSession session) {
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
+        }
         try {
             Integer id = (Integer) params.get("id");
             if (id == null) {

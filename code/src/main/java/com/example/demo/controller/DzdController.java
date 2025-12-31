@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -60,6 +58,13 @@ public class DzdController {
         queryWrapper.eq("sfkp", "未开票")
                 .eq("fahuozhuangtai", "全部发货");
 
+        // 新增条件：duizhangriqi字段为空或null
+        queryWrapper.and(wrapper -> wrapper
+                .isNull("duizhangriqi")      // duizhangriqi IS NULL
+                .or()
+                .eq("duizhangriqi", "")      // duizhangriqi = ''
+        );
+
         // 添加查询条件
         if (StringUtils.isNotBlank(pageRequest.getDdh())) {
             queryWrapper.like("ddh", pageRequest.getDdh());
@@ -75,6 +80,11 @@ public class DzdController {
         }
         if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
             queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+                return Result.error("权限不足");
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -137,6 +147,11 @@ public class DzdController {
         }
         if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
             queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+                return Result.error("权限不足");
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -324,6 +339,10 @@ public class DzdController {
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
             String ddh = (String) params.get("ddh");
             String dzzt = (String) params.get("dzzt");
@@ -372,4 +391,64 @@ public class DzdController {
         return result;
     }
 
+    /**
+     * 合并对账单
+     */
+    @PostMapping("/updatedzdjl")
+    public Result updateDzdjl(HttpSession session, @RequestBody Map<String, Object> params) {
+        // 权限检查
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        try {
+            // 支持字符串或数组形式的ddh
+            Object ddhObj = params.get("ddh");
+            String duizhangdanhao = (String) params.get("duizhangdanhao");
+            String sfkp = (String) params.get("sfkp");
+            String duizhangriqi = (String) params.get("duizhangriqi");
+
+            if (ddhObj == null || duizhangdanhao == null) {
+                return Result.error("订单号和对账单号不能为空");
+            }
+
+            List<String> ddhList;
+            if (ddhObj instanceof String) {
+                String ddhStr = (String) ddhObj;
+                ddhList = Arrays.asList(ddhStr.split(",\\s*"));
+            } else if (ddhObj instanceof List) {
+                // 如果是JSON数组格式
+                ddhList = (List<String>) ddhObj;
+            } else {
+                return Result.error("订单号格式不正确");
+            }
+
+            // 移除非空订单号
+            ddhList = ddhList.stream()
+                    .filter(ddh -> ddh != null && !ddh.trim().isEmpty())
+                    .collect(Collectors.toList());
+
+            if (ddhList.isEmpty()) {
+                return Result.error("订单号不能为空");
+            }
+
+            boolean success = dzdService.updateDzdjl(ddhList, duizhangdanhao, sfkp, duizhangriqi);
+            if (success) {
+                return Result.success("更新对账状态成功");
+            } else {
+                return Result.error("更新对账状态失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("更新对账状态失败: " + e.getMessage());
+        }
+    }
+
 }
+
+
+

@@ -50,4 +50,5 @@ public interface DzdService extends IService<Dzd> {
      */
     boolean batchUpdateInvoiceStatus(BatchInvoiceRequest request);
 
+    boolean updateDzdjl(List<String> ddhList,String duizhangdanhao,String sfkp,String duizhangriqi);
 }

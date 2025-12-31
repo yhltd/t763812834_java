@@ -9,6 +9,10 @@ var currentId = '';
 var selectedDdhs = []; // 存储选择的订单号
 var selectedRows = [];
 
+// 新增：存储客户要求数据
+var customerRequirements = {}; // 以khmc为key，yq为value的对象
+var customerRequirementsList = []; // 完整的客户要求数据列表
+
 
 // 在文件顶部添加导出配置变量
 var exportColumnsConfig = {
@@ -35,6 +39,38 @@ $(document).ready(function() {
     initDdmxPage();
     initToolbarEvents();
     initDetailModalEvents();
+    getListBH();
+
+    // 绑定生成对账单确认按钮事件
+    $(document).on('click', '#confirmGenerateDzd', function() {
+        var duizhangdanhao = $('#duizhangdanhao').val().trim();
+
+        // 验证对账单号
+        if (!duizhangdanhao) {
+            alert('对账单号不能为空');
+            $('#duizhangdanhao').focus();
+            return;
+        }
+
+        // 确认操作
+        if (!confirm(`确定要生成对账单吗？\n对账单号：${duizhangdanhao}\n将更新 ${selectedDdhs.length} 个订单`)) {
+            return;
+        }
+
+        // 调用后端API
+        updateDzdRecords(duizhangdanhao);
+    });
+
+    // 首先获取客户要求数据
+    yaoqiu();
+
+    // 设置定时检查，确保客户要求数据加载完成
+    setTimeout(function() {
+        if (Object.keys(customerRequirements).length === 0 && customerRequirementsList.length === 0) {
+            console.log("客户要求数据获取失败或为空，尝试重新获取...");
+            yaoqiu();
+        }
+    }, 1000);
 
     // 添加导出按钮
     $('#export-btn').off('click').on('click', function() {
@@ -92,7 +128,6 @@ $(document).ready(function() {
 
         console.log('模态框已显示');
     });
-
 
     // 设置默认日期并获取数据
     setDefaultDateRange();
@@ -153,6 +188,92 @@ function formatDateTime(date) {
 // 初始化工具栏事件
 function initToolbarEvents() {
     console.log('初始化工具栏事件...');
+
+    // 新增：导出Excel按钮
+    $('#export-excel-btn').off('click').on('click', function() {
+        console.log('导出Excel按钮点击');
+        var selectedRow = getSelectedRow();
+        if (!selectedRow) {
+            swal('请选择要导出的订单信息');
+            return;
+        }
+
+        // 首先更新对账状态
+        updateDzztStatus(selectedRow.ddh, getCurrentDate(), function(success) {
+            if (success) {
+                // 获取详细信息并导出
+                getDetailDataForPrint(selectedRow.ddh, function(detailData) {
+                    if (detailData && detailData.length > 0) {
+                        // 确保有联系人信息
+                        if (!selectedRow.lxr && detailData[0]) {
+                            selectedRow.lxr = detailData[0].lxr || '';
+                        }
+                        exportPrintDataToExcel(selectedRow, detailData);
+                    } else {
+                        swal('无法获取订单详细信息');
+                    }
+                });
+            } else {
+                swal('更新对账状态失败，无法导出');
+            }
+        });
+    });
+    // 生成对账单按钮
+    $('#shengcheng-btn').off('click').on('click', function() {
+        console.log('生成对账单按钮点击');
+
+        // 检查是否有选中的行
+        if (selectedDdhs.length === 0) {
+            alert('请先选择要生成对账单的订单');
+            return;
+        }
+
+        // 检查选中的订单是否属于同一个客户
+        if (!checkSameCustomer()) {
+            alert('选中的订单必须属于同一个客户才能批量生成对账单');
+            return;
+        }
+
+        // 显示弹窗前获取最新的对账单号
+        $.ajax({
+            type: 'post',
+            url: '/hetong/list',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success && res.data && res.data.length > 0) {
+                    // 提取第一个记录的 bianhao 字段
+                    var firstRecord = res.data[0];
+                    var bianhaoValue = firstRecord.bianhao || '';
+
+                    // 获取当前日期
+                    var currentDate = new Date();
+                    var year = currentDate.getFullYear();
+                    var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                    var day = String(currentDate.getDate()).padStart(2, '0');
+                    var dateStr = year + month + day;
+
+                    // 构建对账单号：DZ + bianhao + 日期
+                    var duizhangdanhao = 'DZ' + bianhaoValue + dateStr;
+
+                    console.log('实时生成的对账单号:', duizhangdanhao);
+
+                    // 设置输入框值
+                    $('#duizhangdanhao').val(duizhangdanhao);
+
+                    // 显示弹窗
+                    $('#selectedCount').text(selectedDdhs.length);
+                    $('#generateDzdModal').modal('show');
+                } else {
+                    alert("无法获取对账单号，请重试");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("获取对账单号失败:", error);
+                alert("获取对账单号失败，请检查网络连接");
+            }
+        });
+    });
 
     // 刷新按钮
     $('#refresh-btn').off('click').on('click', function() {
@@ -663,9 +784,6 @@ function fillTable(data) {
                 <th width="100">总价</th>
                 <th width="80">已付</th>
                 <th width="80">未付</th>
-                <th width="100">开票时间</th>
-                <th width="80">开票状态</th>
-                <th width="100">对账状态</th>
                 <th width="90">操作</th>
             </tr>
         </thead>
@@ -700,9 +818,6 @@ function fillTable(data) {
                     <td>${item.yfsj || ''}</td>
                     <td>${item.yifu || ''}</td>
                     <td>${weifu}</td>
-                    <td>${item.kpsj || ''}</td>
-                    <td>${item.sfkp || ''}</td>
-                    <td>${item.dzzt || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
                                 data-ddh="${ddh}">
@@ -984,7 +1099,16 @@ function showDetailModal(ddh) {
     // 获取选中行的数据
     var rowData = getSelectedRow();
     if (rowData) {
-        fillBasicInfo(rowData);
+        // 确保客户要求数据已加载
+        if (Object.keys(customerRequirements).length === 0 && customerRequirementsList.length === 0) {
+            console.log("客户要求数据为空，重新获取...");
+            yaoqiu(); // 重新获取客户要求数据
+        }
+
+        // 延迟一点填充基础信息，确保客户要求数据已加载
+        setTimeout(function() {
+            fillBasicInfo(rowData);
+        }, 300);
     }
 
     // 根据订单号获取详细信息
@@ -1170,29 +1294,66 @@ function hideDetailLoading() {
     // 加载完成后的处理
 }
 
-// 填充基础信息
+
+// 填充基础信息 - 优化版本（可选）
 function fillBasicInfo(rowData) {
     if (rowData) {
+        // 获取客户要求
+        var customerReq = getCustomerRequirement(rowData.khmc);
+        console.log("客户名称:", rowData.khmc, "对应的客户要求:", customerReq);
+
         var basicInfoHtml = `
             <div class="row">
-                <div class="col-md-4">
-                    <label><strong>订单日期：</strong></label>
-                    <span>${rowData.ddrq || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">订单日期：</label>
+                        <div>${rowData.ddrq || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>订单号：</strong></label>
-                    <span>${rowData.ddh || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">订单号：</label>
+                        <div>${rowData.ddh || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>负责人：</strong></label>
-                    <span>${rowData.fzr || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">负责人：</label>
+                        <div>${rowData.fzr || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>客户名称：</strong></label>
-                    <span>${rowData.khmc || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">客户名称：</label>
+                        <div>${rowData.khmc || ''}</div>
+                    </div>
                 </div>
-            </div>
         `;
+
+        // 如果有客户要求，显示客户要求
+        if (customerReq && customerReq.trim() !== '') {
+            basicInfoHtml += `
+                <div class="col-md-12">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold" style="color: black;">客户要求：</label>
+                        <div class="customer-requirement">
+                            ${customerReq}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            basicInfoHtml += `
+                <div class="col-md-12">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">客户要求：</label>
+                        <div class="text-muted">暂无客户要求信息</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        basicInfoHtml += `</div>`;
         $('#basicInfo').html(basicInfoHtml);
     }
 }
@@ -1429,6 +1590,18 @@ function addTableStyles() {
             .delete-pdf-btn:hover {
                 background-color: #c82333;
                 border-color: #bd2130;
+            }
+             /* 客户要求样式 */
+            .customer-requirement {
+                border-radius: 4px;
+                padding: 10px;
+                font-size: 14px;
+                padding: 3px;
+            }
+            .customer-requirement-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+                color: #856404;
             }
         `)
         .appendTo('head');
@@ -2486,10 +2659,16 @@ function bindCheckboxEvents() {
         console.log('复选框选择 - 订单号:', ddh, '状态:', isChecked);
 
         if (isChecked) {
+            // 获取行数据中的客户名称
+            var khmc = $row.find('td:eq(4)').text().trim(); // 第5列是客户名称
+
             // 添加到选中列表
             if (ddh && !selectedDdhs.includes(ddh)) {
                 selectedDdhs.push(ddh);
-                selectedRows.push(rowData);
+                selectedRows.push({
+                    ddh: ddh,
+                    khmc: khmc
+                });
                 $row.addClass('selected-row');
             }
         } else {
@@ -2675,4 +2854,518 @@ function performBatchInvoice() {
             }
         });
     });
+}
+
+
+function yaoqiu() {
+    console.log("开始获取客户要求数据");
+
+    $ajax({
+        type: 'post',
+        url: '/kehu/getyaoqiu',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            console.log("成功获取客户要求数据:", res.data);
+
+            // 清空之前的数据
+            customerRequirements = {};
+            customerRequirementsList = res.data || [];
+
+            // 将数据转换为以khmc为key的对象，方便快速查找
+            if (customerRequirementsList && customerRequirementsList.length > 0) {
+                customerRequirementsList.forEach(function(item) {
+                    if (item.khmc && item.yq) {
+                        customerRequirements[item.khmc.trim()] = item.yq;
+                    }
+                });
+            }
+
+            console.log("客户要求数据已保存，共", customerRequirementsList.length, "条记录");
+            console.log("转换后的客户要求对象:", customerRequirements);
+
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！");
+        } else {
+            console.error("获取客户要求失败:", res.message);
+            // swal("获取客户要求失败: " + (res.message || '未知错误'));
+        }
+    });
+    // 删除 .fail() 部分
+}
+
+// 新增：根据客户名称获取客户要求
+function getCustomerRequirement(customerName) {
+    if (!customerName) return '';
+
+    // 先尝试从转换后的对象中查找（精确匹配）
+    var requirement = customerRequirements[customerName.trim()];
+    if (requirement) {
+        return requirement;
+    }
+
+    // 如果精确匹配没找到，尝试模糊匹配
+    var found = customerRequirementsList.find(function(item) {
+        return item.khmc && item.khmc.includes(customerName.trim());
+    });
+
+    return found ? found.yq : '';
+}
+
+
+// 检查选中的订单是否属于同一个客户
+function checkSameCustomer() {
+    if (selectedRows.length === 0) return false;
+
+    // 获取第一个订单的客户名称
+    var firstCustomer = selectedRows[0].khmc || '';
+
+    // 检查所有选中的订单客户名称是否一致
+    for (var i = 1; i < selectedRows.length; i++) {
+        var currentCustomer = selectedRows[i].khmc || '';
+        if (currentCustomer !== firstCustomer) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// 调用后端API更新对账记录
+function updateDzdRecords(duizhangdanhao) {
+    showLoading();
+
+    // 获取当前日期（YYYY-MM-DD格式）
+    var currentDate = new Date();
+    var duizhangriqi = currentDate.getFullYear() + '-' +
+        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(currentDate.getDate()).padStart(2, '0');
+
+    // 准备请求数据 - 传递数组格式的ddh
+    var requestData = {
+        ddh: selectedDdhs,  // 数组格式
+        duizhangdanhao: duizhangdanhao,
+        sfkp: '未开票',     // 默认值
+        duizhangriqi: duizhangriqi  // 当前日期
+    };
+
+    console.log('提交对账数据:', requestData);
+
+    // 调用后端API
+    $ajax({
+        type: 'post',
+        url: '/dzd/updatedzdjl',
+        contentType: 'application/json',
+        data: JSON.stringify(requestData),
+        dataType: 'json'
+    }, false, '', function (res) {
+        hideLoading();
+        if (res.code === 200) {
+            alert(`成功为 ${selectedDdhs.length} 个订单生成对账单`);
+
+            // 关闭弹窗
+            $('#generateDzdModal').modal('hide');
+
+            // 清空选择状态
+            selectedDdhs = [];
+            selectedRows = [];
+            $('#selectAllRows').prop('checked', false);
+
+            // 刷新数据
+            forceRefresh();
+        } else if (res.code == 403) {
+            alert("权限不足，无法访问此功能！");
+        } else {
+            alert('更新对账记录失败: ' + (res.message || '未知错误'));
+        }
+    }).fail(function(xhr, status, error) {
+        hideLoading();
+        alert('请求失败，请检查网络连接');
+    });
+}
+
+
+function getListBH() {
+    $.ajax({
+        type: 'post',
+        url: '/hetong/list',
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(res) {
+            if (res.success && res.data && res.data.length > 0) {
+                console.log("返回的客户信息", res);
+
+                // 提取第一个记录的 bianhao 字段
+                var firstRecord = res.data[0];
+                var bianhaoValue = firstRecord.bianhao || '';
+
+                // 获取当前日期
+                var currentDate = new Date();
+                var year = currentDate.getFullYear();
+                var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                var day = String(currentDate.getDate()).padStart(2, '0');
+                var dateStr = year + month + day;
+
+                // 构建对账单号：DZ + bianhao + 日期
+                var duizhangdanhao = 'DZ' + bianhaoValue + dateStr;
+
+                console.log('生成的对账单号:', duizhangdanhao);
+
+                // 设置为模态框中输入框的默认值
+                $('#duizhangdanhao').val(duizhangdanhao);
+
+            } else {
+                console.error("查询失败:", res.message);
+
+                // 处理权限错误
+                if (res.code === 401) {
+                    alert("登录已过期，请重新登录");
+                    window.location.href = "/login.html";
+                } else if (res.code === 403) {
+                    alert("权限不足，无法访问此功能");
+                } else {
+                    alert("查询失败: " + (res.message || '没有获取到数据'));
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX请求失败:", error);
+            alert("请求失败，请检查网络连接");
+        }
+    });
+}
+
+
+
+// 新增：导出打印数据到Excel功能
+// 新增：导出打印数据到Excel功能（带边框）
+function exportPrintDataToExcel(rowData, detailData) {
+    if (!rowData || !detailData || detailData.length === 0) {
+        swal('无法获取要导出的数据');
+        return;
+    }
+
+    try {
+        // 计算金额
+        var paidAmount = parseFloat(rowData.yifu) || 0;
+        var unpaidAmount = parseFloat(rowData.wf) || 0;
+        var currentPeriodAmount = calculateTotal(detailData);
+        var openingAmount = unpaidAmount;
+        var totalDebt = (parseFloat(openingAmount) + parseFloat(currentPeriodAmount)).toFixed(2);
+
+        var currentDate = new Date();
+        var currentMonth = currentDate.getMonth() + 1;
+        var currentYear = currentDate.getFullYear();
+
+        // 准备Excel数据
+        var excelData = [
+            // 标题行
+            ['昆山翰元星传动科技有限公司' + currentMonth + '月对账单'],
+            [], // 空行
+
+            // 客户信息
+            ['客户名称：', rowData.khmc || ''],
+            ['联系人：', rowData.lxr || ''],
+            ['期初金额：', '¥' + openingAmount],
+            [], // 空行
+
+            // 表头
+            ['序号', '产品名称', '规格型号', '单位', '单价', '数量', '总价', '发货时间', '订单号'],
+        ];
+
+        // 添加明细数据
+        detailData.forEach(function(item, index) {
+            excelData.push([
+                index + 1,
+                item.pm || '',
+                item.ggxh || '',
+                item.dw || '',
+                item.dj || '',
+                item.sl || '',
+                item.zj || '',
+                item.fhsj || '',
+                rowData.ddh || ''
+            ]);
+        });
+
+        // 添加空行
+        excelData.push([]);
+
+        // 添加汇总信息
+        excelData.push(['本期金额：', '¥' + currentPeriodAmount]);
+        excelData.push(['欠款总额：', '¥' + totalDebt]);
+
+        // 添加空行
+        excelData.push([]);
+        excelData.push([]);
+
+        // 添加页脚信息
+        excelData.push(['贵公司确认（签字、盖章）：', '昆山翰元星传动科技有限公司']);
+        excelData.push(['日期：', '日期：' + currentYear + '/' + currentMonth + '/' + currentDate.getDate()]);
+
+        // 生成Excel文件名
+        var fileName = '对账单_' + rowData.khmc + '_' + rowData.ddh + '_' +
+            currentYear + currentMonth + currentDate.getDate() + '.xlsx';
+
+        // 创建并导出Excel（带边框）
+        exportExcelFileWithBorder(excelData, fileName, detailData.length);
+
+    } catch (error) {
+        console.error('导出Excel失败:', error);
+        swal('导出失败', '生成Excel文件时发生错误：' + error.message, 'error');
+    }
+}
+
+// 辅助函数：导出带边框的Excel文件
+function exportExcelFileWithBorder(data, fileName, detailRowsCount) {
+    // 确保SheetJS库已加载
+    if (typeof XLSX === 'undefined') {
+        swal({
+            title: '正在加载Excel库...',
+            text: '请稍候...',
+            icon: 'info',
+            buttons: false,
+            closeOnClickOutside: false
+        });
+
+        loadSheetJS().then(function() {
+            swal.close();
+            createAndDownloadExcelWithBorder(data, fileName, detailRowsCount);
+        }).catch(function(error) {
+            swal('导出失败', '无法加载Excel库，请刷新页面重试', 'error');
+        });
+    } else {
+        createAndDownloadExcelWithBorder(data, fileName, detailRowsCount);
+    }
+}
+
+// 创建并下载带边框的Excel文件
+function createAndDownloadExcelWithBorder(data, fileName, detailRowsCount) {
+    try {
+        // 创建工作簿
+        var wb = XLSX.utils.book_new();
+
+        // 创建工作表
+        var ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 计算各个区域的范围
+        var titleRow = 0; // 标题在第0行
+        var infoStartRow = 2; // 客户信息从第2行开始
+        var infoRows = 3; // 客户信息占3行
+        var headerRow = infoStartRow + infoRows + 1; // 表头行
+        var dataStartRow = headerRow + 1; // 数据开始行
+        var dataEndRow = dataStartRow + detailRowsCount - 1; // 数据结束行
+        var summaryStartRow = dataEndRow + 2; // 汇总信息开始行
+        var summaryRows = 2; // 汇总信息占2行
+        var footerStartRow = summaryStartRow + summaryRows + 2; // 页脚开始行
+
+        // 定义边框样式
+        var borderStyle = {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } }
+        };
+
+        var thickBorderStyle = {
+            top: { style: "medium", color: { rgb: "000000" } },
+            bottom: { style: "medium", color: { rgb: "000000" } },
+            left: { style: "medium", color: { rgb: "000000" } },
+            right: { style: "medium", color: { rgb: "000000" } }
+        };
+
+        // 设置单元格样式
+        var cellRefs = [];
+
+        // 1. 标题行样式（合并单元格并居中）
+        var titleRange = XLSX.utils.encode_range(
+            { r: titleRow, c: 0 },
+            { r: titleRow, c: 8 }
+        );
+        ws['!merges'] = [{ s: { r: titleRow, c: 0 }, e: { r: titleRow, c: 8 } }];
+
+        // 设置标题单元格样式
+        var titleCell = XLSX.utils.encode_cell({ r: titleRow, c: 0 });
+        if (!ws[titleCell]) ws[titleCell] = { t: 's', v: data[titleRow][0] };
+        ws[titleCell].s = {
+            font: { bold: true, sz: 16 },
+            alignment: { horizontal: 'center', vertical: 'center' }
+        };
+
+        // 2. 表头行样式（第5行，索引4）
+        for (var col = 0; col < 9; col++) {
+            var headerCell = XLSX.utils.encode_cell({ r: headerRow, c: col });
+            if (!ws[headerCell]) ws[headerCell] = { t: 's', v: data[headerRow][col] };
+            ws[headerCell].s = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "4F81BD" } },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                border: thickBorderStyle
+            };
+            cellRefs.push(headerCell);
+        }
+
+        // 3. 数据区域样式（带边框）
+        for (var row = dataStartRow; row <= dataEndRow; row++) {
+            for (var col = 0; col < 9; col++) {
+                var cell = XLSX.utils.encode_cell({ r: row, c: col });
+                if (!ws[cell]) ws[cell] = { t: 's', v: data[row][col] || '' };
+                ws[cell].s = {
+                    alignment: { horizontal: 'center', vertical: 'center' },
+                    border: borderStyle
+                };
+
+                // 数值列右对齐（单价、数量、总价）
+                if (col === 4 || col === 5 || col === 6) {
+                    ws[cell].s.alignment = { horizontal: 'right', vertical: 'center' };
+                }
+
+                cellRefs.push(cell);
+            }
+        }
+
+        // 4. 汇总信息样式
+        for (var i = 0; i < summaryRows; i++) {
+            var summaryRow = summaryStartRow + i;
+            for (var col = 0; col < 2; col++) {
+                var cell = XLSX.utils.encode_cell({ r: summaryRow, c: col });
+                if (!ws[cell]) ws[cell] = { t: 's', v: data[summaryRow][col] };
+                ws[cell].s = {
+                    font: { bold: true },
+                    border: borderStyle
+                };
+                if (col === 0) {
+                    ws[cell].s.alignment = { horizontal: 'right', vertical: 'center' };
+                } else {
+                    ws[cell].s.alignment = { horizontal: 'left', vertical: 'center' };
+                }
+                cellRefs.push(cell);
+            }
+        }
+
+        // 5. 页脚信息样式
+        for (var i = 0; i < 2; i++) {
+            var footerRow = footerStartRow + i;
+            for (var col = 0; col < 2; col++) {
+                var cell = XLSX.utils.encode_cell({ r: footerRow, c: col });
+                if (!ws[cell]) ws[cell] = { t: 's', v: data[footerRow][col] };
+                if (col === 0) {
+                    ws[cell].s = {
+                        font: { bold: true },
+                        alignment: { horizontal: 'right', vertical: 'center' }
+                    };
+                } else {
+                    ws[cell].s = {
+                        alignment: { horizontal: 'left', vertical: 'center' }
+                    };
+                }
+                cellRefs.push(cell);
+            }
+        }
+
+        // 设置列宽
+        var colWidths = [
+            { wch: 8 },   // 序号列
+            { wch: 20 },  // 产品名称
+            { wch: 20 },  // 规格型号
+            { wch: 8 },   // 单位
+            { wch: 12 },  // 单价
+            { wch: 8 },   // 数量
+            { wch: 12 },  // 总价
+            { wch: 15 },  // 发货时间
+            { wch: 15 }   // 订单号
+        ];
+        ws['!cols'] = colWidths;
+
+        // 设置行高（标题行更高）
+        ws['!rows'] = [];
+        for (var i = 0; i < data.length; i++) {
+            if (i === titleRow) {
+                ws['!rows'][i] = { hpx: 40 }; // 标题行高度
+            } else if (i === headerRow) {
+                ws['!rows'][i] = { hpx: 25 }; // 表头行高度
+            } else {
+                ws['!rows'][i] = { hpx: 20 }; // 普通行高度
+            }
+        }
+
+        // 添加到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '对账单');
+
+        // 导出文件
+        XLSX.writeFile(wb, fileName);
+
+        swal('导出成功', 'Excel文件已生成并开始下载', 'success');
+
+    } catch (error) {
+        console.error('Excel创建失败:', error);
+        swal('导出失败', '创建Excel文件失败：' + error.message, 'error');
+    }
+}
+
+// 辅助函数：导出Excel文件
+function exportExcelFile(data, fileName) {
+    // 确保SheetJS库已加载
+    if (typeof XLSX === 'undefined') {
+        swal({
+            title: '正在加载Excel库...',
+            text: '请稍候...',
+            icon: 'info',
+            buttons: false,
+            closeOnClickOutside: false
+        });
+
+        loadSheetJS().then(function() {
+            swal.close();
+            createAndDownloadExcel(data, fileName);
+        }).catch(function(error) {
+            swal('导出失败', '无法加载Excel库，请刷新页面重试', 'error');
+        });
+    } else {
+        createAndDownloadExcel(data, fileName);
+    }
+}
+
+// 创建并下载Excel文件
+function createAndDownloadExcel(data, fileName) {
+    try {
+        // 创建工作簿
+        var wb = XLSX.utils.book_new();
+
+        // 创建工作表
+        var ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 设置列宽（可根据内容调整）
+        var colWidths = [
+            { wch: 8 },   // 序号列
+            { wch: 20 },  // 产品名称
+            { wch: 20 },  // 规格型号
+            { wch: 8 },   // 单位
+            { wch: 12 },  // 单价
+            { wch: 8 },   // 数量
+            { wch: 12 },  // 总价
+            { wch: 15 },  // 发货时间
+            { wch: 15 }   // 订单号
+        ];
+        ws['!cols'] = colWidths;
+
+        // 设置第一行合并（标题行）
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } } // 合并第一行的所有列
+        ];
+
+        // 添加到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '对账单');
+
+        // 导出文件
+        XLSX.writeFile(wb, fileName);
+
+        swal('导出成功', 'Excel文件已生成并开始下载', 'success');
+
+    } catch (error) {
+        console.error('Excel创建失败:', error);
+        swal('导出失败', '创建Excel文件失败：' + error.message, 'error');
+    }
 }

@@ -443,6 +443,8 @@ function setTable(data) {
                         return '<span class="badge badge-danger" style="font-size: 13px">管理员</span>';
                     } else if (value === '业务员') {
                         return '<span class="badge badge-success" style="font-size: 13px">业务员</span>';
+                    } else if (value === '仓库员') {
+                        return '<span class="badge badge-success" style="font-size: 13px">仓库员</span>';
                     }
                 }
             },

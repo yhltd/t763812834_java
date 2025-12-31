@@ -12,8 +12,10 @@ public interface PzbMapper extends BaseMapper<Pzb> {
 
     @Select("SELECT fuzeren,dianhua,bianhao FROM peizhibiao WHERE fuzeren = #{fuzeren}")
     List<Pzb> getList(@Param("fuzeren") String fuzeren);
+
     @Select("SELECT ghf,khh,zhanghao,shuihao,dizhi,shuilv FROM ghfxinxi")
     List<Pzb> getghf();
+
     @Select("SELECT chanpinmingcheng,fukuanfangshi FROM peizhibiao")
     List<Pzb> getXL();
 

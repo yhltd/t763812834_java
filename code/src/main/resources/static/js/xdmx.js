@@ -19,6 +19,7 @@ $(document).ready(function() {
     initToolbarEvents();
     initDetailModalEvents();
     getDW();
+    resetDailySequence();
 
     // 确保统计区域可见
     $('#statisticsContainer').show();
@@ -750,7 +751,6 @@ function searchKhxx() {
 }
 
 // 填充表格
-// 填充表格
 function fillTable(data) {
     $('#khzlTable').empty();
 
@@ -775,7 +775,6 @@ function fillTable(data) {
                 <th width="150">合同编号</th>
                 <th width="120">购方要求</th>
                 <th width="80">开票状态</th>
-                <th width="200">备注</th>
                 <th width="150">操作</th> <!-- 增加宽度 -->
             </tr>
         </thead>
@@ -822,7 +821,6 @@ function fillTable(data) {
                     <td>${item.htbh || ''}</td>
                     <td>${item.yq || ''}</td>
                     <td>${item.kpzt || ''}</td>
-                    <td>${item.zbz || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
                                 data-id="${item.id}" 
@@ -834,19 +832,6 @@ function fillTable(data) {
                 </tr>
             `;
         });
-
-        // <button className="btn btn-sm btn-danger delete-btn"
-        //         data-id="${item.id}"
-        //         data-khcm="${item.khcm || ''}">
-        //     <i className="bi bi-trash"></i> 删除
-        // </button>
-
-        // 调试：输出统计结果
-        console.log('统计结果:');
-        console.log('合计金额:', window.totalAmount);
-        console.log('未开票数量:', window.uninvoicedCount);
-        console.log('已开票数量:', window.invoicedCount);
-        console.log('不开票数量:', window.noInvoiceCount);
 
         // 更新统计显示
         updateStatistics(window.totalAmount, window.uninvoicedCount, window.invoicedCount, window.noInvoiceCount);
@@ -1008,7 +993,7 @@ function getDetailInfo(id) {
             // 保存详情数据
             currentDetailData = res.data;
 
-            // 初始化产品数据 - 从数据库获取工单号
+            // 确保从后端获取工单号和打印次数
             initProductDataFromDB(res.data);
 
             // 生成详细信息表单
@@ -1026,6 +1011,7 @@ function getDetailInfo(id) {
 
 
 // 从数据库初始化产品数据
+// 从数据库初始化产品数据
 function initProductDataFromDB(data) {
     if (!data || !data.pp || !data.cpxh) return;
 
@@ -1039,6 +1025,7 @@ function initProductDataFromDB(data) {
             var productKey = i.toString();
             // 使用数据库中的工单号，如果没有就留空
             productWorkOrders[productKey] = workOrderArray[i] || '';
+            console.log(`产品 ${i} (${ppArray[i]}) 的工单号: ${productWorkOrders[productKey]}`);
         }
     } else {
         // 没有数据库工单号，全部留空
@@ -1048,33 +1035,54 @@ function initProductDataFromDB(data) {
         }
     }
 
-    // 初始化打印次数为0
-    for (var i = 0; i < ppArray.length; i++) {
-        var productKey = i.toString();
-        productPrintCounts[productKey] = "0";
+    // 初始化打印次数
+    if (data.printCount) {
+        var printCountArray = data.printCount.split(',');
+        for (var i = 0; i < ppArray.length; i++) {
+            var productKey = i.toString();
+            productPrintCounts[productKey] = printCountArray[i] || "0";
+        }
+    } else {
+        for (var i = 0; i < ppArray.length; i++) {
+            var productKey = i.toString();
+            productPrintCounts[productKey] = "0";
+        }
     }
+
+    console.log('从数据库初始化工单号完成:', productWorkOrders);
 }
 
 function generateWorkOrderNumber() {
     var today = new Date().toISOString().split('T')[0].replace(/-/g, '');
     var storageKey = 'workOrderSequence_' + today;
-    var sequence = parseInt(localStorage.getItem(storageKey)) || 1;
 
+    // 获取当前序列号，如果不存在或小于0，则从0开始
+    var sequence = parseInt(localStorage.getItem(storageKey));
+    if (isNaN(sequence) || sequence < 0) {
+        sequence = 0;
+    }
+
+    // 生成工单号（格式：GD + 日期 + 3位序号）
     var workOrderNumber = 'GD' + today + String(sequence).padStart(3, '0');
 
-    // sequence++;
-    // localStorage.setItem(storageKey, sequence.toString());
+    // 递增序列号并保存
+    sequence++;
+    localStorage.setItem(storageKey, sequence.toString());
 
+    console.log('生成新工单号:', workOrderNumber, '，下一序号:', sequence);
     return workOrderNumber;
 }
 
-function incrementWorkOrderSequence() {
+// 新增：重置每日序列号的函数（可选）
+function resetDailySequence() {
     var today = new Date().toISOString().split('T')[0].replace(/-/g, '');
     var storageKey = 'workOrderSequence_' + today;
-    var sequence = parseInt(localStorage.getItem(storageKey)) || 1;
 
-    sequence++;
-    localStorage.setItem(storageKey, sequence.toString());
+    // 检查是否已初始化今天的序列号
+    if (!localStorage.getItem(storageKey)) {
+        localStorage.setItem(storageKey, '0');
+        console.log('初始化今日序列号为0');
+    }
 }
 
 // 填充基础信息
@@ -1091,8 +1099,7 @@ function fillBasicInfo(id) {
                 fzr: $(this).find('td:eq(5)').text().trim(),
                 htbh: $(this).find('td:eq(6)').text().trim(),
                 yq: $(this).find('td:eq(7)').text().trim(),
-                kpzt: $(this).find('td:eq(8)').text().trim(),
-                zbz: $(this).find('td:eq(9)').text().trim()
+                kpzt: $(this).find('td:eq(8)').text().trim()
             };
             return false;
         }
@@ -1135,10 +1142,6 @@ function fillBasicInfo(id) {
             <div class="col-md-4">
                 <label><strong>开票状态：</strong></label>
                 <span>${rowData.kpzt}</span>
-            </div>
-            <div class="col-md-12">
-                <label><strong>备注：</strong></label>
-                <span>${rowData.zbz}</span>
             </div>
         `;
         $('#basicInfo').html(basicInfoHtml);
@@ -1189,6 +1192,7 @@ function generateDetailForm(data) {
 
             var productKey = i.toString();
             var isChecked = selectedWorkOrders.includes(productKey) ? 'checked' : '';
+            // 使用已初始化的工单号，如果没有就留空
             var workOrder = productWorkOrders[productKey] || '';
 
             formHtml += `
@@ -1359,6 +1363,7 @@ function getSelectedRow() {
 }
 
 // 批量打印选中的产品
+// 批量打印选中的产品
 function printSelectedProducts(rowData, selectedProductIndexes) {
     if (selectedProductIndexes.length === 0) {
         swal('请选择至少一个产品进行打印');
@@ -1368,41 +1373,31 @@ function printSelectedProducts(rowData, selectedProductIndexes) {
     // 检查哪些选中的产品没有工单号
     var productsWithoutWorkOrder = [];
     selectedProductIndexes.forEach(function(productKey) {
-        // 只处理没有工单号的产品
+        // 只处理没有工单号的产品（值为空或空字符串）
         if (!productWorkOrders[productKey] || productWorkOrders[productKey].trim() === '') {
             productsWithoutWorkOrder.push(productKey);
         }
     });
 
-    // 如果没有需要分配工单号的产品，直接生成预览
-    if (productsWithoutWorkOrder.length === 0) {
-        console.log('所有选中产品已有工单号，直接预览');
-        if (currentDetailData) {
-            generateBatchPrintPreview(rowData, selectedProductIndexes);
-        } else {
-            // 如果没有详情数据，重新请求
-            fetchDetailAndGeneratePreview(rowData, selectedProductIndexes);
-        }
-        return;
-    }
+    console.log('需要生成工单号的产品:', productsWithoutWorkOrder);
 
-    // 只为没有工单号的产品生成新的统一工单号
-    var commonWorkOrderNumber = generateWorkOrderNumber();
-
-    console.log('为新选中的产品生成统一工单号:', commonWorkOrderNumber);
-    console.log('需要分配工单号的产品索引:', productsWithoutWorkOrder);
-
-    // 只为没有工单号的产品分配新工单号
-    productsWithoutWorkOrder.forEach(function(productKey) {
-        productWorkOrders[productKey] = commonWorkOrderNumber;
-
-        // 更新界面显示新生成的工单号
-        $('.product-row[data-index="' + productKey + '"] .work-order-number').text(commonWorkOrderNumber);
-    });
-
-    // 显示提示信息
+    // 只为没有工单号的产品生成新的工单号
     if (productsWithoutWorkOrder.length > 0) {
-        console.log('为新选的 ' + productsWithoutWorkOrder.length + ' 个产品分配了工单号: ' + commonWorkOrderNumber);
+        var newWorkOrderNumber = generateWorkOrderNumber();
+        console.log('为新选中的产品生成统一工单号:', newWorkOrderNumber);
+
+        // 为每个没有工单号的产品分配新工单号
+        productsWithoutWorkOrder.forEach(function(productKey) {
+            productWorkOrders[productKey] = newWorkOrderNumber;
+
+            // 更新界面显示新生成的工单号
+            $('.product-row[data-index="' + productKey + '"] .work-order-number').text(newWorkOrderNumber);
+        });
+
+        // 显示提示信息
+        if (productsWithoutWorkOrder.length > 0) {
+            console.log('为新选的 ' + productsWithoutWorkOrder.length + ' 个产品分配了工单号: ' + newWorkOrderNumber);
+        }
     }
 
     // 如果有已存在工单号的产品，显示提示
@@ -1411,11 +1406,13 @@ function printSelectedProducts(rowData, selectedProductIndexes) {
         console.log(existingWorkOrderCount + ' 个产品已有工单号，保持原值');
     }
 
+    // 保存工单号到数据库
+    saveWorkOrdersAndPrintCounts(rowData.id);
+
+    // 生成批量打印预览
     if (currentDetailData) {
-        // 生成批量打印预览
-        generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
+        generateBatchPrintPreview(rowData, selectedProductIndexes);
     } else {
-        // 如果没有详情数据，重新请求
         fetchDetailAndGeneratePreview(rowData, selectedProductIndexes);
     }
 }
@@ -1439,49 +1436,6 @@ function fetchDetailAndGeneratePreview(rowData, selectedProductIndexes) {
         }
     });
 }
-
-// // 批量打印选中的产品
-// function printSelectedProducts(rowData, selectedProductIndexes) {
-//     if (selectedProductIndexes.length === 0) {
-//         swal('请选择至少一个产品进行打印');
-//         return;
-//     }
-//
-//     // 生成一个统一的工单号
-//     var commonWorkOrderNumber = generateWorkOrderNumber();
-//
-//     // 为所有选中的产品分配同一个工单号
-//     selectedProductIndexes.forEach(function(productKey) {
-//         productWorkOrders[productKey] = commonWorkOrderNumber;
-//
-//         // 更新界面显示新生成的工单号
-//         $('.product-row[data-index="' + productKey + '"] .work-order-number').text(commonWorkOrderNumber);
-//     });
-//
-//     if (currentDetailData) {
-//         // 生成批量打印预览
-//         generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
-//     } else {
-//         // 如果没有详情数据，重新请求
-//         $.ajax({
-//             url: '/xiadan/detail',
-//             type: 'POST',
-//             contentType: 'application/json',
-//             data: JSON.stringify({ id: rowData.id }),
-//             success: function(result) {
-//                 if (result.success) {
-//                     generateBatchPrintPreview(rowData, selectedProductIndexes, commonWorkOrderNumber);
-//                 } else {
-//                     swal('获取打印数据失败: ' + result.message);
-//                 }
-//             },
-//             error: function(xhr, status, error) {
-//                 swal('请求失败: ' + error);
-//             }
-//         });
-//     }
-// }
-
 
 // 打印单个产品
 function printSingleProduct(rowData, productIndex) {
@@ -1549,14 +1503,22 @@ function saveWorkOrdersAndPrintCounts(orderId) {
     var workOrdersArray = [];
     var printCountsArray = [];
 
-    for (var i = 0; i < Object.keys(productWorkOrders).length; i++) {
-        var key = i.toString();
-        workOrdersArray.push(productWorkOrders[key] || '');
-        printCountsArray.push(productPrintCounts[key] || '0');
+    // 确保遍历所有产品
+    if (currentDetailData && currentDetailData.pp) {
+        var ppArray = currentDetailData.pp.split(',');
+
+        for (var i = 0; i < ppArray.length; i++) {
+            var key = i.toString();
+            workOrdersArray.push(productWorkOrders[key] || '');
+            printCountsArray.push(productPrintCounts[key] || '0');
+        }
     }
 
     var workOrdersString = workOrdersArray.join(',');
     var printCountsString = printCountsArray.join(',');
+
+    console.log('保存工单号:', workOrdersString);
+    console.log('保存打印次数:', printCountsString);
 
     $.ajax({
         url: '/xiadan/saveWorkOrdersAndPrintCounts',
@@ -1564,8 +1526,8 @@ function saveWorkOrdersAndPrintCounts(orderId) {
         contentType: 'application/json',
         data: JSON.stringify({
             id: orderId,
-            scgd: workOrdersString, // 工单号字符串
-            printCount: printCountsString // 打印次数字符串
+            scgd: workOrdersString,
+            printCount: printCountsString
         }),
         success: function(result) {
             if (result.success) {
@@ -1677,10 +1639,25 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
         </div>
         
         <table class="form-table">
-            <tr><th class="label-cell">序号（自增）</th><th class="label-cell">产品型号（cpxh）</th><th class="label-cell">产品名称（pp）</th><th class="label-cell">数量（sl）</th><th class="label-cell">备注（bz）</th></tr>
-            <tr><td class="label-cell">品名</td><td class="value-cell" colspan="3">${currentProduct.pp}</td><td class="label-cell">数量</td><td class="value-cell">${currentProduct.sl}</td></tr>
-            <tr><td class="label-cell">规格</td><td class="value-cell" colspan="3">${currentProduct.cpxh}</td><td class="label-cell">负责</td><td class="value-cell">${rowData.fzr || ''}</td></tr>
-            <tr><td class="label-cell">客户</td><td class="value-cell" colspan="3">${rowData.khcm || ''}</td><td class="label-cell">电话</td><td class="value-cell">${rowData.lxdh || ''}</td></tr>
+            <tr>
+                <th class="label-cell">工单号</th>
+                <th class="label-cell">序号</th>
+                <th class="label-cell">产品型号（cpxh）</th>
+                <th class="label-cell">产品名称（pp）</th>
+                <th class="label-cell">数量（sl）</th>
+                <th class="label-cell">备注（bz）</th>
+            </tr>
+            <tr>
+                <td class="value-cell" style="text-align: center;">${workOrderNumber}</td>
+                <td class="value-cell" style="text-align: center;">${productIndex + 1}</td>
+                <td class="value-cell">${currentProduct.cpxh}</td>
+                <td class="value-cell">${currentProduct.pp}</td>
+                <td class="value-cell">${currentProduct.sl}</td>
+                <td class="value-cell">${currentProduct.bz || rowData.zbz || ''}</td>
+            </tr>
+            <tr><td class="label-cell">品名</td><td class="value-cell" colspan="5">${currentProduct.pp}</td></tr>
+            <tr><td class="label-cell">规格</td><td class="value-cell" colspan="5">${currentProduct.cpxh}</td></tr>
+            <tr><td class="label-cell">客户</td><td class="value-cell" colspan="5">${rowData.khcm || ''}</td></tr>
             <tr><td class="label-cell">备注</td><td class="value-cell large-cell" colspan="5">${currentProduct.bz || rowData.zbz || ''}</td></tr>
             <tr><td class="label-cell">购方要求</td><td class="value-cell large-cell" colspan="5">${rowData.yq || ''}</td></tr>
         </table>
@@ -1959,7 +1936,7 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         });
 
         // 计算分页
-        var itemsPerPage = 10; // 每页显示10条数据
+        var itemsPerPage = 20; // 每页显示10条数据
         var totalPages = Math.ceil(selectedProducts.length / itemsPerPage);
 
         var previewContent = `
@@ -2056,9 +2033,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         /* 表头样式 */
         .page-header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #000;
         }
         .page-title {
             font-size: 24px;
@@ -2082,7 +2056,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         .data-table th {
             border: 1px solid #000;
             background: #f8f9fa;
-            padding: 8px 4px;
             text-align: center;
             font-weight: bold;
             height: 30px;
@@ -2094,11 +2067,12 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             height: 30px;
             vertical-align: middle;
         }
-        .col-1 { width: 5%; }   /* 序号 */
-        .col-2 { width: 15%; }  /* 产品型号 */
-        .col-3 { width: 20%; }  /* 产品名称 */
-        .col-4 { width: 10%; }  /* 数量 */
-        .col-5 { width: 50%; }  /* 备注 */
+        .col-1 { width: 10%; }   /* 工单号 */
+        .col-2 { width: 5%; }    /* 序号 */
+        .col-3 { width: 15%; }   /* 产品型号 */
+        .col-4 { width: 20%; }   /* 产品名称 */
+        .col-5 { width: 10%; }   /* 数量 */
+        .col-6 { width: 40%; }   /* 备注 */
         
         /* 页脚样式 */
         .page-footer {
@@ -2113,7 +2087,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             text-align: center;
             min-width: 100px;
             display: flex;
-
         }
         .signature-label {
             font-weight: bold;
@@ -2173,23 +2146,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                 margin: 0 auto;
             }
         }
-        
-        /* 提示信息 */
-        .print-hint {
-            text-align: center;
-            margin: 15px 0;
-            font-size: 14px;
-            color: #6c757d;
-            font-style: italic;
-            padding: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-        }
-        
-        /* 产品分隔线 */
-        .product-separator {
-            height: 20px;
-        }
     </style>
 </head>
 <body>
@@ -2235,10 +2191,11 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                         <div>订单号：${rowData.htbh || ''}</div>
                         <div>客户：${rowData.khcm || ''}</div>
                         <div>日期：${rowData.ddrq || ''}</div>
+                        
                     </div>
                     <div class="header-info">
-                        <div>负责人：${rowData.fzr || ''}</div>
                         <div>部门：${rowData.bm || ''}</div>
+                        <div>负责人：${rowData.fzr || ''}</div>
                         <div>联系电话：${rowData.lxdh || ''}</div>
                     </div>
                     <div class="header-info">
@@ -2249,11 +2206,12 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th class="col-1">序号</th>
-                            <th class="col-2">产品型号</th>
-                            <th class="col-3">产品名称</th>
-                            <th class="col-4">数量</th>
-                            <th class="col-5">备注</th>
+                            <th class="col-1">工单号</th>
+                            <th class="col-2">序号</th>
+                            <th class="col-3">产品型号</th>
+                            <th class="col-4">产品名称</th>
+                            <th class="col-5">数量</th>
+                            <th class="col-6">备注</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -2261,14 +2219,16 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             // 生成表格行
             pageProducts.forEach(function(product, index) {
                 var displayNumber = pageStartNumber + index;
+                var workOrderNumber = product.workOrderNumber || '';
 
                 previewContent += `
                         <tr>
-                            <td class="col-1" style="text-align: center;">${displayNumber}</td>
-                            <td class="col-2">${product.cpxh}</td>
-                            <td class="col-3">${product.pp}</td>
-                            <td class="col-4" style="text-align: right;">${product.sl}</td>
-                            <td class="col-5">${product.bz || ''}</td>
+                            <td class="col-1" style="text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${workOrderNumber}</td>
+                            <td class="col-2" style="text-align: center;">${displayNumber}</td>
+                            <td class="col-3">${product.cpxh}</td>
+                            <td class="col-4">${product.pp}</td>
+                            <td class="col-5" style="text-align: right;">${product.sl}</td>
+                            <td class="col-6">${product.bz || ''}</td>
                         </tr>`;
             });
 
@@ -2301,7 +2261,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
 
         previewContent += `
         </div>
-       
     </div>
     
     <script>
@@ -2315,9 +2274,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             
             // 保存到数据库
             window.opener.saveWorkOrdersAndPrintCounts('${rowData.id}');
-            
-            // 增加工单序列号 - 只递增一次
-            window.opener.incrementWorkOrderSequence()
             
             // 执行打印
             setTimeout(function() {

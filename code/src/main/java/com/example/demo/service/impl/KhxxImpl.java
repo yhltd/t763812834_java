@@ -12,7 +12,10 @@ import com.example.demo.util.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -153,6 +156,17 @@ public class KhxxImpl extends ServiceImpl<KhxxMapper, Khxx> implements KhxxServi
 
     public Long getLastId() {
         return baseMapper.getLastId();
+    }
+
+    @Override
+    public List<Map<String, Object>> getYaoQiu() {
+        try {
+            return baseMapper.getYaoQiu();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Service层查询异常: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
 }

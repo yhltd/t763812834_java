@@ -5,6 +5,7 @@ import com.example.demo.entity.Scgd;
 import com.example.demo.util.PageRequestDTO;
 import com.example.demo.util.PageResult;
 import com.example.demo.util.ScgdSearchRequest;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -36,4 +37,6 @@ public interface ScgdService extends IService<Scgd> {
 
     List<Scgd> getListRE(String fuzeren);
     List<Scgd> getListRE();
+
+    List<Scgd> daochuexcel(String id);
 }

@@ -86,4 +86,16 @@ public class Dzd {
      * 对账状态
      */
     private String dzzt;
+    /**
+     * 对账单号
+     */
+    private String duizhangdanhao;
+    /**
+     * 对账日期
+     */
+    private String duizhangriqi;
+    /**
+     * 对账上传文件
+     */
+    private String dzscwj;
 }

@@ -32,6 +32,11 @@ public class CaigouController {
             return ResultInfo.error(authResult.getCode(), authResult.getMessage());
         }
 
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return ResultInfo.error(authResult.getCode(), authResult.getMessage());
+        }
+
         Qxgl userInfo = GsonUtil.toEntity(SessionUtil.getToken(session), Qxgl.class);
         try {
             List<Caigou> getyifang = caigouService.getyifang();
@@ -53,6 +58,10 @@ public class CaigouController {
         // 权限检查
         Result<?> authResult = AuthUtil.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
         try {

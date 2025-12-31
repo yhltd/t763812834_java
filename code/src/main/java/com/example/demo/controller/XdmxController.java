@@ -45,6 +45,11 @@ public class XdmxController {
             if (StringUtils.isNotBlank(request.getEndDate())) {
                 request.setEndDate(formatDateWithZeroPadding(request.getEndDate()));
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                    return Result.error("权限不足");
+
+            }
 
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -142,6 +147,10 @@ public class XdmxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 
@@ -254,6 +263,10 @@ public class XdmxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
 
             // 数据验证
             if (request.getId() == null) {
@@ -283,6 +296,10 @@ public class XdmxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -329,6 +346,10 @@ public class XdmxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
 
             // 数据验证
             if (request.getId() == null) {
@@ -354,6 +375,11 @@ public class XdmxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -386,6 +412,11 @@ public class XdmxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -422,6 +453,10 @@ public class XdmxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -474,6 +509,10 @@ public class XdmxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return authResult; // 直接返回 Result 类型
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return authResult; // 直接返回 Result 类型
         }
 
@@ -648,6 +687,10 @@ public class XdmxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 

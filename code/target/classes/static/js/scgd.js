@@ -72,6 +72,17 @@ function initToolbarEvents() {
         getList(currentPage, pageSize, {});
     });
 
+    //导出按钮
+    $('#export-btn').off('click').on('click', function() {
+        console.log('导出按钮点击');
+        var selectedRow = getSelectedRow();
+        if (!selectedRow) {
+            swal('请选择要导出的数据');
+            return;
+        }
+        exportToExcel(selectedRow.id);
+    });
+
     // 修改按钮
     $('#update-btn').off('click').on('click', function() {
         console.log('修改按钮点击');
@@ -1005,3 +1016,204 @@ function addTableStyles() {
         `)
         .appendTo('head');
 }
+
+// 新增：导出Excel函数
+function exportToExcel(id) {
+    if (!id) {
+        swal('请选择要导出的数据');
+        return;
+    }
+
+    showLoading('正在生成Excel文件...');
+
+    $.ajax({
+        url: '/shengchan/excel',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: id }),
+        success: function(result) {
+            hideLoading();
+            console.log('完整返回结果:', result); // 调试日志
+
+            if (result.success && result.data && result.data.length > 0) {
+                // 注意：result.data 是一个数组，需要取第一个元素
+                var exportData = result.data[0];
+                console.log('导出数据:', exportData); // 调试日志
+                generateExcel(exportData);
+            } else {
+                swal('导出失败: ' + (result.message || '无数据'));
+            }
+        },
+        error: function(xhr, status, error) {
+            hideLoading();
+            console.error('导出错误:', error, '状态:', status); // 调试日志
+            swal('导出请求失败: ' + error);
+        }
+    });
+}
+
+//----------导出excel开始-------------
+// 新增：生成Excel文件
+function generateExcel(data) {
+    console.log('生成Excel数据:', data); // 调试日志
+
+    if (!data) {
+        swal('没有数据可导出');
+        return;
+    }
+
+    try {
+        // 创建工作簿
+        const wb = XLSX.utils.book_new();
+
+        // 准备工作表数据
+        const wsData = [];
+
+        // 1. 添加标题行
+        wsData.push(['销售订单详情']);
+        wsData.push([]); // 空行
+
+        // 2. 添加基础信息
+        wsData.push(['基础信息']);
+        wsData.push(['客户名称', data.khcm || '']);
+        wsData.push(['联系人', data.lxr || '']);
+        wsData.push(['联系电话', data.lxdh || '']);
+        wsData.push(['订单日期', data.ddrq || '']);
+        wsData.push(['合计金额', data.hj || '']);
+        wsData.push(['负责人', data.fzr || '']);
+        wsData.push(['合同编号', data.htbh || '']);
+        wsData.push(['状态', data.zt || '']);
+        wsData.push(['购方要求', data.yq || '']);
+        wsData.push(['开票状态', data.kpzt || '']);
+        wsData.push([]); // 空行
+
+        // 3. 添加产品明细标题
+        wsData.push(['产品明细']);
+        wsData.push(['序号', '产品名称', '产品型号', '数量', '单价', '小计', '备注']);
+
+        // 4. 解析并添加产品明细数据
+        if (data.pp && data.cpxh && data.sl && data.dj) {
+            console.log('解析产品数据...');
+            console.log('pp:', data.pp);
+            console.log('cpxh:', data.cpxh);
+            console.log('sl:', data.sl);
+            console.log('dj:', data.dj);
+            console.log('bz:', data.bz);
+
+            const ppArray = data.pp.split(',');
+            const cpxhArray = data.cpxh.split(',');
+            const slArray = data.sl.split(',');
+            const djArray = data.dj.split(',');
+            const bzArray = data.bz ? data.bz.split(',') : [];
+
+            const maxLength = Math.max(
+                ppArray.length,
+                cpxhArray.length,
+                slArray.length,
+                djArray.length
+            );
+
+            console.log('最大长度:', maxLength);
+
+            let totalAmount = 0;
+
+            for (let i = 0; i < maxLength; i++) {
+                const pp = ppArray[i] || '';
+                const cpxh = cpxhArray[i] || '';
+                const sl = slArray[i] ? parseFloat(slArray[i]) : 0;
+                const dj = djArray[i] ? parseFloat(djArray[i]) : 0;
+                const bz = bzArray[i] || '';
+                const subtotal = sl * dj;
+                totalAmount += subtotal;
+
+                console.log(`第${i+1}行:`, { pp, cpxh, sl, dj, bz, subtotal });
+
+                wsData.push([
+                    i + 1,
+                    pp,
+                    cpxh,
+                    sl,
+                    dj.toFixed(2),
+                    subtotal.toFixed(2),
+                    bz
+                ]);
+            }
+
+            // 5. 添加合计行
+            wsData.push([]);
+            wsData.push(['', '', '', '', '合计金额:', totalAmount.toFixed(2), '']);
+
+            console.log('合计金额:', totalAmount);
+        } else {
+            console.warn('缺少产品数据');
+            wsData.push(['', '无产品明细数据', '', '', '', '', '']);
+        }
+
+        // 创建工作表
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // 设置列宽
+        const wscols = [
+            { wch: 8 },  // 序号
+            { wch: 15 }, // 产品名称
+            { wch: 25 }, // 产品型号
+            { wch: 10 }, // 数量
+            { wch: 10 }, // 单价
+            { wch: 10 }, // 小计
+            { wch: 30 }  // 备注
+        ];
+        ws['!cols'] = wscols;
+
+        // 合并标题单元格
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }); // 合并标题行
+
+        // 设置样式（标题居中）
+        const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
+        if (!ws[titleCell]) ws[titleCell] = {};
+        ws[titleCell].s = {
+            alignment: { horizontal: 'center' },
+            font: { bold: true, sz: 14 }
+        };
+
+        // 添加到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '销售订单详情');
+
+        // 生成文件名
+        const fileName = `销售订单_${data.htbh || '明细'}_${new Date().getTime()}.xlsx`;
+
+        // 写入文件并下载
+        XLSX.writeFile(wb, fileName);
+
+        swal({
+            title: '导出成功！',
+            text: `文件 "${fileName}" 已下载`,
+            icon: 'success',
+            timer: 2000
+        });
+
+    } catch (error) {
+        console.error('生成Excel时出错:', error);
+        swal('生成Excel文件时出错: ' + error.message);
+    }
+}
+
+// 新增：显示加载提示
+function showLoading(message) {
+    // 可以使用sweetalert或其他方式显示加载提示
+    swal({
+        title: message || '处理中...',
+        text: '请稍候',
+        icon: 'info',
+        buttons: false,
+        closeOnClickOutside: false,
+        closeOnEsc: false
+    });
+}
+
+// 新增：隐藏加载提示
+function hideLoading() {
+    swal.close();
+}
+
+//---------导出excel结束-------------------

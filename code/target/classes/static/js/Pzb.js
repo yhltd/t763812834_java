@@ -203,7 +203,21 @@ function initToolbarEvents() {
     $('#update-submit-btn').click(function () {
         var msg = confirm("确认要修改吗？");
         if (msg) {
-            let params = formToJson('#update-form');
+            // 直接获取当前输入框的最新值
+            let params = {
+                ghf: $('#update-ghf').val(),
+                khh: $('#update-khh').val(),
+                zhanghao: $('#update-zhanghao').val(),
+                shuihao: $('#update-shuihao').val(),
+                dizhi: $('#update-dizhi').val(),
+                shuilv: $('#update-shuilv').val()
+            };
+
+            // 如果有隐藏的id字段也要包含
+            let idValue = $('#id').val();
+            if (idValue) {
+                params.id = idValue;
+            }
 
             // 包装为 updateInfo 格式
             let requestData = {
@@ -215,17 +229,18 @@ function initToolbarEvents() {
             $ajax({
                 type: 'post',
                 url: '/pzb/updateghf',
-                contentType: 'application/json;charset=utf-8', // 指定JSON格式
-                data: JSON.stringify(requestData), // 发送JSON字符串
+                contentType: 'application/json;charset=utf-8',
+                data: JSON.stringify(requestData),
                 dataType: 'json'
-            }, false, '', function (res) {
+            }, false, '保存中...', function (res) {
                 if (res.code == 200) {
-                    swal("", res.msg, "success");
-                    $('#update-close-btn').click();
+                    swal("修改成功", res.msg, "success");
                     $('#update-modal').modal('hide');
+                    // 清空表单
+                    $('#update-form')[0].reset();
                     getList();
                 } else {
-                    swal("", res.msg, "error");
+                    swal("修改失败", res.msg, "error");
                 }
             });
         }
@@ -364,7 +379,7 @@ function setTable(data) {
                     <th width="150">职位</th>
                     <th width="180">采购乙方</th>
              
-                     <th width="100">税率</th>
+                
                 </tr>
             </thead>
             <tbody>`;
@@ -386,7 +401,7 @@ function setTable(data) {
                     <td class="editable-cell" data-field="zhiwei">${item.zhiwei || ''}</td>
                     <td class="editable-cell" data-field="cgyf">${item.cgyf || ''}</td>
                 
-                     <td class="editable-cell" data-field="shuilv">${item.shuilv || ''}</td>
+                 
                     
                 </tr>`;
         });

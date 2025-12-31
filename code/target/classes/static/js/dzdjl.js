@@ -10,12 +10,17 @@ var selectedDdhs = []; // 存储选择的订单号
 var selectedRows = [];
 
 
+// 新增：存储客户要求数据
+var customerRequirements = {}; // 以khmc为key，yq为value的对象
+var customerRequirementsList = []; // 完整的客户要求数据列表
+
 // 在文件顶部添加导出配置变量
 var exportColumnsConfig = {
     mainColumns: [],      // 用户选择的主表列
     detailColumns: ['品名', '规格型号', '单位', '数量', '单价', '发货时间'], // 详情表固定列
     allMainColumns: [
-        { key: 'ddrq', name: '订单日期' },
+        { key: 'duizhangriqi', name: '订单日期' },
+        { key: 'duizhangdanhao', name: '对账单号' },
         { key: 'ddh', name: '订单号' },
         { key: 'khmc', name: '客户名称' },
         { key: 'fzr', name: '负责人' },
@@ -36,6 +41,17 @@ $(document).ready(function() {
     initToolbarEvents();
     initDetailModalEvents();
 
+    // 首先获取客户要求数据
+    yaoqiu();
+
+    // 设置定时检查，确保客户要求数据加载完成
+    setTimeout(function() {
+        if (Object.keys(customerRequirements).length === 0 && customerRequirementsList.length === 0) {
+            console.log("客户要求数据获取失败或为空，尝试重新获取...");
+            yaoqiu();
+        }
+    }, 1000);
+
     // 添加导出按钮
     $('#export-btn').off('click').on('click', function() {
         showExportModal();
@@ -44,7 +60,6 @@ $(document).ready(function() {
     // 初始化导出配置
     initExportConfig();
 
-    // 添加按钮点击事件 - 使用更可靠的事件委托
     $(document).on('click', '#add-btn', function(e) {
         e.preventDefault();
         console.log('上传文件按钮被点击 - 使用委托绑定');
@@ -52,9 +67,7 @@ $(document).ready(function() {
         // 获取选中的行
         var selectedRow = getSelectedRow();
 
-        console.log('选中的行数据:', selectedRow);
-
-        if (!selectedRow || !selectedRow.ddh) {
+        if (!selectedRow || !selectedRow.duizhangdanhao) {
             swal({
                 title: '未选择订单',
                 text: '请先在表格中选中一行订单，然后再上传文件',
@@ -67,7 +80,7 @@ $(document).ready(function() {
         }
 
         // 使用选中行的订单号
-        var orderNumber = selectedRow.ddh;
+        var orderNumber = selectedRow.duizhangdanhao;
 
         console.log('使用选中订单号:', orderNumber);
 
@@ -92,7 +105,6 @@ $(document).ready(function() {
 
         console.log('模态框已显示');
     });
-
 
     // 设置默认日期并获取数据
     setDefaultDateRange();
@@ -229,7 +241,7 @@ function printDzd(rowData) {
 
 // 撤回对账功能
 function withdrawDzd(rowData) {
-    if (!rowData || !rowData.ddh) {
+    if (!rowData || !rowData.duizhangdanhao) {
         swal('无法获取订单信息');
         return;
     }
@@ -239,7 +251,7 @@ function withdrawDzd(rowData) {
     }
 
     // 更新对账状态为"未对账"
-    updateDzztStatus(rowData.ddh, '未对账', function(success) {
+    updateDzztStatus(rowData.duizhangdanhao, '未开票', function(success) {
         if (success) {
             alert('撤回对账成功');
         } else {
@@ -266,8 +278,8 @@ function updateDzztStatus(ddh, dzztValue, callback) {
         url: '/dzdjl/updateDzztStatus',
         contentType: 'application/json',
         data: JSON.stringify({
-            ddh: ddh,
-            dzzt: dzztValue
+            duizhangdanhao: ddh,
+            sfkp: dzztValue,
         }),
         dataType: 'json'
     }, false, '', function (res) {
@@ -304,7 +316,7 @@ function generatePrintContent(rowData, detailData) {
     var paidAmount = parseFloat(rowData.yifu) || 0;        // 已付金额
     var unpaidAmount = parseFloat(rowData.wf) || 0;        // 未付金额
     var currentPeriodAmount = calculateTotal(detailData);  // 本期金额 = 列表总价汇总
-    var openingAmount = (paidAmount - unpaidAmount).toFixed(2); // 期初金额 = 已付 - 未付
+    var openingAmount = unpaidAmount // 期初金额 = 已付 - 未付
     var totalDebt = (parseFloat(openingAmount) + parseFloat(currentPeriodAmount)).toFixed(2); // 欠款总额 = 期初金额 + 本期金额
 
     var printContent = `
@@ -648,7 +660,7 @@ function calculateWeifu(yfsj, yifu) {
 
 // 修改表格渲染
 function fillTable(data) {
-    console.log("返回数据", data)
+    console.log("返回数据", data);
     $('#ddmxTable').empty();
 
     var tableHeader = `
@@ -656,8 +668,8 @@ function fillTable(data) {
             <tr>
                 <th width="40"><input type="checkbox" id="selectAllRows"></th>
                 <th width="60">序号</th>
-                <th width="100">订单日期</th>
-                <th width="160">订单号</th>
+                <th width="100">对账日期</th>
+                <th width="160">对账单号</th>
                 <th width="180">客户名称</th>
                 <th width="80">负责人</th>
                 <th width="100">总价</th>
@@ -665,8 +677,8 @@ function fillTable(data) {
                 <th width="80">未付</th>
                 <th width="100">开票时间</th>
                 <th width="80">开票状态</th>
-                <th width="100">对账状态</th>
                 <th width="90">操作</th>
+                <th width="120">PDF文件</th>  <!-- 新增扫描件列 -->
             </tr>
         </thead>
     `;
@@ -681,11 +693,45 @@ function fillTable(data) {
             // 计算当前页的序号（考虑分页）
             var serialNumber = (currentPage - 1) * pageSize + index + 1;
 
-            // 使用订单号作为唯一标识
-            var ddh = item.ddh || '';
+            // 使用对账单号作为唯一标识
+            var ddh = item.duizhangdanhao || '';
 
             // 检查当前行是否已被选中
             var isChecked = selectedDdhs.includes(ddh) ? 'checked' : '';
+
+            // 判断是否有扫描件文件 - 使用 dzscwj 字段
+            var hasScanFile = item.dzscwj && item.dzscwj !== '';
+
+            // 获取文件扩展名，用于显示不同的图标
+            var fileExt = '';
+            var fileIcon = '';
+            if (hasScanFile) {
+                // 获取文件扩展名
+                // 如果多个文件用逗号分隔，取第一个
+                var filePath = item.dzscwj.split(',')[0].trim();
+                fileExt = filePath.split('.').pop().toLowerCase();
+                switch(fileExt) {
+                    case 'pdf':
+                        fileIcon = 'bi-file-earmark-pdf';
+                        break;
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                        fileIcon = 'bi-file-earmark-image';
+                        break;
+                    case 'doc':
+                    case 'docx':
+                        fileIcon = 'bi-file-earmark-word';
+                        break;
+                    case 'xls':
+                    case 'xlsx':
+                        fileIcon = 'bi-file-earmark-excel';
+                        break;
+                    default:
+                        fileIcon = 'bi-file-earmark';
+                }
+            }
 
             tableBody += `
                 <tr data-ddh="${ddh}" 
@@ -693,7 +739,7 @@ function fillTable(data) {
                     class="${isChecked ? 'selected-row' : ''}">
                     <td><input type="checkbox" class="row-checkbox" data-ddh="${ddh}" ${isChecked}></td>
                     <td>${serialNumber}</td>
-                    <td>${item.ddrq || ''}</td>
+                    <td>${item.duizhangriqi || ''}</td>
                     <td>${ddh}</td>
                     <td>${item.khmc || ''}</td>
                     <td>${item.fzr || ''}</td>
@@ -702,12 +748,32 @@ function fillTable(data) {
                     <td>${weifu}</td>
                     <td>${item.kpsj || ''}</td>
                     <td>${item.sfkp || ''}</td>
-                    <td>${item.dzzt || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
                                 data-ddh="${ddh}">
                             <i class="bi bi-eye"></i> 详情
                         </button>
+                    </td>
+                    <td class="scan-upload-cell">
+                        <div class="scan-btn-container">
+                            ${hasScanFile ? `
+                                <!-- 有扫描件文件时的按钮 -->
+                                <div>
+                                    <button class="btn btn-sm btn-success view-scan-btn" 
+                                            data-filepath="${item.dzscwj || ''}"
+                                            data-filename="${ddh || ''}"
+                                            title="查看文件：${item.dzscwj || ''}">
+                                        <i class="bi ${fileIcon}"></i> 查看文件
+                                    </button>
+                                </div>
+                            ` : `
+                                <!-- 没有扫描件文件时的按钮 -->
+                                <div>
+
+                                </div>
+                            `}
+                            <input type="file" class="scan-file-input" data-ddh="${ddh}" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx" style="display: none;">
+                        </div>
                     </td>
                 </tr>
             `;
@@ -732,167 +798,333 @@ function fillTable(data) {
     console.log('表格渲染完成，选中订单号:', selectedDdhs);
 }
 
+
 function bindViewFileEvents() {
     console.log('绑定查看文件事件...');
 
-    // 使用事件委托，避免动态生成元素的问题
-    $('#ddmxTable').off('click.view', '.view-file-btn').on('click.view', '.view-file-btn', function(e) {
+    // 解绑旧的事件
+    $(document).off('click', '.view-scan-btn');
+
+    // 绑定新的事件
+    $(document).on('click', '.view-scan-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
         var $btn = $(this);
         var filePath = $btn.data('filepath');
-        var fileName = $btn.data('filename') || '文件';
+        var fileName = $btn.data('filename') || 'file';
+        var ddh = $btn.closest('tr').find('td:eq(3)').text().trim(); // 获取订单号
 
         console.log('查看文件按钮点击，文件路径:', filePath);
         console.log('文件名:', fileName);
+        console.log('订单号:', ddh);
 
         if (!filePath) {
-            alert('错误：文件路径为空，无法查看文件');
+            swal('错误', '文件路径为空，无法查看文件', 'error');
+            return;
+        }
+
+        // 显示文件查看弹窗
+        showFileViewModal(ddh, filePath);
+    });
+}
+
+// 显示文件查看弹窗
+function showFileViewModal(ddh, filePath) {
+    // 解析文件路径（可能是逗号分隔的多个文件）
+    var fileUrls = filePath.split(',');
+    var cleanFileUrls = [];
+
+    // 清理URL，去除空格
+    fileUrls.forEach(function(url) {
+        if (url && url.trim() !== '') {
+            cleanFileUrls.push(url.trim());
+        }
+    });
+
+    console.log('解析后的文件URL:', cleanFileUrls);
+
+    // 生成弹窗内容
+    var modalHtml = `
+        <div class="modal fade" id="fileViewModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-files"></i> 
+                            文件列表 - 订单号: ${ddh}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            共找到 ${cleanFileUrls.length} 个文件，点击"查看"在新窗口打开，点击"删除"可删除单个文件
+                        </div>
+                        
+                        <div class="file-list-container" style="max-height: 400px; overflow-y: auto;">
+    `;
+
+    // 为每个文件生成条目
+    cleanFileUrls.forEach(function(url, index) {
+        var fileName = url.substring(url.lastIndexOf('/') + 1);
+        var fileExt = fileName.split('.').pop().toLowerCase();
+
+        // 根据文件类型设置图标
+        var fileIcon = '';
+        switch(fileExt) {
+            case 'pdf':
+                fileIcon = 'bi-file-earmark-pdf text-danger';
+                break;
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+                fileIcon = 'bi-file-earmark-image text-success';
+                break;
+            case 'doc':
+            case 'docx':
+                fileIcon = 'bi-file-earmark-word text-primary';
+                break;
+            case 'xls':
+            case 'xlsx':
+                fileIcon = 'bi-file-earmark-excel text-success';
+                break;
+            default:
+                fileIcon = 'bi-file-earmark text-secondary';
+        }
+
+        modalHtml += `
+            <div class="file-item card mb-2">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="bi ${fileIcon} mr-3" style="font-size: 24px;"></i>
+                            <div>
+                                <h6 class="mb-1">${fileName}</h6>
+                                <small class="text-muted">${url}</small>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <a href="${url}" target="_blank" 
+                               class="btn btn-sm btn-primary mr-1" 
+                               title="在新窗口打开">
+                                <i class="bi bi-eye"></i> 查看
+                            </a>
+                            <button class="btn btn-sm btn-danger delete-single-file" 
+                                    data-url="${url}" 
+                                    data-index="${index}"
+                                    data-ddh="${ddh}"
+                                    title="删除此文件">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    modalHtml += `
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="d-flex justify-content-between w-100">
+                            <div>
+                                <!-- 这里不再显示"删除全部"按钮 -->
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <i class="bi bi-x-circle"></i> 关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 移除可能已存在的弹窗
+    $('#fileViewModal').remove();
+
+    // 添加弹窗到页面
+    $('body').append(modalHtml);
+
+    // 显示弹窗
+    $('#fileViewModal').modal('show');
+
+    // 绑定删除单个文件事件
+    bindSingleFileDeleteEvents();
+}
+
+// 绑定单个文件删除事件
+function bindSingleFileDeleteEvents() {
+    $('.delete-single-file').off('click').on('click', function() {
+        var $btn = $(this);
+        var fileUrl = $btn.data('url');
+        var ddh = $btn.data('ddh');
+        var index = $btn.data('index');
+
+        console.log('删除单个文件:', fileUrl, '订单号:', ddh, '索引:', index);
+
+        if (!confirm(`确定要删除此文件吗？\n${fileUrl}`)) {
             return;
         }
 
         // 显示加载中
-        var originalText = $btn.html();
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 打开中...');
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 删除中...');
 
-        // 在新窗口/标签页中打开文件
-        try {
-            // 直接在新窗口打开文件URL
-            window.open(filePath, '_blank');
-
-            console.log('文件已在新窗口打开:', filePath);
-
-            // 恢复按钮状态
-            setTimeout(function() {
-                $btn.prop('disabled', false).html(originalText);
-            }, 1000);
-
-        } catch (error) {
-            console.error('打开文件失败:', error);
-
-            // 备用方案：使用iframe预览
-            try {
-                var previewWindow = window.open('', '_blank');
-                previewWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>文件预览 - ${fileName}</title>
-                        <style>
-                            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-                            .container { max-width: 100%; height: 90vh; }
-                            iframe { width: 100%; height: 100%; border: none; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <iframe src="${filePath}" title="${fileName}"></iframe>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                previewWindow.document.close();
-            } catch (fallbackError) {
-                alert('无法打开文件，请检查文件路径是否正确或文件是否存在。\n文件路径：' + filePath);
-            }
-
-            // 恢复按钮状态
-            $btn.prop('disabled', false).html(originalText);
-        }
+        deleteSingleFile(ddh, fileUrl, $btn);
     });
 }
 
-// 绑定查看PDF事件
-function bindViewPdfEvents() {
-    console.log('绑定查看PDF事件...');
+// 删除单个文件 - 使用原来的删除逻辑
+function deleteSingleFile(ddh, fileUrl, $btn) {
+    // 从URL中提取文件名
+    var fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
 
-    $('.view-pdf-btn').off('click.view').on('click.view', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+    console.log('开始删除单个文件:', fileName, '订单号:', ddh);
+    console.log('完整文件URL:', fileUrl);
 
-        var $btn = $(this);
-        var ddh = $btn.data('ddh');
+    // 显示加载中
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 删除中...');
 
-        console.log('查看PDF按钮点击，订单号:', ddh);
+    try {
+        // 调用原来的 extractAndDeleteFromUrl 函数
+        extractAndDeleteFromUrl(fileUrl, ddh);
 
-        if (!ddh) {
-            swal('订单号不能为空');
-            return;
-        }
+        // 同时需要从数据库中删除该文件记录
+        removeFileFromDatabase(ddh, fileUrl);
 
-        viewPdfFile(ddh);
-    });
-}
-
-// 绑定上传PDF事件
-function bindUploadPdfEvents() {
-    console.log('绑定上传PDF事件...');
-
-    $('.upload-pdf-btn').off('click.upload').on('click.upload', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        var $btn = $(this);
-        var ddh = $btn.data('ddh');
-        var $fileInput = $btn.closest('td').find('.pdf-file-input');
-
-        console.log('上传PDF按钮点击，订单号:', ddh, '找到文件输入框:', $fileInput.length);
-
-        if (!ddh) {
-            swal('订单号不能为空');
-            return;
-        }
-
-        // 触发文件选择
-        $fileInput.trigger('click');
-    });
-}
-
-// 上传PDF文件
-function uploadPdfFile(ddh, file) {
-    if (!ddh || !file) {
-        swal('参数错误');
-        return;
-    }
-
-    showLoading();
-
-    // 创建FormData对象
-    var formData = new FormData();
-    formData.append('ddh', ddh);
-    formData.append('pdfFile', file);
-
-    console.log('开始上传PDF文件，订单号:', ddh, '文件:', file.name, '大小:', file.size);
-
-    // 使用原生 fetch 或修改 $ajax 调用方式
-    fetch('/ddmx/uploadPdf', {
-        method: 'POST',
-        body: formData,
-        // 不要设置 Content-Type，让浏览器自动设置
-    })
-        .then(response => response.json())
-        .then(res => {
-            hideLoading();
-            if (res.code === 200) {
-                console.log("PDF文件上传成功", res);
-                swal('PDF文件上传成功！');
-                // 上传成功后刷新数据
-                getList(currentPage, pageSize, getSearchParams());
-            }else if(res.code == 403){
-                swal("权限不足，无法访问此功能！")
-            } else {
-                console.error("PDF文件上传失败:", res.message);
-                swal("PDF文件上传失败: " + (res.message || '未知错误'));
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            console.error("上传请求失败:", error);
-            swal("上传请求失败，请检查网络连接");
+        // 显示成功消息
+        swal({
+            title: '删除成功',
+            text: `文件已成功删除`,
+            icon: 'success',
+            button: '确定'
         });
+
+        // 从当前弹窗中移除该文件项
+        var $fileItem = $btn.closest('.file-item');
+        $fileItem.fadeOut(300, function() {
+            $(this).remove();
+
+            // 如果所有文件都删除了，关闭弹窗
+            if ($('.file-item').length === 0) {
+                $('#fileViewModal').modal('hide');
+                // 刷新表格数据
+                getList(currentPage, pageSize, getSearchParams());
+            } else {
+                // 如果还有文件，需要更新数据库中的文件列表
+                updateRemainingFiles(ddh);
+            }
+        });
+    } catch (error) {
+        console.error('文件删除失败:', error);
+        swal('删除失败', '文件删除过程中发生错误: ' + error.message, 'error');
+        $btn.prop('disabled', false).html('<i class="bi bi-trash"></i> 删除');
+    }
 }
 
+// 从数据库中删除单个文件记录
+function removeFileFromDatabase(ddh, fileUrl) {
+    console.log('从数据库中删除文件记录，订单号:', ddh, '文件URL:', fileUrl);
+
+    // 先获取当前的文件列表
+    $ajax({
+        type: 'post',
+        url: '/dzdjl/getCurrentPdfFileName',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            duizhangdanhao: ddh
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            var currentFiles = res.data || '';
+            console.log('当前数据库中的文件列表:', currentFiles);
+
+            // 如果当前有多个文件，需要移除被删除的那个
+            if (currentFiles && currentFiles.includes(',')) {
+                var fileList = currentFiles.split(',');
+                var newFileList = [];
+
+                for (var i = 0; i < fileList.length; i++) {
+                    var file = fileList[i].trim();
+                    // 如果这个文件不是要删除的那个，保留
+                    if (file !== fileUrl.trim()) {
+                        newFileList.push(file);
+                    }
+                }
+
+                var newFiles = newFileList.join(',');
+                console.log('删除后的新文件列表:', newFiles);
+
+                // 更新数据库
+                updatePdfFileNameInDatabase(ddh, newFiles);
+            } else {
+                // 如果只有一个文件，清空数据库
+                console.log('只有一个文件，清空数据库记录');
+                updatePdfFileNameInDatabase(ddh, '');
+            }
+        } else {
+            console.error('获取当前文件列表失败:', res.message);
+        }
+    });
+}
+
+// 更新数据库中的文件列表
+function updatePdfFileNameInDatabase(ddh, newFiles) {
+    console.log('更新数据库中的文件列表，订单号:', ddh, '新文件列表:', newFiles);
+
+    $ajax({
+        type: 'post',
+        url: '/dzdjl/updatePdfFileName',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            duizhangdanhao: ddh,
+            dzscwj: newFiles
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            console.log('数据库文件列表更新成功');
+        } else {
+            console.error('数据库文件列表更新失败:', res.message);
+        }
+    });
+}
+
+// 更新剩余的文件列表（用于在弹窗中删除文件后）
+function updateRemainingFiles(ddh) {
+    var remainingFiles = [];
+    $('.file-item').each(function() {
+        var url = $(this).find('.delete-single-file').data('url');
+        if (url) {
+            remainingFiles.push(url.trim());
+        }
+    });
+
+    var newFileList = remainingFiles.join(',');
+    console.log('更新剩余文件列表:', newFileList);
+
+    updatePdfFileNameInDatabase(ddh, newFileList);
+}
+
+
+// 验证URL是否有效
+function isValidUrl(string) {
+    try {
+        // 尝试创建URL对象
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
 // 查看PDF文件（在线预览）- 修正版
 function viewPdfFile(ddh) {
     if (!ddh) {
@@ -903,62 +1135,10 @@ function viewPdfFile(ddh) {
     console.log('查看PDF文件，订单号:', ddh);
 
     // 方法1：直接打开新窗口（推荐）
-    const url = `/ddmx/viewPdf?ddh=${encodeURIComponent(ddh)}`;
+    const url = `/dzdjl/viewPdf?ddh=${encodeURIComponent(ddh)}`;
     window.open(url, '_blank');
 }
 
-// 删除PDF文件
-function deletePdfFile(ddh, $btn) {
-    if (!ddh) {
-        swal('订单号不能为空');
-        return;
-    }
-
-    showLoading();
-
-    // 禁用按钮防止重复点击
-    if ($btn) {
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 删除中...');
-    }
-
-    $ajax({
-        type: 'post',
-        url: '/ddmx/deletePdf',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            ddh: ddh
-        }),
-        dataType: 'json'
-    }, false, '', function (res) {
-        hideLoading();
-
-        if ($btn) {
-            $btn.prop('disabled', false).html('<i class="bi bi-trash"></i> 删除');
-        }
-
-        if (res.code === 200) {
-            console.log("PDF文件删除成功");
-            swal('PDF文件删除成功！');
-
-            // 删除成功后刷新数据
-            getList(currentPage, pageSize, getSearchParams());
-        } else if(res.code == 403){
-            swal("权限不足，无法访问此功能！")
-        }else {
-            console.error("PDF文件删除失败:", res.message);
-            swal("PDF文件删除失败: " + (res.message || '未知错误'));
-        }
-    }).fail(function(xhr, status, error) {
-        hideLoading();
-
-        if ($btn) {
-            $btn.prop('disabled', false).html('<i class="bi bi-trash"></i> 删除');
-        }
-
-        console.error("删除请求失败:", error);
-        swal("删除请求失败，请检查网络连接");
-    });
-}
 
 // 绑定详情按钮事件
 function bindDetailButtonEvents() {
@@ -984,7 +1164,16 @@ function showDetailModal(ddh) {
     // 获取选中行的数据
     var rowData = getSelectedRow();
     if (rowData) {
-        fillBasicInfo(rowData);
+        // 确保客户要求数据已加载
+        if (Object.keys(customerRequirements).length === 0 && customerRequirementsList.length === 0) {
+            console.log("客户要求数据为空，重新获取...");
+            yaoqiu(); // 重新获取客户要求数据
+        }
+
+        // 延迟一点填充基础信息，确保客户要求数据已加载
+        setTimeout(function() {
+            fillBasicInfo(rowData);
+        }, 300);
     }
 
     // 根据订单号获取详细信息
@@ -992,7 +1181,6 @@ function showDetailModal(ddh) {
 
     $('#detailModal').modal('show');
 }
-
 // 根据订单号获取详细信息
 function getDetailData(ddh) {
     if (!ddh) {
@@ -1008,7 +1196,7 @@ function getDetailData(ddh) {
         url: '/dzdjl/getDetailByDdh',
         contentType: 'application/json',
         data: JSON.stringify({
-            ddh: ddh
+            duizhangdanhao: ddh
         }),
         dataType: 'json'
     }, false, '', function (res) {
@@ -1039,6 +1227,7 @@ function fillDetailInfo(detailData) {
                 <table class="table table-bordered table-striped table-sm detail-info-table">
                     <thead class="thead-light">
                         <tr>
+                            <th width="120">订单号</th>
                             <th width="120">品名</th>
                             <th width="120">规格型号</th>
                             <th width="60">单位</th>
@@ -1054,6 +1243,7 @@ function fillDetailInfo(detailData) {
             var fhsjClass = (item.fhsj === '待发货' || !item.fhsj) ? 'pending-shipment' : '';
             detailHtml += `
                 <tr>
+                    <td>${item.ddh || ''}</td>
                     <td>${item.pm || ''}</td>
                     <td>${item.ggxh || ''}</td>
                     <td>${item.dw || ''}</td>
@@ -1170,29 +1360,65 @@ function hideDetailLoading() {
     // 加载完成后的处理
 }
 
-// 填充基础信息
+// 填充基础信息 - 优化版本（可选）
 function fillBasicInfo(rowData) {
     if (rowData) {
+        // 获取客户要求
+        var customerReq = getCustomerRequirement(rowData.khmc);
+        console.log("客户名称:", rowData.khmc, "对应的客户要求:", customerReq);
+
         var basicInfoHtml = `
             <div class="row">
-                <div class="col-md-4">
-                    <label><strong>订单日期：</strong></label>
-                    <span>${rowData.ddrq || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex" >
+                        <label class="font-weight-bold">订单日期：</label>
+                        <div>${rowData.ddrq || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>订单号：</strong></label>
-                    <span>${rowData.ddh || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex" >
+                        <label class="font-weight-bold">订单号：</label>
+                        <div>${rowData.ddh || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>负责人：</strong></label>
-                    <span>${rowData.fzr || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex" >
+                        <label class="font-weight-bold">负责人：</label>
+                        <div>${rowData.fzr || ''}</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label><strong>客户名称：</strong></label>
-                    <span>${rowData.khmc || ''}</span>
+                <div class="col-md-6">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">客户名称：</label>
+                        <div>${rowData.khmc || ''}</div>
+                    </div>
                 </div>
-            </div>
         `;
+
+        // 如果有客户要求，显示客户要求
+        if (customerReq && customerReq.trim() !== '') {
+            basicInfoHtml += `
+                <div class="col-md-12">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold" style="color: black;">客户要求：</label>
+                        <div class="customer-requirement">
+                            ${customerReq}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            basicInfoHtml += `
+                <div class="col-md-12">
+                    <div class="form-group" style="display: flex">
+                        <label class="font-weight-bold">客户要求：</label>
+                        <div class="text-muted">暂无客户要求信息</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        basicInfoHtml += `</div>`;
         $('#basicInfo').html(basicInfoHtml);
     }
 }
@@ -1203,16 +1429,23 @@ function getSelectedRows() {
 
 
 // 获取选中行数据
+// 获取选中行数据
 function getSelectedRow() {
     var selectedRow = $('.selected-row');
     if (selectedRow.length === 0) {
+        console.log('没有找到选中的行');
         return null;
     }
+
+    console.log('找到选中的行:', selectedRow.length, '行');
+    console.log('行内容:', selectedRow.find('td').map(function() {
+        return $(this).text().trim();
+    }).get());
 
     var rowData = {
         serialNumber: selectedRow.find('td:eq(1)').text().trim(),
         ddrq: selectedRow.find('td:eq(2)').text().trim(),
-        ddh: selectedRow.find('td:eq(3)').text().trim(),
+        duizhangdanhao: selectedRow.find('td:eq(3)').text().trim(), // 从第4列获取对账单号
         khmc: selectedRow.find('td:eq(4)').text().trim(),
         fzr: selectedRow.find('td:eq(5)').text().trim(),
         yfsj: selectedRow.find('td:eq(6)').text().trim(),
@@ -1230,14 +1463,18 @@ function getSelectedRow() {
         rowData.lxr = rowElement.dataset.lxr || '';
     }
 
+    console.log('获取到的行数据:', rowData);
     return rowData;
 }
 
 // 添加行点击事件
 function addRowClickEvent() {
-    $('#ddmxTable tbody tr').click(function(e) {
-        // 如果点击的是复选框，不执行行选中逻辑
-        if ($(e.target).is('input[type="checkbox"]') || $(e.target).closest('input[type="checkbox"]').length) {
+    $('#ddmxTable tbody tr').off('click').on('click', function(e) {
+        // 如果点击的是复选框、按钮或按钮内的元素，不执行行选中逻辑
+        if ($(e.target).is('input[type="checkbox"]') ||
+            $(e.target).closest('input[type="checkbox"]').length ||
+            $(e.target).is('.file-action-btn, .detail-btn, .view-scan-btn') ||
+            $(e.target).closest('.file-action-btn, .detail-btn, .view-scan-btn').length) {
             return;
         }
 
@@ -1245,8 +1482,16 @@ function addRowClickEvent() {
         var $checkbox = $row.find('.row-checkbox');
         var isChecked = !$checkbox.prop('checked');
 
+        // 先清除其他行的选中状态
+        $('#ddmxTable tbody tr').removeClass('selected-row');
+
+        // 添加当前行的选中状态
+        $row.addClass('selected-row');
+
         // 切换复选框状态
         $checkbox.prop('checked', isChecked).trigger('change');
+
+        console.log('行被点击，添加 selected-row 类，对账单号:', $row.find('td:eq(3)').text().trim());
     });
 }
 
@@ -1430,6 +1675,18 @@ function addTableStyles() {
                 background-color: #c82333;
                 border-color: #bd2130;
             }
+             /* 客户要求样式 */
+            .customer-requirement {
+                border-radius: 4px;
+                padding: 10px;
+                font-size: 14px;
+                padding: 3px;
+            }
+            .customer-requirement-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+                color: #856404;
+            }
         `)
         .appendTo('head');
 }
@@ -1573,51 +1830,60 @@ $(function () {
         });
     }
 
-    // 提交上传 - 统一绑定事件
-    $("#add-submit-btn").off('click').on('click', function () {
-        console.log('提交上传按钮被点击'); // 添加调试信息
-
+    $("#add-submit-btn").click(function () {
         // 获取表单数据
         var formData = new FormData();
         var fileInput = document.getElementById('fileInput1');
 
+        // 获取手动输入的文件名称
+        var manualFileName = $('#add-fileName').val().trim();
+        var orderNumber = $('#add-orderNumber').val();
+
+        if (!manualFileName) {
+            alert("请输入文件名称！");
+            return;
+        }
+
+        if (!orderNumber) {
+            alert("订单号不能为空！");
+            return;
+        }
+
         if (fileInput.files.length > 0) {
             var file = fileInput.files[0];
             var originalName = file.name;
-            var orderNumber = $('#add-orderNumber').val();
+            var fileExtension = originalName.split('.').pop().toLowerCase();
 
-            // 验证订单号是否为空
-            if (!orderNumber) {
-                alert("请先输入订单号！");
-                return;
+            // 重要修改：使用手动输入的文件名来构建存储文件名
+            // 格式：手动文件名.扩展名（而不是原来的 订单号-10.扩展名）
+            var storedFileName = manualFileName;
+
+            // 如果用户输入的文件名没有扩展名，则添加上传文件的扩展名
+            if (storedFileName.lastIndexOf('.') === -1) {
+                storedFileName = storedFileName + '.' + fileExtension;
             }
 
-            var fileExtension = originalName.split('.').pop().toLowerCase();
-            var newFileName = orderNumber + "-10." + fileExtension; // 使用新变量名
+            // 清理文件名中的非法字符（可选）
+            storedFileName = storedFileName.replace(/[\\/:*?"<>|]/g, '_');
 
-            console.log('上传信息:', {
-                orderNumber: orderNumber,
-                originalName: originalName,
-                newFileName: newFileName,
-                fileExtension: fileExtension
-            });
+            console.log('原始文件名:', originalName);
+            console.log('手动输入的文件名:', manualFileName);
+            console.log('最终存储文件名:', storedFileName);
 
-            // 根据截图中的参数格式设置FormData
-            formData.append('file', file);  // 文件字段
-
-            // 添加其他必要的参数（根据截图）
+            formData.append('file', file);
             formData.append('initialPreview', '[]');
             formData.append('initialPreviewConfig', '[]');
             formData.append('initialPreviewThumbTags', '[]');
-            formData.append('file', newFileName);  // 文件名参数（与截图一致）
-            formData.append('name', newFileName);  // 名称参数
-            formData.append('path', '/t763812834_java_sharepic/');  // 路径参数
-            formData.append('kongjian', '3');  // 空间参数
-            formData.append('fileType', fileExtension);  // 文件类型参数
-            formData.append('orderNumber', orderNumber);  // 订单号参数
+            formData.append('file', storedFileName);  // 修改：使用手动文件名
+            formData.append('name', storedFileName);   // 修改：使用手动文件名
+            formData.append('path', '/t763812834_java_sharepic/');
+            formData.append('kongjian', '3');
+            formData.append('fileType', fileExtension);
+            formData.append('orderNumber', orderNumber);
 
-            // 显示加载状态
-            $('#add-submit-btn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 上传中...');
+            // 添加原始文件名信息（可选，用于调试）
+            formData.append('originalFileName', originalName);
+            formData.append('customFileName', manualFileName);
 
             // 发送上传请求
             $.ajax({
@@ -1627,34 +1893,114 @@ $(function () {
                 processData: false,
                 contentType: false,
                 success: function (res) {
-                    console.log('上传响应:', res);
                     if (res.code === 200) {
                         alert("上传成功！");
                         $('#add-modal').modal('hide');
+
+                        // 重要修改：使用手动文件名构建的完整URL
+                        var fullUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + storedFileName;
+
+                        updatePdfFileName(orderNumber, fullUrl);
+
                         clearForm();
 
-                        // 上传成功后更新订单明细表的pdf_file_name字段
-                        updatePdfFileName(orderNumber, fileExtension);
-
                     } else {
-                        alert("上传失败：" + (res.msg || '未知错误'));
+                        alert("上传失败：" + res.msg);
                     }
-
-                    // 恢复按钮状态
-                    $('#add-submit-btn').prop('disabled', false).html('上传');
                 },
                 error: function (xhr, status, error) {
                     console.error('上传请求失败:', error);
-                    alert("上传失败！请检查网络连接");
-
-                    // 恢复按钮状态
-                    $('#add-submit-btn').prop('disabled', false).html('上传');
+                    alert("上传失败！请检查网络连接。");
                 }
             });
         } else {
             alert("请选择要上传的文件！");
         }
     });
+
+    function updatePdfFileName(ddh, pdfFileName) {
+        showLoading();
+
+        console.log('开始更新PDF文件名，订单号:', ddh, '新文件名:', pdfFileName);
+
+        // 先查询当前已有的文件名
+        $ajax({
+            type: 'post',
+            url: '/dzdjl/getCurrentPdfFileName',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                duizhangdanhao: ddh
+            }),
+            dataType: 'json'
+        }, false, '', function (res) {
+            if (res.code === 200) {
+                var currentFileName = res.data || '';
+                console.log('当前已有的文件名:', currentFileName);
+
+                // 构建最终的文件名
+                var finalFileName = '';
+
+                if (currentFileName && currentFileName.trim() !== '') {
+                    // 检查是否已包含相同的文件名（避免重复）
+                    var fileList = currentFileName.split(',');
+                    var alreadyExists = false;
+
+                    for (var i = 0; i < fileList.length; i++) {
+                        if (fileList[i].trim() === pdfFileName.trim()) {
+                            alreadyExists = true;
+                            break;
+                        }
+                    }
+
+                    if (alreadyExists) {
+                        // 如果已存在，使用原值
+                        finalFileName = currentFileName;
+                        console.log('文件名已存在，不重复添加');
+                    } else {
+                        // 如果不存在，用逗号分隔追加
+                        finalFileName = currentFileName + ',' + pdfFileName;
+                        console.log('追加新文件名，最终值:', finalFileName);
+                    }
+                } else {
+                    // 如果没有现有值，直接使用新值
+                    finalFileName = pdfFileName;
+                    console.log('无现有文件名，直接设置');
+                }
+
+                // 执行更新
+                performUpdatePdfFileName(ddh, finalFileName);
+
+            } else {
+                hideLoading();
+                console.error("查询当前文件名失败:", res.message);
+                swal("查询当前文件名失败: " + (res.message || '未知错误'));
+            }
+        });
+    }
+
+    // 新增：执行更新操作的函数
+    function performUpdatePdfFileName(ddh, finalFileName) {
+        $ajax({
+            type: 'post',
+            url: '/dzdjl/updatePdfFileName',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                duizhangdanhao: ddh,
+                dzscwj: finalFileName
+            }),
+            dataType: 'json'
+        }, false, '', function (res) {
+            hideLoading();
+            if (res.code === 200) {
+                console.log("PDF文件名更新成功，最终值:", finalFileName);
+                // 刷新数据
+                getList(currentPage, pageSize, getSearchParams());
+            } else {
+                console.error("PDF文件名更新失败:", res.message);
+                swal("PDF文件名更新失败: " + (res.message || '未知错误'));
+            }
+        });
+    }
 
     // 关闭按钮
     $('#add-close-btn').click(function () {
@@ -1674,40 +2020,6 @@ $(function () {
     }
 });
 
-// 更新PDF文件名
-function updatePdfFileName(ddh, pdfFileName) {
-    showLoading();
-
-    var fullFilePath = "http://yhocn.cn:9088/t763812834_java_sharepic/" + ddh + "-10." + pdfFileName;
-
-    console.log('更新PDF文件名:', {
-        ddh: ddh,
-        pdfFileName: fullFilePath
-    });
-
-    $ajax({
-        type: 'post',
-        url: '/ddmx/updatePdfFileName',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            ddh: ddh,
-            pdfFileName: fullFilePath
-        }),
-        dataType: 'json'
-    }, false, '', function (res) {
-        hideLoading();
-        if (res.code === 200) {
-            console.log("PDF文件名更新成功");
-            // 刷新数据
-            getList(currentPage, pageSize, getSearchParams());
-        } else if(res.code == 403){
-            swal("权限不足，无法访问此功能！");
-        } else {
-            console.error("PDF文件名更新失败:", res.message);
-            alert("PDF文件名更新失败: " + (res.message || '未知错误'));
-        }
-    });
-}
 
 // 清空文件输入值（辅助函数）
 function clearFileValue(input) {
@@ -1727,49 +2039,62 @@ function formToJson(formSelector) {
     return json;
 }
 
-// 删除
+// 删除函数 - 适配新文件名格式
 function extractAndDeleteFromUrl(filePath, ddh) {
-    const ddname = removeBaseUrl(filePath);
-    imageUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + ddname;
-
-    console.log('开始处理URL:', imageUrl);
+    console.log('开始处理URL:', filePath);
 
     // 解析URL
-    const url = new URL(imageUrl);
+    let imageUrl;
+    try {
+        // 如果传入的是完整URL，直接使用
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            imageUrl = filePath;
+        } else {
+            // 否则构建完整URL
+            const ddname = removeBaseUrl(filePath);
+            imageUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + ddname;
+        }
 
-    // 获取路径部分
-    const fullPath = url.pathname;
+        console.log('完整URL:', imageUrl);
 
-    console.log('完整路径:', fullPath);
+        const url = new URL(imageUrl);
 
-    // 分离路径和文件名
-    const lastSlashIndex = fullPath.lastIndexOf('/');
-    const path = fullPath.substring(0, lastSlashIndex + 1);
-    const fileName = fullPath.substring(lastSlashIndex + 1);
+        // 获取路径部分
+        const fullPath = url.pathname;
 
-    console.log('路径:', path);
-    console.log('文件名:', fileName);
+        console.log('完整路径:', fullPath);
 
-    // 支持 jpg, png, pdf 等多种格式
-    // 匹配格式: 文件名-数字.扩展名
-    const match = fileName.match(/^(.*)-(\d+)\.(jpg|jpeg|png|pdf|gif|bmp|webp|tiff)$/i);
+        // 分离路径和文件名
+        const lastSlashIndex = fullPath.lastIndexOf('/');
+        const path = fullPath.substring(0, lastSlashIndex + 1);
+        const fileName = fullPath.substring(lastSlashIndex + 1);
 
-    if (!match) {
-        console.error('文件名格式不正确');
-        alert('错误: 文件名格式不正确\n格式应为: 文件名-数字.扩展名\n例如: PS20251204001-1.jpg');
-        return;
+        console.log('路径:', path);
+        console.log('文件名:', fileName);
+
+        // 新的文件名格式：直接使用文件名（不包含 -数字 后缀）
+        // 例如: 合同.pdf、发票.jpg 等
+        const fileExt = fileName.split('.').pop().toLowerCase();
+
+        // 验证文件扩展名
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'gif', 'bmp', 'webp', 'tiff', 'doc', 'docx', 'xls', 'xlsx'];
+
+        if (!allowedExtensions.includes(fileExt)) {
+            console.error('不支持的文件格式:', fileExt);
+            alert(`错误: 不支持的文件格式 ${fileExt}\n支持的文件格式: ${allowedExtensions.join(', ')}`);
+            return;
+        }
+
+        console.log('文件扩展名:', fileExt);
+        console.log('使用订单号作为文件名标识:', ddh);
+
+        // 调用删除接口
+        deleteFiles(ddh, path, fileName);
+
+    } catch (error) {
+        console.error('URL处理错误:', error);
+        alert('URL格式错误: ' + error.message);
     }
-
-    const orderNumber = match[1]; // 获取文件名部分
-    const fileNumber = match[2];  // 获取数字部分
-    const fileExt = match[3];     // 获取扩展名部分
-
-    console.log('提取的orderNumber:', orderNumber);
-    console.log('文件编号:', fileNumber);
-    console.log('文件格式:', fileExt);
-
-    // 调用删除接口
-    deleteFiles(orderNumber, path);
 }
 
 // 删除函数 - 修复版本
@@ -1868,30 +2193,97 @@ function removeBaseUrl(fullUrl) {
     return fullUrl; // 如果不匹配，返回原字符串
 }
 
-// 删除后更新字段
-function clearFileRecord(ddh) {
+// 删除后更新字段 - 支持删除单个文件
+function clearFileRecord(ddh, fileUrlToRemove) {
+    // 如果传入了要删除的文件URL，则只删除该文件
+    if (fileUrlToRemove) {
+        console.log('删除单个文件记录:', fileUrlToRemove, '订单号:', ddh);
+
+        // 先获取当前文件列表
+        $ajax({
+            type: 'post',
+            url: '/dzdjl/getCurrentPdfFileName',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                duizhangdanhao: ddh
+            }),
+            dataType: 'json'
+        }, false, '', function (res) {
+            if (res.code === 200) {
+                var currentFiles = res.data || '';
+                console.log('当前文件列表:', currentFiles);
+
+                if (currentFiles && currentFiles.trim() !== '') {
+                    // 从文件列表中移除指定的文件
+                    var fileList = currentFiles.split(',');
+                    var newFileList = [];
+
+                    for (var i = 0; i < fileList.length; i++) {
+                        var file = fileList[i].trim();
+                        if (file !== fileUrlToRemove.trim() && file !== '') {
+                            newFileList.push(file);
+                        }
+                    }
+
+                    var newFiles = newFileList.join(',');
+                    console.log('删除后新的文件列表:', newFiles);
+
+                    // 更新数据库
+                    updateField(ddh, 'dzscwj', newFiles, function() {
+                        // 刷新数据
+                        getList(currentPage, pageSize, getSearchParams());
+                    });
+                }
+            }
+        });
+    } else {
+        // 如果没有指定文件，清空所有文件（保持向后兼容）
+        updateField(ddh, 'dzscwj', '', function() {
+            // 刷新数据
+            getList(currentPage, pageSize, getSearchParams());
+        });
+    }
+}
+
+// 更新字段数据
+function updateField(ddh, fieldName, fieldValue, callback) {
+    showLoading();
 
     $ajax({
         type: 'post',
-        url: '/ddmx/updatePdfFileName',
+        url: '/dzdjl/updateByDdh',
         contentType: 'application/json',
         data: JSON.stringify({
             ddh: ddh,
-            pdfFileName: "",
+            fieldName: fieldName,
+            fieldValue: fieldValue
         }),
         dataType: 'json'
     }, false, '', function (res) {
         hideLoading();
         if (res.code === 200) {
-            console.log("PDF文件名更新成功");
-            // 刷新数据
-            getList(currentPage, pageSize, getSearchParams());
+            getList();
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+            // 如果是文件相关操作，刷新数据
+            if (fieldName.includes('pdf') || fieldName.includes('file')) {
+                getList(currentPage, pageSize, getSearchParams());
+            }
+        }else if(res.code === 403){
+            swal("权限不足！ ");
         } else {
-            console.error("PDF文件名更新失败:", res.message);
-            swal("PDF文件名更新失败: " + (res.message || '未知错误'));
+            console.error(fieldName + "字段更新失败:", res.message);
+            swal(fieldName + "字段更新失败: " + (res.message || '未知错误'));
+            // 更新失败时恢复原值
+            if (fieldName === 'sfkp') {
+                var $select = $('.sfkp-select[data-ddh="' + ddh + '"]');
+                $select.val($select.data('original-value'));
+            }
         }
     });
 }
+
 
 // 删除上传文件函数
 function deleteUploadedFile() {
@@ -2106,8 +2498,22 @@ function updateSelectAllCheckbox() {
     $('#selectAllColumns').prop('checked', allChecked);
 }
 
-// 导出到Excel
 function exportToExcel(fileName) {
+    // 检查是否选择了行
+    var selectedRow = getSelectedRow();
+
+    if (!selectedRow || !selectedRow.duizhangdanhao) {
+        swal({
+            title: '请选择订单',
+            text: '请先在表格中选择一行订单，然后再导出Excel',
+            icon: 'warning',
+            buttons: {
+                confirm: '确定'
+            }
+        });
+        return;
+    }
+
     // 显示导出进度
     swal({
         title: '正在导出...',
@@ -2129,6 +2535,7 @@ function exportToExcel(fileName) {
     console.log('=== 导出配置信息 ===');
     console.log('用户选择的主表列:', selectedColumns);
     console.log('固定的详情列:', exportColumnsConfig.detailColumns);
+    console.log('选中的订单号:', selectedRow.duizhangdanhao);
 
     // 获取字段显示名称的映射
     var selectedColumnNames = {};
@@ -2139,10 +2546,10 @@ function exportToExcel(fileName) {
     });
     console.log('字段名称映射:', selectedColumnNames);
 
-    // 获取当前搜索条件
+    // 获取当前搜索条件（包括选中的订单号）
     var searchParams = getSearchParams();
 
-    // 调用后端接口获取全部数据
+    // 调用后端接口获取数据，将选中的订单号作为查询条件
     $ajax({
         type: 'post',
         url: '/dzdjl/daochuexcel',
@@ -2154,7 +2561,9 @@ function exportToExcel(fileName) {
             khmc: searchParams.khmc || '',
             ddh: searchParams.htbh || '',
             startDate: searchParams.startDate || '',
-            endDate: searchParams.endDate || ''
+            endDate: searchParams.endDate || '',
+            // 新增：传递选中的订单号作为查询条件
+            duizhangdanhao: selectedRow.duizhangdanhao || ''
         }),
         dataType: 'json'
     }, false, '', function (res) {
@@ -2451,7 +2860,7 @@ function bindCheckboxEvents() {
                 if (ddh && !selectedDdhs.includes(ddh)) {
                     selectedDdhs.push(ddh);
                     selectedRows.push(rowData);
-                    $row.addClass('selected-row');
+                    $row.addClass('selected-row'); // 添加选中样式
                 }
             });
         } else {
@@ -2464,7 +2873,7 @@ function bindCheckboxEvents() {
                 if (index > -1) {
                     selectedDdhs.splice(index, 1);
                     selectedRows.splice(index, 1);
-                    $row.removeClass('selected-row');
+                    $row.removeClass('selected-row'); // 移除选中样式
                 }
             });
         }
@@ -2490,7 +2899,7 @@ function bindCheckboxEvents() {
             if (ddh && !selectedDdhs.includes(ddh)) {
                 selectedDdhs.push(ddh);
                 selectedRows.push(rowData);
-                $row.addClass('selected-row');
+                $row.addClass('selected-row'); // 添加选中样式
             }
         } else {
             // 从选中列表移除
@@ -2498,7 +2907,7 @@ function bindCheckboxEvents() {
             if (index > -1) {
                 selectedDdhs.splice(index, 1);
                 selectedRows.splice(index, 1);
-                $row.removeClass('selected-row');
+                $row.removeClass('selected-row'); // 移除选中样式
             }
         }
 
@@ -2676,3 +3085,64 @@ function performBatchInvoice() {
         });
     });
 }
+
+
+function yaoqiu() {
+    console.log("开始获取客户要求数据");
+
+    $ajax({
+        type: 'post',
+        url: '/kehu/getyaoqiu',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            console.log("成功获取客户要求数据:", res.data);
+
+            // 清空之前的数据
+            customerRequirements = {};
+            customerRequirementsList = res.data || [];
+
+            // 将数据转换为以khmc为key的对象，方便快速查找
+            if (customerRequirementsList && customerRequirementsList.length > 0) {
+                customerRequirementsList.forEach(function(item) {
+                    if (item.khmc && item.yq) {
+                        customerRequirements[item.khmc.trim()] = item.yq;
+                    }
+                });
+            }
+
+            console.log("客户要求数据已保存，共", customerRequirementsList.length, "条记录");
+            console.log("转换后的客户要求对象:", customerRequirements);
+
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！");
+        } else {
+            console.error("获取客户要求失败:", res.message);
+            // swal("获取客户要求失败: " + (res.message || '未知错误'));
+        }
+    });
+
+}
+
+
+// 新增：根据客户名称获取客户要求
+function getCustomerRequirement(customerName) {
+    if (!customerName) return '';
+
+    // 先尝试从转换后的对象中查找（精确匹配）
+    var requirement = customerRequirements[customerName.trim()];
+    if (requirement) {
+        return requirement;
+    }
+
+    // 如果精确匹配没找到，尝试模糊匹配
+    var found = customerRequirementsList.find(function(item) {
+        return item.khmc && item.khmc.includes(customerName.trim());
+    });
+
+    return found ? found.yq : '';
+}
+
+

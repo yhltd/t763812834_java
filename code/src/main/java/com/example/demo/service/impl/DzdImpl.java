@@ -13,6 +13,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -130,11 +131,41 @@ public class DzdImpl extends ServiceImpl<DzdMapper, Dzd> implements DzdService {
             throw new RuntimeException("开票数据不能为空");
         }
 
-        List<String> ddhs = request.getDdhs();
+        List<Object> ddhsObj = request.getDdhs();  // 假设这是Object类型的列表
+
+        // 转换为字符串列表，处理数字类型
+        List<String> duizhangdanhaos = new ArrayList<>();
+
+        for (Object obj : ddhsObj) {
+            if (obj != null) {
+                // 安全地转换为字符串
+                String strValue;
+                if (obj instanceof String) {
+                    strValue = (String) obj;
+                } else if (obj instanceof Integer) {
+                    strValue = String.valueOf((Integer) obj);
+                } else if (obj instanceof Long) {
+                    strValue = String.valueOf((Long) obj);
+                } else if (obj instanceof Double) {
+                    // 如果是小数，去除小数部分
+                    strValue = String.valueOf(((Double) obj).intValue());
+                } else {
+                    strValue = obj.toString();
+                }
+
+                if (!strValue.trim().isEmpty()) {
+                    duizhangdanhaos.add(strValue);
+                }
+            }
+        }
+
+        if (duizhangdanhaos.isEmpty()) {
+            throw new RuntimeException("没有有效的对账单号");
+        }
 
         // 批量更新开票状态
         QueryWrapper<Dzd> wrapper = new QueryWrapper<>();
-        wrapper.in("ddh", ddhs);  // 使用 in 条件，传入列表
+        wrapper.in("duizhangdanhao", duizhangdanhaos);  // 使用 in 条件，传入列表
 
         Dzd updateEntity = new Dzd();
         updateEntity.setSfkp(request.getSfkp()); // "已开票"
@@ -142,5 +173,20 @@ public class DzdImpl extends ServiceImpl<DzdMapper, Dzd> implements DzdService {
 
         return this.update(updateEntity, wrapper);
     }
+
+    public boolean updateDzdjl(List<String> ddhList, String duizhangdanhao, String sfkp, String duizhangriqi) {
+        if (ddhList == null || ddhList.isEmpty()) {
+            return false;
+        }
+
+        // 循环调用单个更新的方法
+        for (String ddh : ddhList) {
+            // 这里调用原来的单个更新方法，而不是 batchUpdateDzdjl
+            baseMapper.updateDzdjl(ddh, duizhangdanhao, sfkp, duizhangriqi);
+        }
+        return true;
+    }
+
+
 
 }

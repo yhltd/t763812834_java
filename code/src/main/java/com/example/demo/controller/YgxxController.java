@@ -33,6 +33,10 @@ public class YgxxController {
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
 
         try {
             List<Ygxx> getList = ygxxService.getList();
@@ -50,6 +54,10 @@ public class YgxxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 
@@ -74,6 +82,10 @@ public class YgxxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 
@@ -107,6 +119,10 @@ public class YgxxController {
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
 
         GsonUtil gsonUtil = new GsonUtil(GsonUtil.toJson(map));
         try {
@@ -134,6 +150,10 @@ public class YgxxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 

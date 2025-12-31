@@ -36,12 +36,12 @@ public interface DzdjlService extends IService<Dzd> {
     /**
      * 根据订单号获取详细信息
      */
-    List<Ddmx> getDetailByDdh(String ddh);
+    List<Ddmx> getDetailByDdh(String duizhangdanhao);
 
     /**
      * 更新对账状态
      */
-    boolean updateDzztStatus(String ddh, String dzzt);
+    boolean updateDzztStatusByDuizhangdanhao(String duizhangdanhao,String sfkp);
 
     /**
      * 批量更新开票状态
@@ -49,5 +49,10 @@ public interface DzdjlService extends IService<Dzd> {
      * @return 是否成功
      */
     boolean batchUpdateInvoiceStatus(BatchInvoiceRequest request);
+
+    String getCurrentPdfFileName(String duizhangdanhao);
+    boolean updatePdfFileNameByDdh(String duizhangdanhao, String dzscwj);
+
+    int updateByDdh(Map<String, Object> updateParams);
 
 }

@@ -8,6 +8,7 @@ import com.example.demo.util.PageResult;
 import com.example.demo.util.Result;
 
 import java.util.List;
+import java.util.Map;
 
 public interface KhxxService extends IService<Khxx> {
 
@@ -32,5 +33,7 @@ public interface KhxxService extends IService<Khxx> {
      * 获取最后一位id
      */
     Long getLastId();
+
+    List<Map<String, Object>> getYaoQiu();
 
 }

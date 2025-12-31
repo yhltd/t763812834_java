@@ -103,7 +103,12 @@ public class DdmxController {
         // 新增：未付金额为0的筛选（yfsj - yifu = 0）
         if (Boolean.TRUE.equals(pageRequest.getWeifuZero())) {
             // 使用TRY_CAST处理可能的非数字值
-            queryWrapper.apply("yfsj = yifu");
+            queryWrapper.apply("yfsj != yifu");
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error("权限不足");
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
@@ -257,6 +262,11 @@ public class DdmxController {
             queryWrapper.apply("yfsj = yifu");
         }
 
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+                return Result.error("权限不足");
+        }
+
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
             // 从 Session 中获取 D 值（管理员名称）
@@ -330,6 +340,11 @@ public class DdmxController {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
         try {
             String ddh = (String) updateParams.get("ddh");
             String fieldName = (String) updateParams.get("fieldName");
@@ -374,6 +389,10 @@ public class DdmxController {
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
         try {
             String ddh = (String) updateParams.get("ddh");
             if (ddh == null) {
@@ -401,6 +420,10 @@ public class DdmxController {
 
         Result<?> authResult = AuthUtil.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 
@@ -437,6 +460,14 @@ public class DdmxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 403);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("code", 403);
 
@@ -587,6 +618,11 @@ public class DdmxController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(createResponse(403, "权限不足"));
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createResponse(403, "权限不足"));
+        }
 
         try {
             // 文件大小检查
@@ -686,6 +722,13 @@ public class DdmxController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", 403);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("code", 403);
 

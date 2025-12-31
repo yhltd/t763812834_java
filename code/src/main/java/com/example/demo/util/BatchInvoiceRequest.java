@@ -9,7 +9,7 @@ public class BatchInvoiceRequest {
     /**
      * 订单号列表
      */
-    private List<String> ddhs;
+    private List<Object> ddhs;
 
     /**
      * 开票时间

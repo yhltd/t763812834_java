@@ -17,23 +17,45 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
 
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, ddrq DESC) as rn, " +
-            "           ddrq, khmc, fzr, yfsj, yifu, wf, kpsj, sfkp, ddh, dzzt, lxr, pdf_file_name " +
-            "    FROM (" +
-            "        SELECT d1.* " +
-            "        FROM dingdanmingx d1 " +
-            "        WHERE d1.id = (" +
-            "            SELECT TOP 1 id " +
-            "            FROM dingdanmingx d2 " +
-            "            WHERE d2.ddh = d1.ddh " +
-            "            ORDER BY " +
-            "                CASE WHEN pdf_file_name IS NOT NULL AND pdf_file_name != '' THEN 0 ELSE 1 END, " +
-            "                id DESC" +
-            "        ) " +
-            "    ) t " +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, MAX(ddrq) DESC) as rn, " +
+            "           MAX(ddrq) as ddrq, " +
+            "           khmc, " +
+            "           MAX(fzr) as fzr, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
+            "               )" +
+            "           ) as yfsj, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
+            "               )" +
+            "           ) as yifu, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
+            "               ) - " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
+            "               )" +
+            "           ) as wf, " +
+            "           MAX(kpsj) as kpsj, " +
+            "           sfkp, " +
+            "           duizhangdanhao, " +
+            "           MAX(dzzt) as dzzt, " +
+            "           MAX(lxr) as lxr, " +
+            "           MAX(pdf_file_name) as pdf_file_name, " +
+            "           duizhangriqi, " +
+            "           MAX(dzscwj) as dzscwj " +
+            "    FROM dingdanmingx " +
             "    <where>" +
             "      <if test='ew != null'>${ew.sqlSegment}</if>" +
             "    </where>" +
+            "    GROUP BY duizhangdanhao, khmc, sfkp, duizhangriqi " +
             ") temp " +
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
             "</script>")
@@ -62,11 +84,11 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
      */
     @Select("<script>" +
             "SELECT COUNT(*) FROM (" +
-            "   SELECT ddh FROM dingdanmingx " +
+            "   SELECT duizhangdanhao FROM dingdanmingx " +  // 改为duizhangdanhao字段
             "   <where>" +
             "     <if test='ew != null'>${ew.sqlSegment}</if>" +
             "   </where>" +
-            "   GROUP BY ddh" +
+            "   GROUP BY duizhangdanhao" +  // 改为根据duizhangdanhao分组
             ") as temp" +
             "</script>")
     Long selectDistinctCount(@Param("ew") Wrapper<Map<String, Object>> wrapper);
@@ -74,25 +96,48 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
 
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY d.khmc ASC, d.ddrq DESC) as rn, " +
-            "           d.ddrq, d.ddh, d.khjc, d.ggxh, d.fzr, d.bm, d.lxr, d.lxdh, d.tcd, " +
-            "           d.khmc, d.kpsj, d.yingfu, d.yifu, d.wf, d.sfkp, d.scgd, d.bz, " +
-            "           d.wldh, d.yfsj, d.zk, d.fhsj, d.pdf_file_name, d.dzzt " +  // 移除 d.lxr
-            "    FROM dingdanmingx d " +
-            "    WHERE d.id = (" +
-            "        SELECT TOP 1 id " +
-            "        FROM dingdanmingx d2 " +
-            "        WHERE d2.ddh = d.ddh " +
-            "        AND (d2.fzr = #{fuzeren} OR #{fuzeren} = '' OR #{fuzeren} IS NULL) " +
-            "        ORDER BY " +
-            "            CASE WHEN d2.pdf_file_name IS NOT NULL AND d2.pdf_file_name != '' THEN 0 ELSE 1 END, " +
-            "            d2.id DESC" +
-            "    ) " +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, ddrq DESC) as rn, " +
+            "           MAX(ddrq) as ddrq, " +
+            "           khmc, " +
+            "           MAX(fzr) as fzr, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
+            "               )" +
+            "           ) as yfsj, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
+            "               )" +
+            "           ) as yifu, " +
+            "           CONVERT(DECIMAL(18,2), " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
+            "               ) - " +
+            "               SUM(DISTINCT " +
+            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
+            "               )" +
+            "           ) as wf, " +
+            "           MAX(kpsj) as kpsj, " +
+            "           sfkp, " +
+            "           duizhangdanhao, " +
+            "           MAX(dzzt) as dzzt, " +
+            "           MAX(lxr) as lxr, " +
+            "           MAX(pdf_file_name) as pdf_file_name, " +
+            "           duizhangriqi, " +
+            "           MAX(dzscwj) as dzscwj " +
+            "    FROM dingdanmingx " +
             "    <where>" +
+            "      (fzr = #{fuzeren} OR #{fuzeren} = '' OR #{fuzeren} IS NULL) " +
             "      <if test='ew != null and ew.sqlSegment != null and ew.sqlSegment != \"\"'>" +
-            "        ${ew.sqlSegment}" +
+            "        AND ${ew.sqlSegment}" +
             "      </if>" +
             "    </where>" +
+            "    GROUP BY duizhangdanhao, khmc, sfkp, duizhangriqi, ddrq " +
             ") temp " +
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
             "</script>")
@@ -127,22 +172,29 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
      */
     @Select("<script>" +
             "SELECT COUNT(*) FROM (" +
-            "   SELECT ddh FROM dingdanmingx " +
+            "   SELECT duizhangdanhao FROM dingdanmingx " +  // 改为duizhangdanhao字段
             "   <where>" +
             "       fzr = #{fuzeren} " +
             "       <if test='ew != null and ew.sqlSegment != null and ew.sqlSegment != \"\"'>" +
             "           AND ${ew.sqlSegment}" +
             "       </if>" +
             "   </where>" +
-            "   GROUP BY ddh" +
+            "   GROUP BY duizhangdanhao" +  // 改为根据duizhangdanhao分组
             ") as temp" +
             "</script>")
     Long selectDistinctCountY(@Param("ew") Wrapper<Map<String, Object>> wrapper, @Param("fuzeren") String fuzeren);
 
-    @Select("SELECT ggxh,pm,dw,sl,dj,fhsj,zj,lxr FROM dingdanmingx WHERE ddh=#{ddh}")
-    List<Ddmx> getDetailByDdh(String ddh);
+    @Select("SELECT ddh,ggxh,pm,dw,sl,dj,fhsj,zj,lxr FROM dingdanmingx WHERE duizhangdanhao=#{duizhangdanhao}")
+    List<Ddmx> getDetailByDdh(String duizhangdanhao);
 
 
-    @Update("UPDATE dingdanmingx SET dzzt = #{dzzt} WHERE ddh = #{ddh}")
-    int updateDzztStatusByDdh(@Param("ddh") String ddh, @Param("dzzt") String dzzt);
+    @Update("UPDATE dingdanmingx SET sfkp = #{sfkp}, duizhangdanhao = '', duizhangriqi = '', kpsj = '' WHERE duizhangdanhao = #{duizhangdanhao}")
+    boolean updateDzztStatusByDuizhangdanhao(@Param("duizhangdanhao") String duizhangdanhao, @Param("sfkp") String sfkp);
+
+    @Select("SELECT DISTINCT dzscwj FROM dingdanmingx WHERE duizhangdanhao = #{duizhangdanhao}")
+    String getpdffilename(@Param("duizhangdanhao") String duizhangdanhao);
+
+    @Update("update dingdanmingx set dzscwj = #{dzscwj} where duizhangdanhao = #{duizhangdanhao}")
+    boolean updatePdfFileNameByDdh(@Param("duizhangdanhao") String duizhangdanhao, @Param("dzscwj") String dzscwj);
+
 }

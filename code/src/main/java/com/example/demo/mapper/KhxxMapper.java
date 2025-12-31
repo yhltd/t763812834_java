@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface KhxxMapper extends BaseMapper<Khxx> {
@@ -103,6 +104,9 @@ public interface KhxxMapper extends BaseMapper<Khxx> {
      */
     @Select("SELECT MAX(id) FROM kehuxinxi")
     Long getLastId();
+
+    @Select("SELECT khmc, yq FROM kehuxinxi")
+    List<Map<String, Object>> getYaoQiu();
 }
 
 

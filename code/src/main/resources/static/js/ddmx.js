@@ -4,6 +4,7 @@ var pageSize = 20;
 var totalCount = 0;
 var totalPages = 0;
 var currentId = '';
+var sortTimer = null;
 
 var sortField = 'ddrq';      // 当前排序字段，默认按订单日期
 var sortOrder = 'desc';      // 当前排序方向：asc-升序 desc-降序
@@ -48,6 +49,11 @@ $(document).ready(function() {
     initDdmxPage();
     initToolbarEvents();
     initDetailModalEvents();
+
+    setTimeout(function() {
+        bindSortEvents();
+    }, 500); // 延迟500ms确保DOM完全加载
+
 
     // 检查日期选择器支持
     initDatePickerFallback();
@@ -257,18 +263,6 @@ function deleteUploadedFile() {
     }
 }
 
-// function resetSearchAndRefresh() {
-//     // 重置搜索条件
-//     $('#khmc').val('');
-//     $('#fzr').val('');
-//     $('#lxr').val('');
-//     $('#sfkp').val('');
-//     setDefaultDateRange();
-//
-//     // 刷新数据
-//     currentPage = 1;
-//     getList(currentPage, pageSize, {});
-// }
 function resetSearchAndRefresh() {
     // 重置搜索条件
     $('#khmc').val('');
@@ -291,18 +285,6 @@ function initDetailModalEvents() {
     // 可以根据需要添加详情模态框的事件
 }
 
-// 重置搜索条件
-// function resetSearch() {
-//     $('#ddh').val('');    // 订单号
-//     $('#khmc').val('');   // 客户名称
-//     $('#fzr').val('');    // 负责人
-//     $('#bm').val('');     // 部门
-//     setDefaultDateRange();
-//
-//     // 重新查询
-//     currentPage = 1;
-//     getList(currentPage, pageSize, {});
-// }
 // 重置搜索条件
 function resetSearch() {
     $('#ddh').val('');    // 订单号
@@ -377,6 +359,7 @@ function getList(page, size, searchParams) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
+            updateSortIcons();
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
@@ -388,6 +371,17 @@ function getList(page, size, searchParams) {
                 swal("查询失败: " + (res.message || '未知错误'));
             }
         }
+    });
+}
+
+// 添加更新排序图标的函数
+function updateSortIcons() {
+    $('.sortable').each(function() {
+        var $th = $(this);
+        var field = $th.data('field');
+        var currentText = $th.text().replace(/\s*<i[^>]*>.*?<\/i>\s*/g, '').trim();
+
+        $th.html(currentText + ' ' + getSortIcon(field));
     });
 }
 
@@ -481,29 +475,29 @@ function fillTable(data) {
     totalOrderCount = 0;
 
     var tableHeader = `
-        <thead>
-           <tr style="color: #eb6464; font-size: 10px">
-                <th>双击表格内特殊颜色单元格进行输入</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
-            <tr>
-                <th class="sortable" data-field="ddrq">订单日期 ${getSortIcon('ddrq')}</th>
+    <thead>
+       <tr style="color: #eb6464; font-size: 10px">
+            <th>双击表格内特殊颜色单元格进行输入</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
+            <th class="sortable" data-field="ddrq">订单日期 ${getSortIcon('ddrq')}</th>
             <th class="sortable" data-field="ddh">订单号 ${getSortIcon('ddh')}</th>
             <th class="sortable" data-field="fzr">负责人 ${getSortIcon('fzr')}</th>
             <th class="sortable" data-field="bm">部门 ${getSortIcon('bm')}</th>
@@ -521,9 +515,9 @@ function fillTable(data) {
             <th class="sortable" data-field="zk">注释 ${getSortIcon('zk')}</th>
             <th>操作</th>
             <th>PDF文件</th>
-            </tr>
-        </thead>
-    `;
+        </tr>
+    </thead>
+`;
 
     var tableBody = '<tbody>';
 
@@ -1682,51 +1676,6 @@ function bindEditableEvents() {
         setupInputEvents(input, $cell, originalValue, ddh, 'wldh');
     });
 
-    // 折扣编辑 - 改为文本类型
-    // $('.editable-zk').off('dblclick').on('dblclick', function() {
-    //     var $cell = $(this);
-    //     var originalValue = $cell.text().trim();
-    //     var ddh = $cell.data('ddh');
-    //
-    //     var input = createEditableInput($cell, originalValue, 'text');
-    //     input.focus().select();
-    //
-    //     // 特殊处理折扣字段的验证
-    //     input.blur(function() {
-    //         var newValue = input.val().trim();
-    //
-    //         // 折扣字段验证
-    //         if (!validateZkFormat(newValue) && newValue !== '') {
-    //             swal("折扣格式错误", "请输入有效的折扣值（如：0.8、0.85、0.9、1等）", "error");
-    //             $cell.text(originalValue);
-    //             return;
-    //         }
-    //
-    //         $cell.text(newValue);
-    //
-    //         if (newValue !== originalValue) {
-    //             updateField(ddh, 'zk', newValue, function() {
-    //                 var $row = $cell.closest('tr');
-    //                 updateYingfuWeifuDisplay($row);
-    //             });
-    //         }
-    //     });
-    //
-    //     input.keypress(function(e) {
-    //         if (e.which === 13) {
-    //             input.blur();
-    //         }
-    //     });
-    //
-    //     // ESC键取消编辑
-    //     input.keydown(function(e) {
-    //         if (e.keyCode === 27) {
-    //             $cell.text(originalValue);
-    //         }
-    //     });
-    // });
-
-
     $('.editable-zk').off('dblclick').on('dblclick', function() {
         var $cell = $(this);
         var originalValue = $cell.text().trim();
@@ -2802,6 +2751,29 @@ function addTableStyles() {
                     font-size: 18px;
                 }
             }
+            
+            .sortable {
+                cursor: pointer !important;
+                position: relative !important;
+                user-select: none !important;
+                min-width: 80px !important; /* 确保有足够宽度显示图标 */
+            }
+            
+            .sortable:hover {
+                background-color: #f8f9fa !important;
+            }
+            
+            .sortable i {
+                margin-left: 4px !important;
+                vertical-align: middle !important;
+                display: inline-block !important;
+            }
+            
+            /* 当前排序字段的样式 */
+            .sortable[data-field="当前排序字段"] {
+                background-color: #e3f2fd !important;
+                font-weight: bold !important;
+            }
         `)
         .appendTo('head');
 }
@@ -3171,61 +3143,6 @@ $(function () {
     }
 
 
-
-    // 提交上传
-    // $("#add-submit-btn").click(function () {
-    //     // 获取表单数据
-    //     var formData = new FormData();
-    //     var fileInput = document.getElementById('fileInput1');
-    //
-    //     if (fileInput.files.length > 0) {
-    //         var file = fileInput.files[0];
-    //         var originalName = file.name;
-    //         var orderNumber = $('#add-orderNumber').val();
-    //         var fileExtension = originalName.split('.').pop().toLowerCase();
-    //         var originalName = orderNumber+"-10."+fileExtension;
-    //         // 根据截图中的参数格式设置FormData
-    //         formData.append('file', file);  // 文件字段
-    //
-    //         // 添加其他必要的参数（根据截图）
-    //         formData.append('initialPreview', '[]');
-    //         formData.append('initialPreviewConfig', '[]');
-    //         formData.append('initialPreviewThumbTags', '[]');
-    //         formData.append('file', originalName);  // 文件名参数（与截图一致）
-    //         formData.append('name', originalName);  // 名称参数
-    //         formData.append('path', '/t763812834_java_sharepic/');  // 路径参数
-    //         formData.append('kongjian', '3');  // 空间参数
-    //         formData.append('fileType', fileExtension);  // 文件类型参数
-    //         formData.append('orderNumber', orderNumber);  // 订单号参数
-    //
-    //         // 发送上传请求
-    //         $.ajax({
-    //             url: "https://yhocn.cn:9097/file/upload",
-    //             type: 'POST',
-    //             data: formData,
-    //             processData: false,
-    //             contentType: false,
-    //             success: function (res) {
-    //                 if (res.code === 200) {
-    //                     alert("上传成功！");
-    //                     $('#add-modal').modal('hide');
-    //                     clearForm();
-    //
-    //                     updatePdfFileName(orderNumber, fileExtension);
-    //
-    //                 } else {
-    //                     alert("上传失败：" + res.msg);
-    //                 }
-    //             },
-    //             error: function () {
-    //                 alert("上传失败！");
-    //             }
-    //         });
-    //     } else {
-    //         alert("请选择要上传的文件！");
-    //     }
-    // });
-
     $("#add-submit-btn").click(function () {
         // 获取表单数据
         var formData = new FormData();
@@ -3314,30 +3231,7 @@ $(function () {
         }
     });
 
-    // function updatePdfFileName(ddh, pdfFileName) {
-    //     showLoading();
-    //
-    //     $ajax({
-    //         type: 'post',
-    //         url: '/ddmx/updatePdfFileName',
-    //         contentType: 'application/json',
-    //         data: JSON.stringify({
-    //             ddh: ddh,
-    //             pdfFileName: pdfFileName
-    //         }),
-    //         dataType: 'json'
-    //     }, false, '', function (res) {
-    //         hideLoading();
-    //         if (res.code === 200) {
-    //             console.log("PDF文件名更新成功");
-    //             // 刷新数据
-    //             getList(currentPage, pageSize, getSearchParams());
-    //         } else {
-    //             console.error("PDF文件名更新失败:", res.message);
-    //             swal("PDF文件名更新失败: " + (res.message || '未知错误'));
-    //         }
-    //     });
-    // }
+
 
     function updatePdfFileName(ddh, pdfFileName) {
         showLoading();
@@ -3456,50 +3350,6 @@ function formToJson(formSelector) {
 }
 
 
-// 删除
-// function extractAndDeleteFromUrl(filePath, ddh) {
-//     const ddname = removeBaseUrl(filePath);
-//     imageUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + ddname;
-//
-//     console.log('开始处理URL:', imageUrl);
-//
-//     // 解析URL
-//     const url = new URL(imageUrl);
-//
-//     // 获取路径部分
-//     const fullPath = url.pathname;
-//
-//     console.log('完整路径:', fullPath);
-//
-//     // 分离路径和文件名
-//     const lastSlashIndex = fullPath.lastIndexOf('/');
-//     const path = fullPath.substring(0, lastSlashIndex + 1);
-//     const fileName = fullPath.substring(lastSlashIndex + 1);
-//
-//     console.log('路径:', path);
-//     console.log('文件名:', fileName);
-//
-//     // 支持 jpg, png, pdf 等多种格式
-//     // 匹配格式: 文件名-数字.扩展名
-//     const match = fileName.match(/^(.*)-(\d+)\.(jpg|jpeg|png|pdf|gif|bmp|webp|tiff)$/i);
-//
-//     if (!match) {
-//         console.error('文件名格式不正确');
-//         alert('错误: 文件名格式不正确\n格式应为: 文件名-数字.扩展名\n例如: PS20251204001-1.jpg');
-//         return;
-//     }
-//
-//     const orderNumber = match[1]; // 获取文件名部分
-//     const fileNumber = match[2];  // 获取数字部分
-//     const fileExt = match[3];     // 获取扩展名部分
-//
-//     console.log('提取的orderNumber:', orderNumber);
-//     console.log('文件编号:', fileNumber);
-//     console.log('文件格式:', fileExt);
-//
-//     // 调用删除接口
-//     deleteFiles(orderNumber, path);
-// }
 
 // 删除函数 - 适配新文件名格式
 function extractAndDeleteFromUrl(filePath, ddh) {
@@ -3655,30 +3505,7 @@ function removeBaseUrl(fullUrl) {
     return fullUrl; // 如果不匹配，返回原字符串
 }
 
-// // 删除后更新字段
-// function clearFileRecord(ddh) {
-//
-//     $ajax({
-//         type: 'post',
-//         url: '/ddmx/updatePdfFileName',
-//         contentType: 'application/json',
-//         data: JSON.stringify({
-//             ddh: ddh,
-//             pdfFileName: "",
-//         }),
-//         dataType: 'json'
-//     }, false, '', function (res) {
-//         hideLoading();
-//         if (res.code === 200) {
-//             console.log("PDF文件名更新成功");
-//             // 刷新数据
-//             getList(currentPage, pageSize, getSearchParams());
-//         } else {
-//             console.error("PDF文件名更新失败:", res.message);
-//             swal("PDF文件名更新失败: " + (res.message || '未知错误'));
-//         }
-//     });
-// }
+
 
 // 删除后更新字段 - 支持删除单个文件
 function clearFileRecord(ddh, fileUrlToRemove) {
@@ -4214,36 +4041,84 @@ function loadSheetJS() {
 
 // 获取排序图标
 function getSortIcon(field) {
-    if (sortField !== field) {
-        return '<i class="bi bi-arrow-down-up" style="opacity: 0.3; font-size: 10px;"></i>';
-    }
-    if (sortOrder === 'asc') {
-        return '<i class="bi bi-arrow-up" style="color: #409EFF;"></i>';
+    var iconHtml = '';
+
+    if (sortField === field) {
+        if (sortOrder === 'asc') {
+            iconHtml = '<i class="bi bi-arrow-up" style="color: #409EFF; font-size: 12px;"></i>';
+        } else {
+            iconHtml = '<i class="bi bi-arrow-down" style="color: #409EFF; font-size: 12px;"></i>';
+        }
     } else {
-        return '<i class="bi bi-arrow-down" style="color: #409EFF;"></i>';
+        iconHtml = '<i class="bi bi-arrow-down-up" style="opacity: 0.3; font-size: 10px;"></i>';
     }
+
+    return iconHtml;
 }
 
 // 处理排序点击
 function handleSortClick(field) {
-    // 如果点击的是当前排序字段，切换排序方向
-    if (sortField === field) {
-        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-        // 点击新字段，默认降序
-        sortField = field;
-        sortOrder = 'desc';
+    // 清除之前的定时器
+    if (sortTimer) {
+        clearTimeout(sortTimer);
     }
 
-    // 重置到第一页并重新加载数据
-    currentPage = 1;
-    getList(currentPage, pageSize, getSearchParams());
+    // 使用防抖，避免快速多次点击
+    sortTimer = setTimeout(function() {
+        console.log('执行排序操作，字段:', field);
+
+        // 如果点击的是当前排序字段，切换排序方向
+        if (sortField === field) {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            // 点击新字段，默认降序
+            sortField = field;
+            sortOrder = 'desc';
+        }
+
+        console.log('新排序字段:', sortField, '新排序方向:', sortOrder);
+
+        // 重置到第一页并重新加载数据
+        currentPage = 1;
+
+        // 显示排序加载状态
+        showSortingLoader();
+
+        // 获取搜索参数
+        var searchParams = getSearchParams();
+
+        // 重新加载数据
+        getList(currentPage, pageSize, searchParams);
+
+    }, 200); // 200ms防抖延迟
 }
+
+// 显示排序加载状态
+function showSortingLoader() {
+    // 可以在表头显示加载状态
+    var $currentSortHeader = $(`.sortable[data-field="${sortField}"]`);
+    if ($currentSortHeader.length) {
+        $currentSortHeader.html(
+            $currentSortHeader.text().replace(/\s*<i[^>]*>.*?<\/i>\s*/g, '') +
+            ' <i class="bi bi-hourglass" style="color: #ff9800;"></i>'
+        );
+    }
+}
+
 
 // 绑定排序事件
 function bindSortEvents() {
-    $('.sortable').off('click.sort').on('click.sort', function() {
+    // 移除旧的绑定
+    $('.sortable').off('click.sort');
+
+    // 使用事件委托，绑定到表格容器
+    $('#ddmxTable').off('click.sort').on('click.sort', '.sortable', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         var field = $(this).data('field');
+        console.log('排序点击，字段:', field, '当前排序字段:', sortField, '当前排序方向:', sortOrder);
+
         handleSortClick(field);
     });
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -39,6 +40,19 @@ public class ScgdController {
 
             // 执行查询
             PageResult<Scgd> result = scgdService.getScgdPage(request);
+            return Result.success(result);
+
+        } catch (Exception e) {
+            log.error("查询客户信息失败", e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/excel")
+    public Result<List<Scgd>> daochuexcel(@RequestBody Map<String, String> params) {
+        try {
+            String id = params.get("id");
+            List<Scgd> result = scgdService.daochuexcel(id);
             return Result.success(result);
 
         } catch (Exception e) {
@@ -212,6 +226,10 @@ public class ScgdController {
         // 权限检查
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
 

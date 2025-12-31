@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -32,6 +34,11 @@ public class KhxxController {
     public Result<PageResult<Khxx>> getKhxxList(HttpSession session, @RequestBody KhxxPageRequestDTO request) {
         try {
             // 权限检查
+
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                    return Result.error("为获取身份信息，请重新登录");
+            }
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
                 // 从 Session 中获取 D 值（管理员名称）
@@ -66,6 +73,10 @@ public class KhxxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
 
             // 数据验证
             if (khxx.getKhmc() == null || khxx.getKhmc().trim().isEmpty()) {
@@ -92,6 +103,10 @@ public class KhxxController {
             // 权限检查
             Result<?> authResult = AuthUtil2.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -124,6 +139,11 @@ public class KhxxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
 
             // 数据验证
             if (request.getId() == null) {
@@ -161,6 +181,10 @@ public class KhxxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
 
             // 数据验证
             if (request.getId() == null) {
@@ -192,6 +216,10 @@ public class KhxxController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
 
             // 执行查询下拉内容
             List<Pzb> result = pzbService.getXL();
@@ -212,6 +240,28 @@ public class KhxxController {
             return Result.success(lastId);
         } catch (Exception e) {
             return Result.error("获取最后ID失败");
+        }
+    }
+
+    @PostMapping("/getyaoqiu")
+    public Result getYaoQiu(@RequestBody(required = false) Map<String, Object> params) { // 添加@RequestBody注解
+        try {
+            System.out.println("接收获取客户要求请求，参数: " + params);
+
+            // 指定返回类型为List<Map<String, Object>>
+            List<Map<String, Object>> yaoqiu = khxxService.getYaoQiu();
+
+            System.out.println("查询结果数量: " + (yaoqiu != null ? yaoqiu.size() : 0));
+
+            if (yaoqiu != null) {
+                return Result.success(yaoqiu);
+            } else {
+                return Result.success(new ArrayList<>());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("获取客户要求异常: " + e.getMessage());
+            return Result.error("获取客户要求失败: " + e.getMessage());
         }
     }
 

@@ -32,6 +32,10 @@ public class YjbbController {
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
 
         try {
             log.info("分页查询业绩报表，页码: {}, 页大小: {}, 关键词: {}",

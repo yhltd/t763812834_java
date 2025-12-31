@@ -19,4 +19,5 @@ public class PageRequest {
     private Boolean weifuZero;       // 未付金额为0
     private String sortField;
     private String sortOrder;
+    private String duizhangdanhao;
 }

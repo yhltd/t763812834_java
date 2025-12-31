@@ -8,6 +8,7 @@ import com.example.demo.mapper.ScgdMapper;
 import com.example.demo.service.ScgdService;
 import com.example.demo.util.PageResult;
 import com.example.demo.util.ScgdSearchRequest;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -147,5 +148,10 @@ public class ScgdImpl extends ServiceImpl<ScgdMapper, Scgd> implements ScgdServi
     @Override
     public List<Scgd> getListRE(){
         return baseMapper.getListRE(null);
+    }
+
+    @Override
+    public List<Scgd> daochuexcel(String id){
+        return baseMapper.daochuexcel(id);
     }
 }

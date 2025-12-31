@@ -35,6 +35,12 @@ public class CgmxController {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
+
             // 执行查询
             PageResult<Cgmx> result = cgmxService.getCgmxPage(request);
             return Result.success(result);
@@ -54,6 +60,11 @@ public class CgmxController {
             // 权限检查
             Result<?> authResult = AuthUtil.checkAdminAuth(session);
             if (!authResult.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
@@ -88,6 +99,11 @@ public class CgmxController {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
 
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
             String keyword = (String) params.get("keyword");
             Integer pageNum = (Integer) params.get("pageNum");
             Integer pageSize = (Integer) params.get("pageSize");
@@ -109,6 +125,11 @@ public class CgmxController {
         // 权限检查
         Result<?> authResult = AuthUtil.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
         try {

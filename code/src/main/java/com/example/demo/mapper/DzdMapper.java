@@ -145,4 +145,10 @@ public interface DzdMapper extends BaseMapper<Dzd> {
 
     @Update("UPDATE dingdanmingx SET dzzt = #{dzzt} WHERE ddh = #{ddh}")
     int updateDzztStatusByDdh(@Param("ddh") String ddh, @Param("dzzt") String dzzt);
+
+    @Update("UPDATE dingdanmingx SET sfkp = #{sfkp}, duizhangdanhao = #{duizhangdanhao}, duizhangriqi = #{duizhangriqi} WHERE ddh = #{ddh}")
+    boolean updateDzdjl(@Param("ddh") String ddh,
+                    @Param("duizhangdanhao") String duizhangdanhao,
+                    @Param("sfkp") String sfkp,
+                    @Param("duizhangriqi") String duizhangriqi);
 }

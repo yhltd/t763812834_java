@@ -37,6 +37,11 @@ public class CgdzdController {
             if (!authResult.isSuccess()) {
                 return Result.error(authResult.getCode(), authResult.getMessage());
             }
+            Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+            if (!authResult3.isSuccess()) {
+                return Result.error(authResult.getCode(), authResult.getMessage());
+            }
+
 
             // 执行查询
             PageResult<Cgdzd> result = cgdzdService.getCgmxPage(request);
@@ -56,6 +61,10 @@ public class CgdzdController {
         // 权限检查
         Result<?> authResult = AuthUtil.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
         try {
@@ -81,6 +90,10 @@ public class CgdzdController {
         // 权限检查
         Result<?> authResult = AuthUtil.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
+            return Result.error(authResult.getCode(), authResult.getMessage());
+        }
+        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+        if (!authResult3.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }
         try {

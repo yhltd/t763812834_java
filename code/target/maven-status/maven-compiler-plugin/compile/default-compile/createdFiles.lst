@@ -112,3 +112,4 @@ com\example\demo\util\BatchInvoiceRequest.class
 com\example\demo\interceptor\AdminInterceptor.class
 com\example\demo\util\GsonUtil$1.class
 com\example\demo\service\XdmxService.class
+com\example\demo\util\AuthUtil3.class
