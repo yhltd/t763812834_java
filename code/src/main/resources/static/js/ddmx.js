@@ -1973,6 +1973,7 @@ function showDetailModal(ddh, ddrq) {
 
     // 获取选中行的数据
     var rowData = getSelectedRow();
+    console.log("获取行数据",rowData);
     if (rowData) {
         fillBasicInfo(rowData);
     }
@@ -2213,22 +2214,20 @@ function getSelectedRow() {
     var rowData = {
         ddrq: selectedRow.find('td:eq(0)').text().trim(),
         ddh: selectedRow.find('td:eq(1)').text().trim(),
-        khjc: selectedRow.find('td:eq(2)').text().trim(),
-        fzr: selectedRow.find('td:eq(3)').text().trim(),
-        bm: selectedRow.find('td:eq(4)').text().trim(),
-        lxr: selectedRow.find('td:eq(5)').text().trim(),
-        lxdh: selectedRow.find('td:eq(6)').text().trim(),
-        tcd: selectedRow.find('td:eq(7)').text().trim(),
-        khmc: selectedRow.find('td:eq(8)').text().trim(),
-        kpsj: selectedRow.find('td:eq(9)').text().trim(),
-        yingfu: selectedRow.find('td:eq(10)').text().trim(),
-        yifu: selectedRow.find('td:eq(11)').text().trim(),
-        wf: selectedRow.find('td:eq(12)').text().trim(),
-        sfkp: selectedRow.find('td:eq(13)').text().trim(),
+        fzr: selectedRow.find('td:eq(2)').text().trim(),
+        bm: selectedRow.find('td:eq(3)').text().trim(),
+        lxr: selectedRow.find('td:eq(4)').text().trim(),
+        lxdh: selectedRow.find('td:eq(5)').text().trim(),
+        khmc: selectedRow.find('td:eq(6)').text().trim(),
+        kpsj: selectedRow.find('td:eq(7)').text().trim(),
+
+        yingfu: selectedRow.find('td:eq(9)').text().trim(),
+        yifu: selectedRow.find('td:eq(10)').text().trim(),
+        wf: selectedRow.find('td:eq(11)').text().trim(),
+        sfkp: selectedRow.find('td:eq(12)').text().trim(),
         wldh: selectedRow.find('td:eq(14)').text().trim(),
-        zk: selectedRow.find('td:eq(15)').text().trim(),
-        fhsj: selectedRow.find('td:eq(16)').text().trim(),
-        bz: selectedRow.find('td:eq(17)').text().trim(),
+        fhsj: selectedRow.find('td:eq(13)').text().trim(),
+        bz: selectedRow.find('td:eq(15)').text().trim(),
         pdf_file_name: selectedRow.find('.view-file-btn').data('filepath') || ''
     };
 

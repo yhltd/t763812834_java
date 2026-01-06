@@ -57,11 +57,6 @@
             padding: 20px;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -220,7 +215,6 @@
         }
 
         .btn {
-            /*padding: 10px 20px;*/
             border: none;
             border-radius: var(--radius);
             cursor: pointer;
@@ -399,143 +393,6 @@
             position: relative;
         }
 
-        /* 替换现有的 @media print 部分 */
-        @media print {
-            @page {
-                size: A4;
-                margin: 5mm; /* 减小边距 */
-
-            }
-
-            body {
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                font-size: 15px !important;
-                line-height: 1.3 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                width: 100% !important;
-                min-height: 297mm !important;
-            }
-
-            /* 隐藏不需要打印的元素 */
-            body > *:not(#printContainer) {
-                display: none !important;
-            }
-
-            /* 打印容器 */
-            #printContainer {
-                display: block !important;
-                position: static !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                background: white !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            /* 打印页面容器 */
-            .print-page-container {
-                display: block !important;
-                width: 100% !important;
-                min-height: 297mm !important;
-                padding: 3mm 5mm !important;
-                margin: 0 !important;
-                page-break-after: always !important;
-                break-after: page !important;
-                box-sizing: border-box !important;
-                position: relative !important;
-                background: white !important;
-                font-family: "Microsoft YaHei", sans-serif !important;
-                overflow: hidden !important;
-            }
-
-            /* 合同内容样式 */
-            .invoice-container {
-                box-shadow: none !important;
-                padding: 0 !important; /* 确保打印时没有内边距 */
-                margin: 0 !important;
-                border: none !important;
-                font-size: 11px !important;
-                line-height: 1.2 !important;
-                width: 100% !important;
-                height: 100% !important; /* 改为 100% 填充 */
-                min-height: 287mm !important; /* 调整为更接近页面高度 */
-            }
-
-            /* 紧凑布局 */
-            .invoice-header {
-                margin-bottom: 8mm !important;
-                padding-bottom: 4mm !important;
-            }
-
-            .invoice-details {
-                margin-bottom: 8mm !important;
-                gap: 10mm !important;
-            }
-
-            /* 优化表格样式 */
-            .items-table {
-                font-size: 9px !important;
-                line-height: 1.1 !important;
-                margin-bottom: 8mm !important;
-                border-collapse: collapse !important;
-                width: 100% !important;
-                table-layout: fixed !important;
-            }
-
-            .items-table th,
-            .items-table td {
-                padding: 2px 3px !important;
-                height: 16px !important;
-                border: 1px solid #666 !important;
-                word-wrap: break-word;
-                overflow: hidden;
-            }
-
-            .items-table th {
-                background-color: #2c5aa0 !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-
-            .footer {
-                margin-top: 8mm !important;
-                font-size: 10px !important;
-            }
-
-            .signature-table td {
-                height: 18px !important;
-                padding: 1px 2px !important;
-                font-size: 9px !important;
-            }
-
-            .summary {
-                margin-bottom: 8mm !important;
-            }
-
-            /* 页码信息 */
-            .page-info {
-                font-size: 10px !important;
-                color: #000 !important;
-                font-weight: bold !important;
-            }
-
-            /* 印章 */
-            .seal-overlay {
-                opacity: 1 !important;
-            }
-
-            .seal-overlay.hidden {
-                display: none !important;
-            }
-        }
-
-
         /* 自定义滚动条 */
         ::-webkit-scrollbar {
             width: 6px;
@@ -599,9 +456,8 @@
 
         /* ==================== 移动端响应式适配 ==================== */
 
-        /* 手机端：变成滑动表格（只针对预览表格） */
+        /* 手机端：变成滑动表格 */
         @media screen and (max-width: 768px) {
-            /* 调整整体布局 */
             body {
                 padding: 10px !important;
                 overflow-x: hidden !important;
@@ -617,7 +473,6 @@
                 font-size: 24px !important;
             }
 
-            /* 表单区域调整 */
             .form-section {
                 padding: 15px !important;
             }
@@ -627,18 +482,16 @@
                 gap: 15px !important;
             }
 
-            /* 产品输入区域 - 使用原来的垂直排列方案 */
             #itemsContainer {
                 padding: 10px;
                 background: #f8f9fa;
                 border-radius: 8px;
                 margin: 10px 0;
-                overflow-x: hidden !important; /* 禁止水平滚动 */
+                overflow-x: hidden !important;
             }
 
-            /* 产品行 - 垂直排列 */
             .item-row {
-                display: block !important; /* 改为块级显示 */
+                display: block !important;
                 width: 100% !important;
                 padding: 10px;
                 background: white;
@@ -658,17 +511,14 @@
                 margin-bottom: 0 !important;
             }
 
-            /* 移除产品行的flex和grid相关样式 */
             .item-row .form-group:first-child {
                 flex: none !important;
             }
 
-            /* 产品名称输入框全宽 */
             .item-row .item-name {
                 width: 100% !important;
             }
 
-            /* 表格容器 - 滑动方案（去掉提示） */
             .table-responsive-wrapper {
                 position: relative;
                 width: 100%;
@@ -681,25 +531,22 @@
                 box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
             }
 
-            /* 移除滑动提示 */
             .table-responsive-wrapper::after {
                 display: none !important;
             }
 
-            /* 表格本身 - 固定最小宽度 */
             .table-responsive-wrapper .items-table {
-                min-width: 900px !important; /* 确保所有列都显示 */
+                min-width: 900px !important;
                 width: auto !important;
                 margin: 0 !important;
                 border-collapse: collapse;
                 table-layout: auto !important;
             }
 
-            /* 表格单元格 */
             .table-responsive-wrapper .items-table th,
             .table-responsive-wrapper .items-table td {
                 padding: 8px 10px !important;
-                font-size: 12px !important;
+                font-size: 14px !important;
                 min-width: 80px !important;
                 max-width: 150px !important;
                 white-space: nowrap;
@@ -708,7 +555,6 @@
                 border: 1px solid #ddd !important;
             }
 
-            /* 按钮调整 */
             .action-buttons {
                 flex-wrap: wrap;
                 gap: 10px;
@@ -721,7 +567,6 @@
                 min-width: 120px;
             }
 
-            /* 底部签字区域 */
             .footer {
                 flex-direction: column !important;
                 gap: 20px;
@@ -732,12 +577,10 @@
                 width: 100% !important;
             }
 
-            /* 印章缩小 */
             .seal-overlay img {
                 width: 150px !important;
             }
 
-            /* 确保输入框内容可见 */
             input, select, textarea {
                 font-size: 16px !important;
                 width: 100% !important;
@@ -746,7 +589,7 @@
             }
         }
 
-        /* 小屏幕手机 (576px以下) */
+        /* 小屏幕手机 */
         @media screen and (max-width: 576px) {
             .header h1 {
                 font-size: 20px !important;
@@ -765,7 +608,6 @@
                 font-size: 13px !important;
             }
 
-            /* 进一步压缩表格 */
             .table-responsive-wrapper .items-table {
                 min-width: 800px !important;
             }
@@ -776,12 +618,10 @@
                 font-size: 11px !important;
             }
 
-            /* 产品行标签文字缩小 */
             .item-row .form-group label {
-                font-size: 12px !important;
+                font-size: 14px !important;
             }
 
-            /* 产品输入框 */
             .item-row input,
             .item-row select {
                 font-size: 14px !important;
@@ -789,7 +629,7 @@
             }
         }
 
-        /* 超小屏幕手机 (360px以下) */
+        /* 超小屏幕手机 */
         @media screen and (max-width: 360px) {
             .header h1 {
                 font-size: 18px !important;
@@ -816,7 +656,7 @@
             }
         }
 
-        /* 电脑端：保持原样 */
+        /* 电脑端 */
         @media screen and (min-width: 769px) {
             .table-responsive-wrapper {
                 overflow: visible !important;
@@ -827,7 +667,6 @@
                 min-width: 100% !important;
             }
 
-            /* 电脑端产品行保持水平排列 */
             .item-row {
                 display: flex !important;
                 gap: 10px;
@@ -855,11 +694,13 @@
         .seal-overlay {
             display: block;
             transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         .seal-overlay.hidden {
-            display: none;
+            display: none !important;
         }
+
         /* 驳回数据表格样式 */
         #rejectedDataTable {
             font-size: 14px;
@@ -901,12 +742,687 @@
             font-size: 12px;
             padding: 4px 8px;
         }
+
+
+        /* 打印预览模态框 */
+        .print-preview-modal .modal-dialog {
+            width: 70%;
+            margin: 0;
+            height: 70vh;
+            margin-left: 15%;
+        }
+
+        .print-preview-modal .modal-content {
+            height: 100vh;
+            border-radius: 0;
+            border: none;
+        }
+
+        .print-preview-modal .modal-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border-bottom: none;
+        }
+
+        .print-preview-modal .modal-title {
+            font-weight: 600;
+        }
+
+        .print-preview-modal .modal-body {
+            padding: 0;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 打印页面容器 */
+        .print-page-container {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            padding: 15mm;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            page-break-after: always;
+            position: relative;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            display: block;
+        }
+
+        /* 打印页内容样式 */
+        .print-page-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 打印页头部 */
+        .print-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            width: 100%;
+        }
+
+        .print-page-header .company-logo {
+            width: 20%;
+        }
+
+        .print-page-header .company-logo img {
+            max-width: 150px;
+            max-height: 60px;
+        }
+
+        .print-page-header .contract-title {
+            text-align: center;
+            flex: 1;
+        }
+
+        .print-page-header .contract-title h2 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .print-page-header .page-info {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 打印页详细信息 */
+        .print-page-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .print-client-info, .print-contract-meta {
+            padding-top: 10px;
+            border-radius: 4px;
+            margin-left: 60px;
+        }
+
+        /* 打印产品表格 */
+        .print-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+            font-size: 10px;
+            flex: 1;
+            table-layout: fixed;
+        }
+
+        .print-items-table th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 6px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        .print-items-table td {
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .print-items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* 每页固定15行 */
+        .print-items-table tbody tr {
+            height: 20px;
+        }
+
+        .print-items-table .empty-row td {
+            border: 1px solid #eee;
+            background-color: white;
+        }
+
+        /* 打印页脚部 */
+        .print-page-footer {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .print-page-summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
+        }
+
+        .print-summary-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+
+        .print-summary-table td {
+            padding: 6px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .print-summary-table tr:last-child {
+            font-weight: bold;
+            background-color: #f1f8ff;
+        }
+
+        /* 打印条款内容 */
+        .print-terms {
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .print-terms p {
+            margin-bottom: 6px;
+        }
+
+        /* 打印签名区域 */
+        .print-signature-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 11px;
+        }
+
+        .print-supplier-signature, .print-client-signature {
+            width: 45%;
+        }
+
+        .print-signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .print-signature-table td {
+            padding: 3px;
+            border: 1px solid #ddd;
+            height: 22px;
+            font-size: 10px;
+        }
+
+        /* 打印预览操作按钮 */
+        .print-preview-actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 10px 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .print-preview-actions .btn {
+            min-width: 100px;
+        }
+
+        /* 打印导航按钮 */
+        .print-nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* 页码指示器 */
+        .page-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .page-indicator .page-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .page-indicator .page-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #dee2e6;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .page-indicator .page-dot.active {
+            background-color: var(--primary-color);
+        }
+
+        .page-indicator .page-dot:hover {
+            background-color: var(--primary-light);
+        }
+
+        @media print {
+            /* ==================== 修复打印样式 ==================== */
+
+            /* 1. 重置基础样式 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                height: auto !important;
+                overflow: visible !important;
+                font-family: "Microsoft YaHei", sans-serif !important;
+                line-height: 1.5 !important; /* 增加行高：从默认1.2增加到1.6，增加高度 */
+            }
+
+            /* 2. 打印容器 */
+            #temp-print-container {
+                display: block !important;
+                width: 100% !important;
+                min-height: 100vh !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                position: relative !important;
+            }
+
+            /* 3. 每个打印页面 - 固定尺寸 */
+            .print-page-container {
+                /* 固定A4尺寸 */
+                width: 210mm !important;
+                min-height: 297mm !important;
+                height: auto !important;
+
+                /* 修改：增加上边距和内边距来增加高度 */
+                padding: 5mm 0mm 5mm 0mm !important; /* 上边距从5mm增加到8mm，下边距从5mm增加到8mm，总计增加6mm ≈ 22px */
+                margin: 0 auto 2mm auto !important;
+                box-sizing: border-box !important;
+
+                /* 分页控制 - 关键 */
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                break-after: page !important;
+
+                /* 显示控制 */
+                display: block !important;
+                position: relative !important;
+                background: white !important;
+
+                /* 移除干扰样式 */
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* 4. 最后一个页面不要强制分页 */
+            .print-page-container:last-of-type {
+                page-break-after: auto !important;
+                break-after: auto !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* 5. 页面内容区域 - 增加行间距来增加高度 */
+            .print-page-content {
+                height: auto !important;
+                min-height: calc(297mm - 16mm) !important; /* 调整可用高度 */
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+            }
+
+            /* 6. 打印页头部 - 增加字体大小和间距 */
+            .print-page-header {
+                margin-bottom: 5px !important; /* 增加3px */
+                padding-bottom: 5px !important; /* 增加3px */
+                line-height: 1.8 !important; /* 增加行高 */
+            }
+
+            .print-page-header .company-logo img {
+                max-width: 120px !important;
+                max-height: 50px !important;
+            }
+
+            .print-page-header .contract-title h2 {
+                font-size: 22px !important; /* 增加2px */
+                margin: 0 !important;
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-page-header .page-info {
+                font-size: 11px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 7. 合同基本信息区域 - 增加字体大小和行间距 */
+            .print-page-details {
+                gap: 12px !important; /* 增加2px */
+                margin-bottom: 10px !important; /* 增加2px */
+                font-size: 12px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-client-info,
+            .print-contract-meta {
+                margin-left: 0 !important; /* 去掉左边距 */
+                padding: 10px !important; /* 增加2px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-client-info p,
+            .print-contract-meta p {
+                margin-bottom: 8px !important; /* 增加行间距4px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 8. 表格调整 - 增加行高和字体大小 */
+            .print-items-table {
+                width: 100% !important;
+                font-size: 10px !important; /* 增加1px */
+                line-height: 1.5 !important; /* 增加行高 */
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
+                margin-bottom: 8px !important; /* 增加3px */
+            }
+
+            .print-items-table th {
+                padding: 5px 6px !important; /* 增加内边距 */
+                font-size: 10px !important; /* 增加1px */
+                line-height: 1.5 !important; /* 增加行高 */
+            }
+
+            .print-items-table td {
+                padding: 4px 5px !important; /* 增加内边距 */
+                height: 22px !important; /* 增加2px，10行共增加20px */
+                font-size: 10px !important; /* 增加1px */
+                line-height: 1.5 !important; /* 增加行高 */
+            }
+
+            .print-items-table tbody tr {
+                height: 22px !important; /* 增加2px，10行共增加20px */
+                line-height: 1.5 !important; /* 增加行高 */
+            }
+
+            /* 9. 合计金额区域 - 增加字体大小和间距 */
+            .print-page-summary {
+                margin-bottom: 8px !important; /* 增加5px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-summary-table {
+                width: 250px !important;
+            }
+
+            .print-summary-table td {
+                padding: 6px 10px !important; /* 增加内边距 */
+                font-size: 11px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 10. 乙方要求和收货地址 - 增加字体大小和行间距 */
+            .print-terms {
+                margin-top: 12px !important; /* 增加4px */
+                font-size: 15px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高0.4 */
+            }
+
+            /* 11. 乙方要求、收货地址与条款字体一致 */
+            .print-terms p,
+            .print-page-content > div > p,
+            .print-page-content > p {
+                font-size: 15px !important; /* 增加1px */
+                margin-bottom: 4px !important; /* 增加4px */
+                line-height: 1.7 !important; /* 增加行高0.4 */
+            }
+
+            /* 12. 强调文字 */
+            .print-terms strong,
+            .print-page-content strong {
+                font-size: 15px !important; /* 增加1px */
+                font-weight: 600 !important;
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 13. 条款标题字体加大 */
+            .print-terms p strong:first-child {
+                font-size: 15px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 14. 签名区域 - 增加字体大小和行高 */
+            .print-signature-area {
+                margin-top: 16px !important; /* 增加4px */
+                font-size: 12px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-supplier-signature,
+            .print-client-signature {
+                width: 48% !important; /* 稍微调整宽度 */
+            }
+
+            .print-signature-table td {
+                padding: 4px !important; /* 增加2px */
+                height: 22px !important; /* 增加2px，7行共增加14px */
+                font-size: 11px !important; /* 增加1px */
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            .print-signature-area h5 {
+                font-size: 12px !important; /* 增加1px */
+                margin-bottom: 8px !important; /* 增加3px */
+                font-weight: 600 !important;
+                line-height: 1.7 !important; /* 增加行高 */
+            }
+
+            /* 15. 印章调整 */
+            .seal-overlay img {
+                width: 180px !important; /* 稍微减小印章大小 */
+                max-width: 180px !important;
+            }
+
+            /* 16. @page 设置 - 最小边距 */
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            /* 17. 隐藏所有非打印内容 */
+            body > *:not(#temp-print-container) {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                opacity: 0 !important;
+            }
+
+            /* 18. 确保印章正确显示 */
+            .seal-overlay {
+                opacity: 0.8 !important;
+                pointer-events: none !important;
+            }
+
+            .seal-overlay.hidden {
+                display: none !important;
+            }
+        }
+
+        /* ==================== 屏幕预览样式调整 ==================== */
+        @media screen {
+            .print-preview-modal .modal-dialog {
+                width: 70%;
+                margin: 0;
+                height: 70vh;
+                margin-left: 15%;
+            }
+
+            .print-preview-modal .modal-content {
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+
+            .print-preview-modal .modal-body {
+                padding: 0;
+                height: calc(100vh - 60px);
+                overflow-y: auto;
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+            }
+
+            /* 打印页面容器 - 与打印样式保持一致 */
+            .print-page-container {
+                background: white;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 20px auto;
+                /* 修改：增加内边距 */
+                padding: 8mm 3mm !important; /* 同步增加内边距 */
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                page-break-after: always;
+                position: relative;
+                box-sizing: border-box;
+                font-family: "Microsoft YaHei", sans-serif;
+                display: block;
+                line-height: 1.5 !important; /* 同步增加行高 */
+            }
+
+            /* 调整字体大小以匹配打印效果 */
+            .print-page-header .contract-title h2 {
+                font-size: 22px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+
+            .print-page-details {
+                font-size: 12px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+
+            .print-items-table {
+                font-size: 10px !important; /* 同步增加 */
+                line-height: 1.5 !important; /* 同步增加行高 */
+            }
+
+            .print-items-table td {
+                height: 22px !important; /* 同步增加 */
+            }
+
+            /* 条款区域字体放大 */
+            .print-terms {
+                font-size: 15px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+
+            .print-terms p,
+            .print-page-content > div > p,
+            .print-page-content > p {
+                font-size: 15px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+
+            /* 签名区域字体 */
+            .print-signature-area {
+                font-size: 12px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+
+            .print-signature-table td {
+                font-size: 11px !important; /* 同步增加 */
+                height: 22px !important; /* 同步增加 */
+                line-height: 1.7 !important; /* 同步增加行高 */
+            }
+        }
+
+
+        /* 响应式调整 */
+        @media screen and (max-width: 1200px) {
+            .print-preview-modal .modal-dialog {
+                max-width: 100%;
+                width: auto;
+            }
+
+
+        }
+
+        @media screen and (max-width: 768px) {
+            .print-preview-modal .modal-dialog {
+                margin: 5px;
+            }
+
+            .print-page-container {
+                transform: scale(0.85);
+            }
+        }
+
+        /* 专门为非常小的屏幕调整 */
+        @media screen and (max-width: 480px) {
+            .print-page-container {
+                transform: scale(0.8);
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>销售合同</h1>
+    </div>
+
+    <!-- 打印预览模态框 -->
+    <div class="modal fade print-preview-modal" id="printPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-printer"></i> 打印预览</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="printPreviewContent">
+                    <!-- 打印页面将通过JavaScript动态生成到这里 -->
+                </div>
+                <div class="print-preview-actions">
+                    <div class="page-indicator" id="pageIndicator">
+                        <!-- 页码指示器将通过JavaScript动态生成 -->
+                    </div>
+                    <div class="print-nav-buttons">
+                        <button type="button" class="btn btn-outline-primary" id="prevPageBtn">
+                            <i class="bi bi-chevron-left"></i> 上一页
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="nextPageBtn">
+                            下一页 <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-secondary" id="togglePrintSealBtn">
+                        <i class="bi bi-eye-slash"></i> 隐藏打印印章
+                    </button>
+                    <button type="button" class="btn btn-primary" id="printFromPreview">
+                        <i class="bi bi-printer"></i> 打印
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="form-section">
@@ -1187,7 +1703,6 @@
         <div class="action-buttons">
             <button id="saveData" class="btn btn-primary">保存数据</button>
             <button id="printInvoice" class="btn btn-primary">打印合同</button>
-            <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
         </div>
     </div>
     <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
@@ -1195,9 +1710,62 @@
 
 <script>
 
+    let printData = {
+        pages: [],
+        currentPage: 0,
+        totalPages: 0
+    };
+
     var clauses = [];
     var shui="";
     document.addEventListener('DOMContentLoaded', function() {
+
+        // 绑定打印预览中的印章控制按钮事件
+        document.getElementById('togglePrintSealBtn')?.addEventListener('click', function() {
+            // 切换全局变量
+            showSealInPrint = !showSealInPrint;
+
+            // 更新按钮文本
+            if (showSealInPrint) {
+                this.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏打印印章';
+                this.classList.remove('btn-success');
+                this.classList.add('btn-outline-secondary');
+            } else {
+                this.innerHTML = '<i class="bi bi-eye"></i> 显示打印印章';
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-success');
+            }
+
+            // 重新渲染打印预览以应用更改
+            if (printData.pages && printData.pages.length > 0) {
+                renderPrintPreview();
+            }
+        });
+
+        // 在显示打印预览时，初始化按钮状态
+        const printPreviewModal = document.getElementById('printPreviewModal');
+        if (printPreviewModal) {
+            printPreviewModal.addEventListener('show.bs.modal', function() {
+                // 重置为默认显示状态
+                showSealInPrint = true;
+
+                // 更新按钮状态
+                const printSealBtn = document.getElementById('togglePrintSealBtn');
+                if (printSealBtn) {
+                    printSealBtn.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏打印印章';
+                    printSealBtn.classList.remove('btn-success');
+                    printSealBtn.classList.add('btn-outline-secondary');
+                }
+            });
+        }
+
+        // 初始化事件绑定
+        bindPrintButtonsEvents();
+
+        // 确保Bootstrap模态框可用
+        if (typeof bootstrap !== 'undefined') {
+            console.log('Bootstrap已加载，打印预览功能就绪');
+        }
 
         // 添加导出Excel按钮到操作按钮区域
         const actionButtons = document.querySelector('.action-buttons');
@@ -1566,21 +2134,889 @@
             return totalPages;
         }
 
-        // 完全重写打印函数，避免替换整个body
-        document.getElementById('printInvoice').addEventListener('click', function() {
-            // 1. 验证数据
-            if (!validatePrintData()) {
-                return;
-            }
+        // 找到原来的打印按钮
+        const printBtn = document.getElementById('printInvoice');
+        if (printBtn) {
+            // 移除原来的点击事件
+            printBtn.removeEventListener('click', handlePrintContract);
 
-            // 2. 确保合同预览是最新的
+            // 添加新的点击事件 - 一键完成所有操作
+            printBtn.addEventListener('click', async function() {
+                // 先验证数据
+                if (!validatePrintData()) {
+                    return;
+                }
+
+                // 显示简单的加载提示
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-hourglass"></i> 正在准备...';
+                this.disabled = true;
+
+                try {
+                    // 1. 首先触发生成合同，更新所有预览数据
+                    const generateBtn = document.getElementById('generateInvoice');
+                    if (generateBtn) {
+                        generateBtn.click();
+                    }
+
+                    // 2. 等待一小段时间让DOM更新完成
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // 3. 直接准备并显示打印预览
+                    preparePrintPreview();
+                    showPrintPreview();
+
+                } catch (error) {
+                    console.error('打印准备失败:', error);
+                    alert('打印准备失败，请重试');
+                } finally {
+                    // 恢复按钮状态
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }
+            });
+        }
+
+        // 绑定打印预览中的打印按钮
+        document.getElementById('printFromPreview')?.addEventListener('click', function() {
+            executePrintFromPreview();
+        });
+
+        // 绑定翻页按钮
+        document.getElementById('prevPageBtn')?.addEventListener('click', function() {
+            navigatePage(-1);
+        });
+
+        document.getElementById('nextPageBtn')?.addEventListener('click', function() {
+            navigatePage(1);
+        });
+
+        // 准备打印预览数据
+        function preparePrintPreview() {
+            console.log('准备打印预览数据...');
+
+            // 先确保生成合同按钮被点击，更新所有数据
             document.getElementById('generateInvoice').click();
 
-            // 3. 延迟执行，确保DOM更新完成
+            // 延迟一下确保DOM更新完成
             setTimeout(() => {
-                executeSmartPrint();
-            }, 300);
+                // 收集打印数据
+                const contractData = collectPrintData();
+                console.log('收集到的打印数据:', contractData);
+
+                // 生成分页数据（每页10条）
+                const pages = generatePrintPages(contractData);
+
+                // 存储到全局变量
+                printData = {
+                    pages: pages,
+                    currentPage: 0,
+                    totalPages: pages.length
+                };
+
+                console.log('准备打印数据完成:', printData);
+            }, 500);
+        }
+
+
+        // 显示打印预览
+        function showPrintPreview() {
+            // 生成预览内容
+            renderPrintPreview();
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('printPreviewModal'));
+            modal.show();
+        }
+
+        // 渲染打印预览
+        function renderPrintPreview() {
+            const previewContent = document.getElementById('printPreviewContent');
+            const pageIndicator = document.getElementById('pageIndicator');
+
+            if (!previewContent || !pageIndicator) return;
+
+            // 清空内容
+            previewContent.innerHTML = '';
+            pageIndicator.innerHTML = '';
+
+            // 获取主页面印章的当前状态
+            const mainSeal = document.querySelector('.seal-overlay');
+            const isSealHidden = mainSeal && mainSeal.classList.contains('hidden');
+
+            // 渲染所有页面
+            printData.pages.forEach((page, index) => {
+                const pageElement = createPrintPageElement(page);
+                previewContent.appendChild(pageElement);
+
+                // 同步主页面印章状态到预览中的印章
+                const previewSeal = pageElement.querySelector('.seal-overlay');
+                if (previewSeal) {
+                    // 应用主页面隐藏状态
+                    if (isSealHidden) {
+                        previewSeal.classList.add('hidden');
+                    } else {
+                        previewSeal.classList.remove('hidden');
+                    }
+
+                    // 应用打印预览的显示/隐藏状态
+                    if (!showSealInPrint) {
+                        previewSeal.style.display = 'none';
+                    } else if (!isSealHidden) {
+                        previewSeal.style.display = 'block';
+                    }
+                }
+            });
+
+            // 生成页码指示器
+            generatePageIndicator(pageIndicator);
+
+            // 显示第一页
+            showPage(0);
+
+            // 更新翻页按钮状态
+            updatePageNavigation();
+        }
+
+        let showSealInPrint = true; // 默认显示印章
+
+        // 创建打印页面元素 - 确保所有页面结构相同
+        function createPrintPageElement(page) {
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'print-page-container';
+            pageContainer.id = `print-page-${page.pageNum}`;
+            pageContainer.style.display = 'none';
+
+            // 获取主页面印章状态
+            const mainSeal = document.querySelector('.seal-overlay');
+            const sealClass = mainSeal && mainSeal.classList.contains('hidden') ? 'hidden' : '';
+            const sealDisplayStyle = showSealInPrint ? '' : 'display: none !important;';
+
+            // 固定表格结构 - 总是10行
+            let tableRowsHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const item = page.items[i] || {
+                    index: page.pageNum === 1 ? i + 1 : (page.pageNum - 1) * 10 + i + 1,
+                    name: '',
+                    model: '',
+                    quantity: '',
+                    price: '',
+                    amount: '',
+                    remark: '',
+                    delivery: '',
+                    brand: ''
+                };
+
+                tableRowsHTML += `
+        <tr class="${item.name === '' ? 'empty-row' : ''}">
+            <td>${item.index || ''}</td>
+            <td>${item.name || ''}</td>
+            <td>${item.model || ''}</td>
+            <td>${item.quantity || ''}</td>
+            <td>${item.price || ''}</td>
+            <td>${item.amount || ''}</td>
+            <td>${item.remark || ''}</td>
+            <td>${item.delivery || ''}</td>
+            <td>${item.brand || ''}</td>
+        </tr>
+    `;
+            }
+
+            // 构建完整的HTML - 所有页面都有完整内容
+            pageContainer.innerHTML = `
+    <div class="print-page-content">
+        <!-- 页头 -->
+        <div class="print-page-header">
+            <div class="company-logo">
+                <img src="../img/khlogo.png" alt="公司logo">
+            </div>
+            <div class="contract-title">
+                <h2>加工定制合同</h2>
+            </div>
+            <div class="page-info">
+                <div>第${page.pageNum}页 / 共${page.totalPages}页</div>
+            </div>
+        </div>
+
+        <!-- 合同基本信息 -->
+        <div class="print-page-details">
+            <div class="print-client-info">
+                <p>甲方(供货方): ${page.contractData.supplierInfo.company}</p>
+                <p>乙方(购货方): ${page.contractData.clientInfo.company}</p>
+            </div>
+            <div class="print-contract-meta">
+                <p>合同编号: ${page.contractData.contractNumber}</p>
+                <p>签约地点: 江苏省昆山市 ${page.contractData.contractDate}</p>
+            </div>
+        </div>
+
+        <!-- 货物明细标题 -->
+        <div style="margin-bottom: 5px;">
+            <p style="font-size: 14px; font-weight: bold;">一、以下为货物名称、数量、单价及总金额及乙方要求和收货地址：</p>
+        </div>
+
+        <!-- 货物明细表格 - 固定10行 -->
+        <table class="print-items-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%">序号</th>
+                    <th style="width: 15%">产品名称</th>
+                    <th style="width: 15%">产品型号</th>
+                    <th style="width: 8%">订购数量</th>
+                    <th style="width: 10%">单价</th>
+                    <th style="width: 10%">合计</th>
+                    <th style="width: 20%">备注</th>
+                    <th style="width: 10%">货期</th>
+                    <th style="width: 7%">品牌</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRowsHTML}
+            </tbody>
+        </table>
+
+        <!-- 合计金额 -->
+        <div class="print-page-summary">
+            <table class="print-summary-table">
+                <tr>
+                    <td>总计:</td>
+                    <td>${page.pageTotal} 元</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 乙方要求和收货地址 - 与条款字体一致 -->
+        <div style="margin-top: 8px;">
+            <p style="font-size: 14px;"><strong>乙方要求：</strong>${page.contractData.clientRequirements}</p>
+            <p style="font-size: 14px;"><strong>收货地址：</strong>${page.contractData.deliveryAddress}</p>
+        </div>
+
+        <!-- 合同条款 - 所有页面都显示 -->
+        <div class="print-terms">
+            <p style="font-size: 14px;">${page.contractData.taxRate}</p>
+            <p style="font-size: 14px;"><strong>二、合同履行，付款方式及期限，交货方式。</strong></p>
+            <p style="font-size: 14px;"> 1.本合同请乙方于3个工作日内加盖合同章或公章向甲方回传，双方盖章（签字）后合同生效。</p>
+            <p style="font-size: 14px;"> 2.交货地点：甲方负责将货物交付到乙方指定的国内交货地点，并承担运输费用；由乙方负责货物卸车。</p>
+            <p style="font-size: 14px;"> 3.付款方式：${page.contractData.paymentMethod}</p>
+            <p style="font-size: 14px;"> 4.交货方式：乙方应在甲方完成加工入库并收到甲方通知（不限书面，微信QQ等亦可）提货后7日内提完相应货物，若乙方未在约定时间内提完，甲方有权自行处置本合同产品，由此给乙方造成的全部损失，由乙方自行承担。</p>
+            <p style="font-size: 14px;"><strong>三、质保期：</strong>本合同项下货物，自乙方收到之日起保修期为一年。在质保期内，如果因产品质量问题，由甲方负责维修；非产品质量问题，经协商一致，甲方可以提供维修服务，由此产生的费用，由乙方承担。</p>
+            <p style="font-size: 14px;"><strong>四、货物验收：</strong>乙方收到货物后，应于3日内进行验收确认，如果有质量问题，须以书面形式通知甲方。如逾期未提出任何异议的，视为验收合格。</p>
+            <p style="font-size: 14px;"><strong>五、其他条款：</strong>本合同产品为加工定制品，不支持加工途中取消或者变更型号，非质量问题不支持退换货。</p>
+            <p style="font-size: 14px;"><strong>六、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
+        </div>
+
+        <!-- 签名区域 - 所有页面都显示，左右分部 -->
+        <div class="print-signature-area">
+            <!-- 供货方签名 -->
+            <div class="print-supplier-signature" style="position: relative;">
+                <h5 style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">供货方签字盖章</h5>
+                ${page.contractData.sealInfo.hasSeal ? `
+                <div class="seal-overlay ${sealClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; opacity: 0.8; ${sealDisplayStyle}">
+                    <img src="${page.contractData.sealInfo.sealPath}"
+                         style="width: ${page.contractData.sealInfo.sealWidth}; max-width: 180px;"
+                         alt="公司印章"
+                         onerror="this.style.display='none'">
+                </div>
+                ` : ''}
+                <table class="print-signature-table">
+                    <tr>
+                        <td style="width: 15%; font-size: 11px;">甲方：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.company}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">开户行：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.bank}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">账号：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.account}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">税号：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.taxNumber}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">地址：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.address}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">电话：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.phone}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">代表人：</td>
+                        <td style="font-size: 11px;">${page.contractData.supplierInfo.representative}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 购货方签名 -->
+            <div class="print-client-signature">
+                <h5 style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">购货方签字盖章</h5>
+                <table class="print-signature-table">
+                    <tr>
+                        <td style="width: 15%; font-size: 11px;">乙方：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.company}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">开户行：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.bank || ''}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">账号：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.account || ''}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">税号：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.taxNumber || ''}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">地址：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.address}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">电话：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.phone || ''}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 11px;">代表人：</td>
+                        <td style="font-size: 11px;">${page.contractData.clientInfo.representative || ''}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+`;
+
+            return pageContainer;
+        }
+
+        // 验证分页是否正确
+        function validatePrintPages() {
+            const pages = document.querySelectorAll('.print-page-container');
+
+            console.log('=== 分页验证 ===');
+            console.log(`总页数: ${pages.length}`);
+
+            pages.forEach((page, index) => {
+                const table = page.querySelector('.print-items-table tbody');
+                const rows = table ? table.querySelectorAll('tr') : [];
+                const pageNum = page.querySelector('.page-info')?.textContent || `第${index + 1}页`;
+
+                console.log(`${pageNum}:`, {
+                    表格行数: rows.length,
+                    页面高度: page.offsetHeight + 'px',
+                    是否显示条款: page.querySelector('.print-terms') ? '是' : '否'
+                });
+
+                // 确保每页10行
+                if (rows.length !== 10) {
+                    console.warn(`警告: ${pageNum} 有 ${rows.length} 行，应为10行`);
+                }
+            });
+
+            return pages.length > 0;
+        }
+
+// 在渲染后调用验证
+        function renderPrintPreview() {
+            const previewContent = document.getElementById('printPreviewContent');
+            const pageIndicator = document.getElementById('pageIndicator');
+
+            if (!previewContent || !pageIndicator) return;
+
+            // 清空内容
+            previewContent.innerHTML = '';
+            pageIndicator.innerHTML = '';
+
+            // 渲染所有页面
+            printData.pages.forEach((page, index) => {
+                const pageElement = createPrintPageElement(page);
+                previewContent.appendChild(pageElement);
+            });
+
+            // 生成页码指示器
+            generatePageIndicator(pageIndicator);
+
+            // 显示第一页
+            showPage(0);
+
+            // 更新翻页按钮
+            updatePageNavigation();
+
+            // 验证分页
+            setTimeout(validatePrintPages, 100);
+        }
+
+        // 生成页码指示器
+        function generatePageIndicator(container) {
+        if (printData.totalPages <= 1) return;
+
+        container.innerHTML = `
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="firstPageBtn">
+        <i class="bi bi-chevron-double-left"></i> 第一页
+        </button>
+        <div class="page-dots">
+        ${Array.from({length: printData.totalPages}, (_, i) => `
+        <div class="page-dot ${i === 0 ? 'active' : ''}"
+        data-page="${i}"
+        title="第${i + 1}页">
+        </div>
+        `).join('')}
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="lastPageBtn">
+        最后一页 <i class="bi bi-chevron-double-right"></i>
+        </button>
+        `;
+
+        // 绑定页码指示器点击事件
+        container.querySelectorAll('.page-dot').forEach(dot => {
+        dot.addEventListener('click', function() {
+        const pageNum = parseInt(this.getAttribute('data-page'));
+        showPage(pageNum);
         });
+        });
+
+        // 绑定第一页按钮
+        document.getElementById('firstPageBtn')?.addEventListener('click', function() {
+        showPage(0);
+        });
+
+        // 绑定最后一页按钮
+        document.getElementById('lastPageBtn')?.addEventListener('click', function() {
+        showPage(printData.totalPages - 1);
+        });
+        }
+
+        // 显示指定页面 - 修复版
+        function showPage(pageNum) {
+            // 隐藏所有页面
+            document.querySelectorAll('.print-page-container').forEach(page => {
+                page.style.display = 'none';
+            });
+
+            // 显示当前页面
+            const currentPage = document.getElementById(`print-page-${pageNum + 1}`);
+            if (currentPage) {
+                currentPage.style.display = 'block';
+                printData.currentPage = pageNum;
+
+                // 更新页码指示器
+                updatePageIndicator();
+                updatePageNavigation();
+            }
+        }
+
+        // 显示当前页面
+        const currentPage = document.getElementById(`print-page-${pageNum + 1}`);
+        if (currentPage) {
+        currentPage.style.display = 'block';
+        printData.currentPage = pageNum;
+
+        // 更新页码指示器
+        updatePageIndicator();
+        updatePageNavigation();
+        }
+
+
+        // 更新页码指示器
+        function updatePageIndicator() {
+        document.querySelectorAll('.page-dot').forEach((dot, index) => {
+        if (index === printData.currentPage) {
+        dot.classList.add('active');
+        } else {
+        dot.classList.remove('active');
+        }
+        });
+        }
+
+        // 翻页导航
+        function navigatePage(direction) {
+        const newPage = printData.currentPage + direction;
+
+        if (newPage >= 0 && newPage < printData.totalPages) {
+        showPage(newPage);
+        }
+        }
+
+        // 更新翻页按钮状态
+        function updatePageNavigation() {
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+
+        if (prevBtn) {
+        prevBtn.disabled = printData.currentPage === 0;
+        }
+
+        if (nextBtn) {
+        nextBtn.disabled = printData.currentPage === printData.totalPages - 1;
+        }
+        }
+
+        // 从预览执行打印 - 修复打印取消后页面变灰的问题
+        function executePrintFromPreview() {
+            console.log('===== 开始执行打印 =====');
+
+            // 定义在函数内部但不在try块中的变量
+            let tempPrintContainer = null;
+            let modal = null;
+            let modalBackdrop = null;
+            let originalModalStyle = '';
+            let originalBackdropStyle = '';
+
+            // 清理函数 - 移到try块外部
+            function cleanupAfterPrint() {
+                console.log('执行清理...');
+
+                // 移除临时打印容器
+                if (tempPrintContainer && tempPrintContainer.parentNode) {
+                    tempPrintContainer.parentNode.removeChild(tempPrintContainer);
+                }
+
+                // 恢复预览模态框
+                if (modal) {
+                    modal.style.display = '';
+                    modal.style.visibility = '';
+                    modal.style.cssText = originalModalStyle;
+                }
+                if (modalBackdrop) {
+                    modalBackdrop.style.display = '';
+                    modalBackdrop.style.visibility = '';
+                    modalBackdrop.style.cssText = originalBackdropStyle;
+                }
+
+                const allBackdrops = document.querySelectorAll('.modal-backdrop');
+                allBackdrops.forEach(backdrop => {
+                    if (backdrop.parentNode) {
+                        backdrop.parentNode.removeChild(backdrop);
+                    }
+                });
+
+                // 2. 恢复body的modal-open状态
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = 'auto';
+                document.body.style.paddingRight = '0';
+                document.body.style.pointerEvents = 'auto';
+
+                // 3. 确保所有模态框都正确关闭
+                const allModals = document.querySelectorAll('.modal');
+                allModals.forEach(modalElement => {
+                    modalElement.classList.remove('show');
+                    modalElement.style.pointerEvents = 'auto';
+                });
+
+                // 4. 强制重新显示模态框（解决页面变灰问题）
+                if (modal) {
+                    // 先完全隐藏再重新显示，确保Bootstrap状态正确
+                    setTimeout(() => {
+                        try {
+                            // 尝试使用Bootstrap API重新打开
+                            const newModal = new bootstrap.Modal(modal);
+                            newModal.show();
+                        } catch (e) {
+                            // 如果Bootstrap API失败，手动显示
+                            console.log('Bootstrap API失败，手动恢复模态框');
+                            modal.style.display = 'block';
+                            modal.classList.add('show');
+
+                            // 重新添加背景遮罩
+                            const newBackdrop = document.createElement('div');
+                            newBackdrop.className = 'modal-backdrop fade show';
+                            document.body.appendChild(newBackdrop);
+
+                            // 设置body状态
+                            document.body.classList.add('modal-open');
+                            document.body.style.overflow = 'hidden';
+                        }
+                    }, 50);
+                }
+
+                console.log('清理完成');
+            }
+
+            try {
+                // 获取所有打印页面
+                const allPrintPages = document.querySelectorAll('.print-page-container');
+                console.log(`找到 ${allPrintPages.length} 个打印页面`);
+
+                if (allPrintPages.length === 0) {
+                    alert('错误：没有找到任何打印页面！');
+                    return;
+                }
+
+                // 创建一个临时的打印容器
+                tempPrintContainer = document.createElement('div');
+                tempPrintContainer.id = 'temp-print-container';
+                tempPrintContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 999999;
+            overflow: auto;
+        `;
+
+                // 复制所有打印页面
+                allPrintPages.forEach(page => {
+                    const pageClone = page.cloneNode(true);
+                    pageClone.style.display = 'block';
+                    pageClone.style.visibility = 'visible';
+                    pageClone.style.opacity = '1';
+                    pageClone.style.position = 'relative';
+                    pageClone.style.pageBreakAfter = 'always';
+                    pageClone.style.pageBreakInside = 'avoid';
+                    tempPrintContainer.appendChild(pageClone);
+                });
+
+                // 添加到body
+                document.body.appendChild(tempPrintContainer);
+
+                // 保存当前模态框的引用
+                modal = document.getElementById('printPreviewModal');
+                modalBackdrop = document.querySelector('.modal-backdrop');
+
+                // 保存原始样式（用于恢复）
+                originalModalStyle = modal ? modal.style.cssText : '';
+                originalBackdropStyle = modalBackdrop ? modalBackdrop.style.cssText : '';
+
+                // 隐藏预览模态框（但不移除）
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                }
+                if (modalBackdrop) {
+                    modalBackdrop.style.display = 'none';
+                    modalBackdrop.style.visibility = 'hidden';
+                }
+
+                console.log('开始打印...');
+
+                // 添加事件监听器来处理打印完成
+                const handleAfterPrint = () => {
+                    console.log('打印结束（无论是完成还是取消）');
+                    cleanupAfterPrint();
+                };
+
+                // 添加afterprint事件监听
+                window.addEventListener('afterprint', handleAfterPrint, { once: true });
+
+                // 设置一个超时，确保即使打印事件没有触发也能恢复
+                setTimeout(() => {
+                    // 检查是否已经处理过清理
+                    if (tempPrintContainer && tempPrintContainer.parentNode) {
+                        console.log('打印超时，强制恢复');
+                        cleanupAfterPrint();
+                    }
+                }, 3000); // 3秒后自动恢复
+
+                // 触发打印
+                window.print();
+
+            } catch (error) {
+                console.error('打印过程中发生错误:', error);
+                alert('打印失败: ' + error.message);
+
+                // 出错时也要清理
+                cleanupAfterPrint();
+            }
+        }
+
+
+
+
+        function collectPrintData() {
+            // 基础信息
+            const contractNumber = document.getElementById('contractNumber').value || '无';
+            const contractDate = document.getElementById('contractDate').value || '';
+            const formattedDate = contractDate ?
+                `${contractDate.slice(0,4)}/${contractDate.slice(5,7)}/${contractDate.slice(8,10)}` : '';
+
+            // 客户信息
+            let clientCompany = document.getElementById('clientCompany').value || '';
+            if (clientCompany === '其他') {
+                clientCompany = document.getElementById('clientCompanyOther').value || '无';
+            }
+
+            let clientAddress = document.getElementById('clientAddress').value || '';
+            if (clientAddress === '其他') {
+                clientAddress = document.getElementById('clientAddressOther').value || '无';
+            }
+
+            let deliveryAddress = document.getElementById('deliveryAddress').value || '';
+            if (deliveryAddress === '其他') {
+                deliveryAddress = document.getElementById('deliveryAddressOther').value || '无';
+            } else if (deliveryAddress === '同乙方地址') {
+                deliveryAddress = clientAddress || '同乙方地址';
+            }
+
+            const clientRequirements = document.getElementById('clientRequirements').value || '无';
+
+            // 付款方式
+            let paymentMethod = document.getElementById('paymentMethod').value || '';
+            if (paymentMethod === '其他') {
+                paymentMethod = document.getElementById('paymentMethodOther').value || '无';
+            }
+
+            // 税率信息
+            const taxRateText = document.getElementById('previewTaxRate').textContent || '以上报价含税（13%增值税）';
+
+            // 产品信息
+            const items = [];
+            const itemRows = document.querySelectorAll('.item-row');
+            let totalAmount = 0;
+
+            itemRows.forEach((row, index) => {
+                const name = row.querySelector('.item-name').value || '';
+                const model = row.querySelector('.item-model').value || '';
+                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = quantity * price;
+                const remark = row.querySelector('.item-remark').value || '';
+                const delivery = row.querySelector('.item-delivery').value || '';
+                const brand = row.querySelector('.item-brand').value || 'SHAC';
+
+                totalAmount += amount;
+
+                items.push({
+                    index: index + 1,
+                    name: name,
+                    model: model,
+                    quantity: quantity,
+                    price: price.toFixed(2),
+                    amount: amount.toFixed(2),
+                    remark: remark,
+                    delivery: delivery,
+                    brand: brand
+                });
+            });
+
+            // 供货方信息
+            const supplierInfo = {
+                company: document.getElementById('ghf').textContent || '昆山翰元星传动科技有限公司',
+                bank: document.getElementById('khh').textContent || '中国银行股份有限公司昆山综合保税区支行',
+                account: document.getElementById('zhanghao').textContent || '554739970698',
+                taxNumber: document.getElementById('shuihao').textContent || '91320583MABWDA32XA',
+                address: document.getElementById('dizhi').textContent || '昆山市张浦镇同舟路188号3号房',
+                phone: document.getElementById('previewPhone').textContent || '',
+                representative: document.getElementById('previewRepresentative').textContent || ''
+            };
+
+            // 购货方信息 - 修复：从页面上获取完整的购货方信息
+            const clientInfo = {
+                company: clientCompany,
+                address: clientAddress,
+                // 从页面上获取购货方的银行信息
+                bank: getElementText('.footer-right .signature-table tr:nth-child(2) td:last-child') || '',
+                account: getElementText('.footer-right .signature-table tr:nth-child(3) td:last-child') || '',
+                taxNumber: getElementText('.footer-right .signature-table tr:nth-child(4) td:last-child') || '',
+                phone: getElementText('.footer-right .signature-table tr:nth-child(6) td:last-child') || '',
+                representative: getElementText('.footer-right .signature-table tr:nth-child(7) td:last-child') || ''
+            };
+
+            // 印章信息
+            const sealInfo = {
+                hasSeal: true,
+                sealPath: '../img/yinzhang.png',
+                sealWidth: '200px'
+            };
+
+            return {
+                contractNumber: contractNumber,
+                contractDate: formattedDate,
+                clientCompany: clientCompany,
+                clientAddress: clientAddress,
+                deliveryAddress: deliveryAddress,
+                clientRequirements: clientRequirements,
+                paymentMethod: paymentMethod,
+                taxRate: taxRateText,
+                items: items,
+                totalAmount: totalAmount.toFixed(2),
+                supplierInfo: supplierInfo,
+                clientInfo: clientInfo,
+                sealInfo: sealInfo
+            };
+        }
+
+// 辅助函数：获取元素的文本内容
+        function getElementText(selector) {
+            const element = document.querySelector(selector);
+            return element ? element.textContent.trim() : '';
+        }
+
+        // 生成打印分页（固定每页10条数据）
+        function generatePrintPages(contractData) {
+            console.log('生成打印分页（固定每页10行）...');
+
+            const pages = [];
+            const itemsPerPage = 10; // 固定每页10行
+            const totalItems = contractData.items.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+            console.log('分页参数:', {
+                itemsPerPage: itemsPerPage,
+                totalItems: totalItems,
+                totalPages: totalPages
+            });
+
+            // 生成每一页
+            for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+                const startIndex = pageNum * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+                // 当前页的产品数据
+                const pageItems = contractData.items.slice(startIndex, endIndex);
+
+                // 补足到10行
+                const displayItems = [...pageItems];
+                const emptyRows = itemsPerPage - pageItems.length;
+
+                if (emptyRows > 0) {
+                    for (let i = 0; i < emptyRows; i++) {
+                        displayItems.push({
+                            index: startIndex + pageItems.length + i + 1,
+                            name: '',
+                            model: '',
+                            quantity: '',
+                            price: '',
+                            amount: '',
+                            remark: '',
+                            delivery: '',
+                            brand: ''
+                        });
+                    }
+                }
+
+                // 计算当前页合计
+                let pageTotal = 0;
+                pageItems.forEach(item => {
+                    pageTotal += parseFloat(item.amount) || 0;
+                });
+
+                // 判断是否为第一页（显示条款）
+                const isFirstPage = pageNum === 0;
+
+                pages.push({
+                    pageNum: pageNum + 1,
+                    totalPages: totalPages,
+                    items: displayItems, // 总是10行
+                    pageTotal: pageTotal.toFixed(2),
+                    contractData: contractData,
+                    isFirstPage: isFirstPage,
+                    showTerms: isFirstPage || (totalPages === 1) // 只有第一页或单页显示条款
+                });
+
+                console.log(`第${pageNum + 1}页:`, {
+                    实际数据行: pageItems.length,
+                    显示行数: displayItems.length,
+                    空行数: emptyRows,
+                    合计金额: pageTotal
+                });
+            }
+
+            return pages;
+        }
 
         // 智能打印函数 - 不替换整个body
         function executeSmartPrint() {
@@ -1912,22 +3348,17 @@
             const itemRows = document.querySelectorAll('.item-row');
 
             if (!contractNumber || contractNumber.trim() === '') {
-                alert('请填写合同编号');
+                swal('请填写合同编号');
                 return false;
             }
 
             if (!clientCompany || clientCompany.trim() === '') {
-                alert('请选择乙方公司');
+                swal('请选择乙方公司');
                 return false;
             }
 
             if (itemRows.length === 0) {
-                alert('请至少添加一个产品');
-                return false;
-            }
-
-            // 添加确认对话框
-            if (!confirm('确定要打印合同吗？')) {
+                swal('请至少添加一个产品');
                 return false;
             }
 
@@ -3645,35 +5076,27 @@
 
 
 
-    function updatePrintButtonsState(dataId) {
-        const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
+        function updatePrintButtonsState(dataId) {
+            const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
 
-        // 保存原始ID到全局变量
-        window.currentRejectedDataId = dataId;
+            // 保存原始ID到全局变量
+            window.currentRejectedDataId = dataId;
 
-        // 修改打印单上的按钮HTML
-        printActionButtons.innerHTML = `
+            // 修改打印单上的按钮HTML - 确保包含隐藏印章按钮
+            printActionButtons.innerHTML = `
         <button id="updateData" class="btn btn-warning">修改数据</button>
         <button id="deleteData" class="btn btn-danger">删除数据</button>
         <button id="printInvoiceBtn" class="btn btn-primary">打印合同</button>
-         <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
-         <button id="exportContractExcel" class="btn btn-success">
-         <i class="bi bi-file-earmark-excel"></i> 导出合同Excel</button>
+        <button id="exportContractExcel" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> 导出合同Excel
+        </button>
     `;
 
-        // 使用事件委托绑定所有按钮事件
-        printActionButtons.addEventListener('click', function(e) {
-            if (e.target.id === 'updateData') {
-                updateRejectedData(dataId);
-            } else if (e.target.id === 'deleteData') {
-                deleteRejectedData(dataId);
-            } else if (e.target.id === 'printInvoiceBtn') {
-                handlePrintContract();
-            }
-        });
+            // 使用事件委托绑定所有按钮事件
+            bindPrintButtonsEvents();
 
-        console.log("打印单按钮已更新为修改模式");
-    }
+            console.log("打印单按钮已更新为修改模式");
+        }
 
     // 处理打印合同
     function handlePrintContract() {
@@ -3850,35 +5273,73 @@
     }
 
     // 恢复打印单原始按钮状态
-    function resetPrintButtonsState() {
-        const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
-        if (printActionButtons) {
-            printActionButtons.innerHTML = `
+        function resetPrintButtonsState() {
+            const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
+            if (printActionButtons) {
+                printActionButtons.innerHTML = `
             <button id="saveData" class="btn btn-primary">保存数据</button>
             <button id="printInvoice" class="btn btn-primary">打印合同</button>
-             <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
+            <button id="yincanggongzhang" class="btn btn-primary">
+                <i class="bi bi-eye-slash"></i> 隐藏印章
+            </button>
         `;
 
-            // 使用事件委托重新绑定事件
-            printActionButtons.addEventListener('click', function(e) {
-                if (e.target.id === 'saveData') {
-                    if (!validateSaveData()) {
-                        return;
-                    }
+                // 重新绑定所有按钮事件
+                bindPrintButtonsEvents();
+            }
+
+            // 清除全局ID
+            window.currentRejectedDataId = null;
+
+            console.log("打印单按钮已恢复为原始状态");
+        }
+
+        // 统一绑定打印区域按钮事件的函数
+        function bindPrintButtonsEvents() {
+            const actionButtons = document.querySelector('#invoicePreview .action-buttons');
+
+            if (!actionButtons) return;
+
+            // 使用事件委托绑定所有按钮事件
+            actionButtons.addEventListener('click', function(e) {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const buttonId = button.id;
+
+                if (buttonId === 'saveData') {
+                    if (!validateSaveData()) return;
                     if (confirm('确定要保存销售订单数据吗？')) {
                         saveDataToDatabase();
                     }
-                } else if (e.target.id === 'printInvoice') {
+                } else if (buttonId === 'printInvoice' || buttonId === 'printInvoiceBtn') {
                     handlePrintContract();
+                } else if (buttonId === 'yincanggongzhang') {
+                    // 隐藏印章按钮的逻辑
+                    const sealElement = document.querySelector('.seal-overlay');
+
+                    // 切换hidden类
+                    sealElement.classList.toggle('hidden');
+
+                    // 更新按钮状态
+                    if (sealElement.classList.contains('hidden')) {
+                        button.innerHTML = '<i class="bi bi-eye"></i> 显示印章';
+                        button.classList.remove('btn-secondary');
+                        button.classList.add('btn-success');
+                    } else {
+                        button.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏印章';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-secondary');
+                    }
+                } else if (buttonId === 'updateData') {
+                    updateRejectedData(window.currentRejectedDataId);
+                } else if (buttonId === 'deleteData') {
+                    deleteRejectedData(window.currentRejectedDataId);
+                } else if (buttonId === 'exportContractExcel') {
+                    exportContractToExcel();
                 }
             });
         }
-
-        // 清除全局ID
-        window.currentRejectedDataId = null;
-
-        console.log("打印单按钮已恢复为原始状态");
-    }
 
     // 恢复原始按钮状态
     // function resetButtonState() {
@@ -4566,32 +6027,355 @@
         const style = document.createElement('style');
         style.innerHTML = `
         @media print {
-            body {
-                font-size: 12px !important;
-            }
+    /* ==================== 复刻预览界面样式 ==================== */
 
-            .invoice-container {
-                font-size: 11px !important;
-            }
+    /* 1. 基础样式保留 */
+    :root {
+        --primary-color: #2c5aa0;
+        --primary-light: #4a76c4;
+        --secondary-color: #f8f9fa;
+        --accent-color: #ff6b35;
+        --text-color: #333;
+        --border-color: #dee2e6;
+        --radius: 8px;
+    }
 
-            .items-table {
-                font-size: 10px !important;
-            }
+    /* 2. 确保打印容器正确显示 */
+    body > *:not(#temp-print-container) {
+        display: none !important;
+        visibility: hidden !important;
+    }
 
-            .notes p {
-                margin-bottom: 8px !important;
-                line-height: 1.3 !important;
-            }
+    #temp-print-container {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%) !important;
+        padding: 20px !important;
+        min-height: 100vh !important;
+    }
 
-            .footer {
-                margin-top: 30px !important;
-            }
+    /* 3. 完全复刻预览页面的样式 */
+    .print-page-container {
+        /* 预览界面的基础样式 */
+        background: white !important;
+        border-radius: var(--radius) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 20px auto !important;
+        padding: 15mm !important;
+        box-sizing: border-box !important;
+        font-family: "Microsoft YaHei", sans-serif !important;
 
-            .signature-table td {
-                height: 25px !important;
-                font-size: 10px !important;
-            }
-        }
+        /* 打印特有样式 */
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        position: relative !important;
+        display: block !important;
+    }
+
+    /* 4. 打印头部完全复刻预览样式 */
+    .print-page-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+        border-bottom: 2px solid var(--primary-color) !important;
+        width: 100% !important;
+    }
+
+    .print-page-header .company-logo {
+        width: 20% !important;
+    }
+
+    .print-page-header .company-logo img {
+        max-width: 150px !important;
+        max-height: 60px !important;
+    }
+
+    .print-page-header .contract-title {
+        text-align: center !important;
+        flex: 1 !important;
+    }
+
+    .print-page-header .contract-title h2 {
+        color: var(--primary-color) !important;
+        font-size: 24px !important;
+        margin: 0 !important;
+        font-weight: 600 !important;
+    }
+
+    .print-page-header .page-info {
+        text-align: right !important;
+        font-size: 12px !important;
+        color: #666 !important;
+    }
+
+    /* 5. 详细信息区域完全复刻预览样式 */
+    .print-page-details {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 20px !important;
+        margin-bottom: 15px !important;
+        font-size: 12px !important;
+        width: 100% !important;
+    }
+
+    .print-client-info,
+    .print-contract-meta {
+        padding-top: 10px !important;
+        border-radius: 4px !important;
+        margin-left: 60px !important;
+        background: #f8f9fa !important;
+        padding: 15px !important;
+        border-radius: var(--radius) !important;
+    }
+
+    /* 6. 表格完全复刻预览样式 */
+    .print-items-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 5px !important;
+        font-size: 10px !important;
+        border-radius: var(--radius) !important;
+        overflow: hidden !important;
+        box-shadow: 0 0 0 1px var(--border-color) !important;
+        table-layout: fixed !important;
+    }
+
+    .print-items-table th {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        padding: 4px 6px !important;
+        text-align: center !important;
+        border: 1px solid #ddd !important;
+        font-weight: 600 !important;
+    }
+
+    .print-items-table td {
+        padding: 4px 6px !important;
+        border: 1px solid #ddd !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .print-items-table tr:nth-child(even) {
+        background-color: #f8f9fa !important;
+    }
+
+    /* 每页固定行高 */
+    .print-items-table tbody tr {
+        height: 20px !important;
+    }
+
+    .print-items-table .empty-row td {
+        border: 1px solid #eee !important;
+        background-color: white !important;
+    }
+
+    /* 7. 合计区域完全复刻预览样式 */
+    .print-page-summary {
+        display: flex !important;
+        justify-content: flex-end !important;
+        margin-bottom: 5px !important;
+    }
+
+    .print-summary-table {
+        width: 300px !important;
+        border-collapse: collapse !important;
+        border-radius: var(--radius) !important;
+        overflow: hidden !important;
+        box-shadow: 0 0 0 1px var(--border-color) !important;
+    }
+
+    .print-summary-table td {
+        padding: 6px 12px !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+
+    .print-summary-table tr:last-child {
+        font-weight: bold !important;
+        background-color: #f1f8ff !important;
+    }
+
+    /* 8. 条款内容完全复刻预览样式 */
+    .print-terms {
+        font-size: 11px !important;
+        line-height: 1.4 !important;
+    }
+
+    .print-terms p {
+        margin-bottom: 6px !important;
+    }
+
+    /* 9. 签名区域完全复刻预览样式 */
+    .print-signature-area {
+        display: flex !important;
+        justify-content: space-between !important;
+        margin-top: 20px !important;
+        font-size: 11px !important;
+        width: 100% !important;
+    }
+
+    .print-supplier-signature,
+    .print-client-signature {
+        width: 45% !important;
+    }
+
+    .print-signature-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 8px !important;
+    }
+
+    .print-signature-table td {
+        padding: 3px !important;
+        border: 1px solid #ddd !important;
+        height: 22px !important;
+        font-size: 10px !important;
+    }
+
+    /* 10. 印章样式完全复刻 */
+    .seal-overlay {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 100 !important;
+        opacity: 0.8 !important;
+        pointer-events: none !important;
+    }
+
+    .seal-overlay img {
+        width: 200px !important;
+        max-width: 200px !important;
+    }
+
+    /* 11. 强制打印背景色 */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 12. 页面设置 */
+    @page {
+        size: A4;
+        margin: 0; /* 设置为0，用容器的padding和margin控制边距 */
+    }
+
+    /* 13. 隐藏不需要打印的元素 */
+    .print-preview-actions,
+    .page-indicator,
+    .print-nav-buttons,
+    .modal-header,
+    .modal-footer,
+    .modal-backdrop,
+    .btn-close,
+    .modal,
+    .modal-dialog,
+    .modal-content,
+    .btn,
+    .action-buttons,
+    .header,
+    .invoice-container:not(.print-page-container) {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 14. 页面内容区域 */
+    .print-page-content {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 15. 页脚部分 */
+    .print-page-footer {
+        margin-top: auto !important;
+        padding-top: 15px !important;
+        border-top: 1px solid #ddd !important;
+    }
+
+    /* 16. 专门针对签名区域的flex布局调整 */
+    .print-supplier-signature[style*="display: flex"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        position: relative !important;
+        width: 100% !important;
+    }
+
+    /* 17. 确保供货方签名区域宽度正确 */
+    .print-supplier-signature > div[style*="width: 300px"] {
+        width: 300px !important;
+        min-width: 300px !important;
+        max-width: 300px !important;
+        position: relative !important;
+    }
+
+    /* 18. 确保购货方签名区域宽度正确 */
+    .print-client-signature[style*="width: 300px"] {
+        width: 300px !important;
+        min-width: 300px !important;
+        max-width: 300px !important;
+    }
+
+    /* 19. 标题和强调文字样式 */
+    .print-terms strong {
+        font-weight: 600 !important;
+    }
+
+    /* 20. 表格列宽设置 */
+    .print-items-table th[style*="width:"],
+    .print-items-table td[style*="width:"] {
+        width: inherit !important;
+    }
+
+    /* 21. 确保分隔线和边框颜色正确 */
+    .print-page-header {
+        border-bottom-color: var(--primary-color) !important;
+    }
+
+    .print-items-table th,
+    .print-items-table td {
+        border-color: #ddd !important;
+    }
+
+    /* 22. 表格行悬停效果移除（打印不需要） */
+    .print-items-table tr:hover {
+        background-color: inherit !important;
+    }
+
+    /* 23. 确保页边距与预览一致 */
+    .print-page-container {
+        padding: 15mm !important;
+    }
+
+    /* 24. 字体大小调整确保可读性 */
+    .print-page-details p,
+    .print-terms p,
+    .print-signature-table td {
+        font-size: 11px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 25. 小标题样式 */
+    h5 {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* 26. 确保预览背景渐变 */
+    #temp-print-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%) !important;
+    }
+}
     `;
         document.head.appendChild(style);
     }

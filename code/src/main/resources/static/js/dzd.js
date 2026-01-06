@@ -265,12 +265,11 @@ function initToolbarEvents() {
                     $('#selectedCount').text(selectedDdhs.length);
                     $('#generateDzdModal').modal('show');
                 } else {
-                    alert("无法获取对账单号，请重试");
+                    console.log("无法获取对账单号，请重试");
                 }
             },
             error: function(xhr, status, error) {
                 console.error("获取对账单号失败:", error);
-                alert("获取对账单号失败，请检查网络连接");
             }
         });
     });
@@ -3026,13 +3025,13 @@ function getListBH() {
                 } else if (res.code === 403) {
                     alert("权限不足，无法访问此功能");
                 } else {
-                    alert("查询失败: " + (res.message || '没有获取到数据'));
+                    console.log("查询失败: " + (res.message || '没有获取到数据'));
                 }
             }
         },
         error: function(xhr, status, error) {
             console.error("AJAX请求失败:", error);
-            alert("请求失败，请检查网络连接");
+            console.log("请求失败，请检查网络连接");
         }
     });
 }
