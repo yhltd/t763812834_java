@@ -92,4 +92,13 @@ public class Xdmx {
     @TableField(exist = false)  // 表示这个字段不在当前表中
     private String bm;
 
+    /**
+     * 货期
+     */
+    private String hq;
+    /**
+     * 收货地址
+     */
+    private String shdz;
+
 }

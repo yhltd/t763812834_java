@@ -96,6 +96,8 @@ public interface ScgdMapper extends BaseMapper<Scgd> {
             "   <if test='zbz != null'>zbz = #{zbz},</if>",
             "   <if test='yq != null'>yq = #{yq},</if>",
             "   <if test='kpzt != null'>kpzt = #{kpzt},</if>",
+            "   <if test='hq != null'>hq = #{hq},</if>",
+            "   <if test='shdz != null'>shdz = #{shdz},</if>",
             "</set>",
             "WHERE id = #{id}",
             "</script>"})
@@ -104,10 +106,11 @@ public interface ScgdMapper extends BaseMapper<Scgd> {
     /**
      * 新增记录
      */
-    @Insert("INSERT INTO shengchangongdan (khcm, lxr, lxdh, ddrq, pp, cpxh, sl, dj, hj, fzr, htbh, zt, bz, zbz,yq,kpzt) " +
-            "VALUES (#{khcm}, #{lxr}, #{lxdh}, #{ddrq}, #{pp}, #{cpxh}, #{sl}, #{dj}, #{hj}, #{fzr}, #{htbh}, #{zt}, #{bz}, #{zbz}, #{yq}, #{kpzt})")
+    @Insert("INSERT INTO shengchangongdan (khcm, lxr, lxdh, ddrq, pp, cpxh, sl, dj, hj, fzr, htbh, zt, bz, zbz,yq,kpzt,hq,shdz) " +
+            "VALUES (#{khcm}, #{lxr}, #{lxdh}, #{ddrq}, #{pp}, #{cpxh}, #{sl}, #{dj}, #{hj}, #{fzr}, #{htbh}, #{zt}, #{bz}, #{zbz}, #{yq}, #{kpzt}, #{hq}, #{shdz})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Scgd shengchan);
+
 
 
     @Select("SELECT * FROM shengchangongdan WHERE id= #{id} ")

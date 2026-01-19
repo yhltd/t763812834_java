@@ -83,5 +83,13 @@ public class Scgd {
      * 生产工单
      */
     private String scgd;
+    /**
+     * 货期
+     */
+    private String hq;
+    /**
+     * 收货地址
+     */
+    private String shdz;
 
 }

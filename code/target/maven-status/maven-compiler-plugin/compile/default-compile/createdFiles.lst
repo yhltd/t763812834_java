@@ -5,6 +5,7 @@ com\example\demo\service\impl\DdmxImpl.class
 com\example\demo\util\IntTypeAdapter.class
 com\example\demo\util\GsonUtil$3.class
 com\example\demo\util\DetailRequestDTO.class
+com\example\demo\util\AuthUtil4.class
 com\example\demo\service\KhxxService.class
 com\example\demo\service\DzdService.class
 com\example\demo\service\impl\LargeFileUploadService.class

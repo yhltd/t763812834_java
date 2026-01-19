@@ -10,21 +10,44 @@ var totalHjAmount = 0;  // 合计金额总计
 var totalQkjeAmount = 0; // 欠款金额总计
 var totalYfjeAmount = 0; // 已付金额总计
 
+// 导出配置变量
+var exportColumnsConfig = {
+    mainColumns: [],      // 用户选择的主表列
+    detailColumns: ['产品名称', '产品型号', '订购数量', '含税单价', '备注'], // 详情表固定列
+    allMainColumns: [
+        { key: 'khcm', name: '乙方公司' },
+        { key: 'ddrq', name: '订单日期' },
+        { key: 'hj', name: '合计金额' },
+        { key: 'htbh', name: '合同编号' },
+        { key: 'kprq', name: '开票日期' },
+        { key: 'qkje', name: '欠款金额' },
+        { key: 'yfje', name: '已付金额' },
+        { key: 'zbz', name: '备注' }
+    ]
+};
+
+// 初始化导出配置
+function initExportConfig() {
+    exportColumnsConfig.mainColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+}
 // 页面加载完成后初始化
 $(document).ready(function() {
     console.log('页面加载完成，初始化客户信息页面...');
     addTableStyles();
+    addExportModalStyles(); // 添加导出样式
     initKhxxPage();
     initToolbarEvents();
     initDetailModalEvents();
 
+    // 初始化导出配置
+    initExportConfig();
+
     // 确保统计区域可见并初始化
     $('#statisticsContainer').show();
-    updateStatistics(); // 初始化显示为0
+    updateStatistics();
 
     getList(currentPage, pageSize, '');
 });
-
 // 初始化客户信息页面
 function initKhxxPage() {
     console.log('初始化客户信息页面...');
@@ -45,7 +68,9 @@ function initKhxxPage() {
 // 初始化工具栏事件
 function initToolbarEvents() {
     console.log('初始化工具栏事件...');
-
+    $('#export-excel-btn').off('click').on('click', function() {
+        showExportModal();
+    });
     // 刷新按钮
     $('#refresh-btn').off('click').on('click', function() {
         console.log('刷新数据');
@@ -408,7 +433,615 @@ function getDetailInfo(id) {
         }
     });
 }
+//导出excel
+// 显示导出模态框
+function showExportModal() {
+    var modalHtml = `
+        <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportModalLabel">导出Excel设置</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> 导出的Excel将包含您选择的主表字段，并固定拼接详情表字段。
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6><i class="bi bi-list-check"></i> 主表字段选择</h6>
+                                <div class="export-columns-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="selectAllColumns">
+                                        <label class="form-check-label" for="selectAllColumns">
+                                            <strong>全选/全不选</strong>
+                                        </label>
+                                    </div>
+                                    <div id="mainColumnsList">
+                                        <!-- 主表列复选框将在这里动态生成 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="exportFileName">导出文件名：</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="exportFileName" value="采购明细_${formatDate(new Date())}">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">.xlsx</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-success" id="confirmExport">
+                            <i class="bi bi-file-earmark-excel"></i> 导出Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
+    // 如果模态框已存在，先移除
+    $('#exportModal').remove();
+
+    // 添加到页面
+    $('body').append(modalHtml);
+
+    // 显示模态框
+    $('#exportModal').modal('show');
+
+    // 渲染主表列复选框
+    renderMainColumnsList();
+
+    // 绑定事件
+    bindExportModalEvents();
+}
+
+// 渲染主表列复选框
+function renderMainColumnsList() {
+    var columnsHtml = '';
+    exportColumnsConfig.allMainColumns.forEach(function(column) {
+        var isChecked = exportColumnsConfig.mainColumns.includes(column.key) ? 'checked' : '';
+        columnsHtml += `
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input main-column-checkbox" 
+                       id="col_${column.key}" value="${column.key}" ${isChecked}>
+                <label class="form-check-label" for="col_${column.key}">
+                    ${column.name}
+                </label>
+            </div>
+        `;
+    });
+
+    $('#mainColumnsList').html(columnsHtml);
+
+    // 更新全选复选框状态
+    updateSelectAllCheckbox();
+}
+
+// 绑定导出模态框事件
+function bindExportModalEvents() {
+    // 全选/全不选
+    $('#selectAllColumns').off('change').on('change', function() {
+        var isChecked = $(this).prop('checked');
+        $('.main-column-checkbox').prop('checked', isChecked);
+
+        if (isChecked) {
+            exportColumnsConfig.mainColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+        } else {
+            exportColumnsConfig.mainColumns = [];
+        }
+    });
+
+    // 单个复选框变化
+    $('.main-column-checkbox').off('change').on('change', function() {
+        var columnKey = $(this).val();
+
+        if ($(this).prop('checked')) {
+            if (!exportColumnsConfig.mainColumns.includes(columnKey)) {
+                exportColumnsConfig.mainColumns.push(columnKey);
+            }
+        } else {
+            var index = exportColumnsConfig.mainColumns.indexOf(columnKey);
+            if (index > -1) {
+                exportColumnsConfig.mainColumns.splice(index, 1);
+            }
+        }
+
+        // 更新全选复选框状态
+        updateSelectAllCheckbox();
+    });
+
+    // 确认导出
+    $('#confirmExport').off('click').on('click', function() {
+        var fileName = $('#exportFileName').val().trim();
+        if (!fileName) {
+            fileName = `采购明细_${formatDate(new Date())}`;
+        }
+
+        // 确保文件名有.xlsx扩展名
+        if (!fileName.endsWith('.xlsx')) {
+            fileName += '.xlsx';
+        }
+
+        $('#exportModal').modal('hide');
+        exportToExcel(fileName);
+    });
+}
+
+// 更新全选复选框状态
+function updateSelectAllCheckbox() {
+    var allChecked = $('.main-column-checkbox').length ===
+        $('.main-column-checkbox:checked').length;
+    $('#selectAllColumns').prop('checked', allChecked);
+}
+
+// 导出到Excel
+// 修改exportToExcel函数
+function exportToExcel(fileName) {
+    // 显示导出进度
+    swal({
+        title: '正在导出...',
+        text: '正在获取数据并生成Excel文件，请稍候...',
+        icon: 'info',
+        buttons: false,
+        closeOnClickOutside: false,
+        closeOnEsc: false
+    });
+
+    // 获取用户选择的字段
+    var selectedColumns = exportColumnsConfig.mainColumns;
+
+    // 如果没有选择任何字段，使用所有字段
+    if (selectedColumns.length === 0) {
+        selectedColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+    }
+
+    console.log('=== 导出配置信息 ===');
+    console.log('用户选择的主表列:', selectedColumns);
+
+    // 获取字段显示名称的映射
+    var selectedColumnNames = {};
+    exportColumnsConfig.allMainColumns.forEach(col => {
+        if (selectedColumns.includes(col.key)) {
+            selectedColumnNames[col.key] = col.name;
+        }
+    });
+
+    // 获取当前搜索条件
+    var keyword = getCurrentKeyword();
+
+    // 使用现有的list接口，设置很大的pageSize获取所有数据
+    $ajax({
+        type: 'post',
+        url: '/cgmx/list',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1,
+            pageSize: 99999999,
+            keyword: keyword
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        swal.close();
+
+        console.log('=== 导出接口响应 ===');
+        console.log('响应码:', res.success ? 'success' : 'error');
+        console.log('响应数据:', res.data);
+
+        if (res.success && res.data && res.data.list) {
+            // 使用list数据
+            processExportData(res.data.list, selectedColumns, selectedColumnNames, fileName);
+        } else if (res.success && res.data && Array.isArray(res.data)) {
+            // 另一种可能的响应格式
+            processExportData(res.data, selectedColumns, selectedColumnNames, fileName);
+        } else {
+            console.error('导出失败:', res.message);
+            swal('导出失败', res.message || '数据获取失败', 'error');
+        }
+    });
+}
+
+// 处理导出数据
+// 修改processExportData函数，传递selectedColumns和columnMapping参数
+function processExportData(apiData, selectedColumns, columnMapping, fileName) {
+    try {
+        var exportData = [];
+
+        console.log('=== 数据调试信息 ===');
+        console.log('用户选择的列:', selectedColumns);
+        console.log('列映射:', columnMapping);
+        console.log('处理数据条数:', apiData.length);
+
+        if (apiData.length > 0) {
+            console.log('第一条数据:', apiData[0]);
+        }
+
+        // 处理每条数据
+        apiData.forEach(function(item, index) {
+            // 传递selectedColumns和columnMapping参数
+            var detailData = getDetailForExport(item, selectedColumns, columnMapping);
+            if (detailData) {
+                exportData = exportData.concat(detailData);
+            }
+        });
+
+        console.log('导出数据条数:', exportData.length);
+        if (exportData.length > 0) {
+            console.log('第一条导出数据字段:', Object.keys(exportData[0]));
+            console.log('第一条导出数据值:', exportData[0]);
+
+            // 导出到Excel
+            exportDataToExcel(exportData, fileName);
+        } else {
+            swal('导出失败', '没有找到可导出的数据', 'warning');
+        }
+
+    } catch (error) {
+        console.error('数据处理失败:', error);
+        swal('导出失败', '数据处理过程中发生错误: ' + error.message, 'error');
+    }
+}
+
+
+// 获取单条记录的详细信息用于导出
+function getDetailForExport(item, selectedColumns, columnMapping) {
+    try {
+        var exportRows = [];
+
+        // 解析产品信息
+        var productNames = item.pp ? item.pp.split(',') : [];
+        var productModels = item.cpxh ? item.cpxh.split(',') : [];
+        var quantities = item.sl ? item.sl.split(',') : [];
+        var prices = item.dj ? item.dj.split(',') : [];
+        var remarks = item.bz ? item.bz.split(',') : [];
+
+        // 计算产品数量
+        var productCount = Math.max(
+            productNames.length,
+            productModels.length,
+            quantities.length,
+            prices.length,
+            remarks.length
+        );
+
+        // 如果没有产品信息，至少导出一条记录
+        if (productCount === 0) {
+            var row = {};
+
+            // 只添加用户选择的主表列
+            selectedColumns.forEach(function(colKey) {
+                var displayName = columnMapping[colKey] || colKey;
+                var value = '';
+
+                // 根据字段名从数据中获取值
+                switch(colKey) {
+                    case 'hj':
+                    case 'qkje':
+                    case 'yfje':
+                        // 金额字段格式化为两位小数
+                        var amount = parseFloat(item[colKey]) || 0;
+                        value = amount.toFixed(2);
+                        break;
+                    default:
+                        // 其他字段直接获取
+                        value = item[colKey] || '';
+                }
+
+                row[displayName] = value;
+            });
+
+            // 添加固定的详情列（即使为空）
+            exportColumnsConfig.detailColumns.forEach(function(detailCol) {
+                row[detailCol] = '';
+            });
+
+            exportRows.push(row);
+            return exportRows;
+        }
+
+        // 为每个产品创建一行
+        for (var i = 0; i < productCount; i++) {
+            var row = {};
+
+            // 1. 添加用户选择的主表列
+            selectedColumns.forEach(function(colKey) {
+                var displayName = columnMapping[colKey] || colKey;
+                var value = '';
+
+                // 根据字段名从数据中获取值
+                switch(colKey) {
+                    case 'hj':
+                    case 'qkje':
+                    case 'yfje':
+                        // 金额字段格式化为两位小数
+                        var amount = parseFloat(item[colKey]) || 0;
+                        value = amount.toFixed(2);
+                        break;
+                    default:
+                        // 其他字段直接获取
+                        value = item[colKey] || '';
+                }
+
+                row[displayName] = value;
+            });
+
+            // 2. 添加固定的详情列
+            exportColumnsConfig.detailColumns.forEach(function(detailCol) {
+                var value = '';
+
+                // 根据中文列名获取对应的字段值
+                switch(detailCol) {
+                    case '产品名称':
+                        value = productNames[i] || '';
+                        break;
+                    case '产品型号':
+                        value = productModels[i] || '';
+                        break;
+                    case '订购数量':
+                        value = quantities[i] || '';
+                        break;
+                    case '含税单价':
+                        var price = parseFloat(prices[i]) || 0;
+                        value = price.toFixed(2);
+                        break;
+                    case '备注':
+                        value = remarks[i] || '';
+                        break;
+                    default:
+                        // 尝试使用映射
+                        var fieldName = mapDetailColumnName(detailCol);
+                        value = item[fieldName] || '';
+                }
+
+                row[detailCol] = value;
+            });
+
+            exportRows.push(row);
+        }
+
+        return exportRows;
+
+    } catch (error) {
+        console.error('获取详情失败:', error, item);
+        return null;
+    }
+}
+// 创建采购明细导出行
+function createExportRowForCgmx(item, selectedColumns, columnMapping) {
+    try {
+        var row = {};
+
+        // 1. 添加用户选择的主表列
+        selectedColumns.forEach(function(colKey) {
+            var displayName = columnMapping[colKey] || colKey;
+            var value = '';
+
+            // 根据字段名从数据中获取值
+            switch(colKey) {
+                case 'hj':
+                case 'qkje':
+                case 'yfje':
+                    // 金额字段格式化为两位小数
+                    var amount = parseFloat(item[colKey]) || 0;
+                    value = amount.toFixed(2);
+                    break;
+                default:
+                    // 其他字段直接获取
+                    value = item[colKey] || '';
+            }
+
+            row[displayName] = value;
+        });
+
+        // 2. 添加固定的详情列
+        exportColumnsConfig.detailColumns.forEach(function(detailCol) {
+            var value = '';
+
+            // 根据中文列名获取对应的字段值
+            switch(detailCol) {
+                case '产品名称':
+                    value = item.pp || '';
+                    break;
+                case '产品型号':
+                    value = item.cpxh || '';
+                    break;
+                case '订购数量':
+                    value = item.sl || '';
+                    break;
+                case '含税单价':
+                    var price = parseFloat(item.dj) || 0;
+                    value = price.toFixed(2);
+                    break;
+                case '备注':
+                    value = item.bz || '';
+                    break;
+                default:
+                    // 尝试使用映射
+                    var fieldName = mapDetailColumnName(detailCol);
+                    value = item[fieldName] || '';
+            }
+
+            row[detailCol] = value;
+        });
+
+        return row;
+    } catch (error) {
+        console.error('创建导出行失败:', error, item);
+        return null;
+    }
+}
+
+// 映射详情列中文名到字段名
+function mapDetailColumnName(chineseName) {
+    var mapping = {
+        '产品名称': 'pp',
+        '产品型号': 'cpxh',
+        '订购数量': 'sl',
+        '含税单价': 'dj',
+        '备注': 'bz'
+    };
+
+    return mapping[chineseName];
+}
+
+// 使用SheetJS导出Excel
+function exportDataToExcel(data, fileName) {
+    try {
+        // 检查是否加载了SheetJS库
+        if (typeof XLSX === 'undefined') {
+            // 动态加载SheetJS库
+            loadSheetJS().then(function() {
+                createExcelFile(data, fileName);
+            }).catch(function(error) {
+                console.error('加载SheetJS库失败:', error);
+                swal('导出失败', '请检查网络连接或联系管理员', 'error');
+            });
+        } else {
+            createExcelFile(data, fileName);
+        }
+    } catch (error) {
+        console.error('Excel导出失败:', error);
+        swal('导出失败', '生成Excel文件时发生错误', 'error');
+    }
+}
+
+// 修改createExcelFile函数，添加调试信息
+function createExcelFile(data, fileName) {
+    try {
+        // 先检查数据的列是否符合预期
+        console.log('=== 创建Excel文件前的数据检查 ===');
+        if (data.length > 0) {
+            var firstRow = data[0];
+            console.log('第一行数据列:', Object.keys(firstRow));
+            console.log('第一行数据值:', firstRow);
+
+            // 验证是否包含用户选择的列
+            var expectedColumns = Object.keys(firstRow);
+            console.log('预期导出的列:', expectedColumns);
+        }
+
+        // 创建工作簿
+        var wb = XLSX.utils.book_new();
+
+        // 准备工作表数据
+        var wsData = [];
+
+        // 添加表头
+        if (data.length > 0) {
+            var headers = Object.keys(data[0]);
+            console.log('最终导出的表头:', headers);
+            wsData.push(headers);
+        }
+
+        // 添加数据行
+        data.forEach(function(row, index) {
+            var rowData = [];
+            if (data.length > 0) {
+                var headers = Object.keys(data[0]);
+                headers.forEach(function(header) {
+                    rowData.push(row[header] || '');
+                });
+                wsData.push(rowData);
+
+                // 只打印前3行数据用于调试
+                if (index < 3) {
+                    console.log(`第${index+1}行数据:`, row);
+                }
+            }
+        });
+
+        // 创建工作表
+        var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // 设置列宽
+        if (data.length > 0) {
+            var colWidths = [];
+            var headers = Object.keys(data[0]);
+            headers.forEach(function(header) {
+                colWidths.push({ wch: Math.max(header.length, 10) });
+            });
+            ws['!cols'] = colWidths;
+        }
+
+        // 将工作表添加到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '采购明细');
+
+        // 导出Excel文件
+        XLSX.writeFile(wb, fileName);
+
+        swal('导出成功', `文件 ${fileName} 已生成并开始下载`, 'success');
+    } catch (error) {
+        console.error('创建Excel文件失败:', error);
+        swal('导出失败', '创建Excel文件时发生错误: ' + error.message, 'error');
+    }
+}
+
+// 动态加载SheetJS库
+function loadSheetJS() {
+    return new Promise(function(resolve, reject) {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// 添加导出样式
+function addExportModalStyles() {
+    if ($('#export-modal-styles').length) return;
+
+    $('<style id="export-modal-styles">')
+        .prop('type', 'text/css')
+        .html(`
+            .export-columns-container {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 15px;
+            }
+            .export-columns-container .form-check {
+                margin-bottom: 8px;
+            }
+            .export-columns-container .form-check-input {
+                margin-top: 0.3rem;
+            }
+            .export-columns-container .form-check-label {
+                padding-left: 5px;
+                cursor: pointer;
+            }
+            #exportFileName {
+                font-weight: bold;
+            }
+            .input-group-text {
+                background-color: #e9ecef;
+                font-weight: bold;
+            }
+        `)
+        .appendTo('head');
+}
 // 生成详细信息表单 - 修改后的函数
 function generateDetailForm(data) {
     var formHtml = '';

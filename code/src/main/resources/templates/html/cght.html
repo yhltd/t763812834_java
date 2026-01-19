@@ -154,7 +154,9 @@
             overflow: hidden;
             box-shadow: 0 0 0 1px var(--border-color);
         }
-
+        .item-model {
+            width: 180px !important;
+        }
         .items-table th {
             background-color: var(--primary-color);
             color: white;
@@ -822,6 +824,12 @@
                     <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
                 </div>
                 <div class="form-group">
+                    <label>单行总价 (元)</label>
+                    <div class="form-control line-total" style="background-color: #f8f9fa; font-weight: bold; border: 1px solid #ddd; padding: 5px 12px; border-radius: var(--radius); min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                        0.00
+                    </div>
+                </div>
+                <div class="form-group">
                     <label>备注</label>
                     <input type="text" class="form-control item-remark" placeholder="备注">
                 </div>
@@ -874,10 +882,10 @@
             </div>`;
             newItemRow.innerHTML = `
         ${productNameHtml}
-        <div class="form-group">
-            <label>产品型号</label>
-            <input type="text" class="form-control item-model" placeholder="产品型号">
-        </div>
+            <div class="form-group">
+                <label>产品型号</label>
+                <input type="text" class="form-control item-model" placeholder="产品型号">
+            </div>
         <div class="form-group">
             <label>订购数量</label>
             <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
@@ -885,6 +893,12 @@
         <div class="form-group">
             <label>单价 (元)</label>
             <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+        </div>
+         <div class="form-group">
+            <label>单行总价 (元)</label>
+            <div class="form-control line-total" style="background-color: #f8f9fa; font-weight: bold; border: 1px solid #ddd; padding: 5px 12px; border-radius: var(--radius); min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                0.00
+            </div>
         </div>
         <div class="form-group">
             <label>备注</label>
@@ -898,11 +912,22 @@
         </div>
     `;
             itemsContainer.appendChild(newItemRow);
+            // 为输入框添加事件监听
+            addInputListeners(newItemRow);
+
+            // 初始化计算
+            updateLineTotal(newItemRow);
 
             // 添加删除事件
             newItemRow.querySelector('.remove-item').addEventListener('click', function() {
                 itemsContainer.removeChild(newItemRow);
+                // 删除后重新计算合计
+                updateTotalDisplay();
             });
+        });
+        document.querySelectorAll('.item-row').forEach(row => {
+            addInputListeners(row);
+            updateLineTotal(row);
         });
 
         // 初始商品行的删除事件
@@ -1094,7 +1119,21 @@
         });
         return prices.join(',');
     }
-
+    // 获取所有单行总价（逗号分隔）
+    function getLineTotals() {
+        const lineTotals = [];
+        document.querySelectorAll('.line-total').forEach(div => {
+            const text = div.textContent.trim();
+            // 提取数字部分
+            const match = text.match(/([\d.]+)/);
+            if (match) {
+                lineTotals.push(match[1]);
+            } else {
+                lineTotals.push('0.00');
+            }
+        });
+        return lineTotals.join(',');
+    }
     // 计算合计总金额
     function calculateTotalAmount() {
         let total = 0;
@@ -1145,6 +1184,69 @@
     $(document).ready(function() {
         getKH();
     });
+    // 计算单行总价
+    function calculateLineTotal(quantity, price) {
+        const qty = parseFloat(quantity) || 0;
+        const unitPrice = parseFloat(price) || 0;
+        return (qty * unitPrice).toFixed(2);
+    }
+
+    // 更新单行总价
+    function updateLineTotal(row) {
+        const quantityInput = row.querySelector('.item-quantity');
+        const priceInput = row.querySelector('.item-price');
+        const totalDiv = row.querySelector('.line-total');
+
+        if (quantityInput && priceInput && totalDiv) {
+            const total = calculateLineTotal(quantityInput.value, priceInput.value);
+            totalDiv.textContent = total;
+
+            // 更新合计总金额显示
+            updateTotalDisplay();
+        }
+    }
+
+    // 为输入框添加事件监听
+    function addInputListeners(row) {
+        const quantityInput = row.querySelector('.item-quantity');
+        const priceInput = row.querySelector('.item-price');
+
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => updateLineTotal(row));
+            quantityInput.addEventListener('change', () => updateLineTotal(row));
+        }
+
+        if (priceInput) {
+            priceInput.addEventListener('input', () => updateLineTotal(row));
+            priceInput.addEventListener('change', () => updateLineTotal(row));
+        }
+    }
+
+    // 更新合计总金额显示
+    function updateTotalDisplay() {
+        let grandTotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const totalDiv = row.querySelector('.line-total');
+            if (totalDiv) {
+                const totalValue = parseFloat(totalDiv.textContent) || 0;
+                grandTotal += totalValue;
+            }
+        });
+
+        // 可以在页面上显示合计金额，如果需要的话
+        console.log('合计总金额:', grandTotal.toFixed(2));
+
+        // 如果需要显示在页面上，可以添加一个合计显示区域
+        // 例如：document.getElementById('totalAmount').textContent = grandTotal.toFixed(2);
+    }
+
+    // 初始化已有商品行的计算和事件
+    function initializeExistingRows() {
+        document.querySelectorAll('.item-row').forEach(row => {
+            addInputListeners(row);
+            updateLineTotal(row);
+        });
+    }
 </script>
 </body>
 </html>

@@ -185,6 +185,7 @@
         .signature-title {
             font-size: 14px;
             margin-bottom: 5px;
+            display: flex;
         }
 
         .signature-line {
@@ -193,10 +194,9 @@
         }
 
         .signature-input {
-            width: 100%;
+            width: 70%;
             border: none;
             border-bottom: 1px solid #333;
-            padding: 5px 0;
             font-size: 14px;
             text-align: center;
             background: transparent;
@@ -351,7 +351,6 @@
                 z-index: 1000;
                 background: white;
                 padding: 2px 5px;
-                border: 1px solid #ccc;
                 border-radius: 3px;
             }
             /* 隐藏不打印的元素 */
@@ -376,29 +375,21 @@
                 color: #000;
             }
 
-            /* 打印时隐藏下拉框和日期选择框的边框及箭头 */
-            #contract-select, #fhrq {
-                /* 移除所有边框和样式 */
+            #contract-select, #fhrq, #contract-input {
                 border: none !important;
                 outline: none !important;
                 box-shadow: none !important;
                 background: transparent !important;
-
-                /* 移除所有浏览器特定的样式 */
                 appearance: none !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
                 -ms-appearance: none !important;
-
-                /* 确保内容正常显示 */
                 color: #000 !important;
                 font-size: 14px !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 width: auto !important;
                 height: auto !important;
-
-                /* 移除内边距和背景 */
                 background-color: transparent !important;
                 background-image: none !important;
             }
@@ -451,6 +442,61 @@
             .signature-input:focus {
                 border-bottom-color: #333;
             }
+
+            /* 隐藏所有不打印的元素 */
+            .print-controls, .labels-section {
+                display: none !important;
+            }
+
+            /* 调整打印样式 */
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .delivery-note {
+                box-shadow: none;
+                border: 1px solid #000;
+                max-width: 100%;
+                /* 防止分页时表格被切断 */
+                page-break-inside: avoid;
+            }
+
+            /* 只在第一页显示的页码信息 */
+            .page-info {
+                position: fixed;
+                top: 5mm;
+                right: 5mm;
+                font-size: 10pt !important;
+                color: #000 !important;
+                z-index: 1000;
+                background: white;
+                padding: 2px 5px;
+                border-radius: 3px;
+                /* 使用CSS计数器控制显示 */
+                counter-increment: page;
+                display: block;
+            }
+
+            /* 只在第一页显示页码 */
+            .page-info::after {
+                content: "第 " counter(page) " 页 / 共 " counter(pages) " 页";
+            }
+
+            /* 从第二页开始隐藏页码信息 */
+            .delivery-note {
+                counter-reset: page 1;
+            }
+
+            /* 或者更简单的方法：只在第一页显示 */
+            .delivery-note:not(:first-child) .page-info {
+                display: none !important;
+            }
+
+            /* 确保打印时黑色文字 */
+            .address, .note {
+                color: #000;
+            }
         }
     </style>
 </head>
@@ -500,12 +546,12 @@
         <table class="product-table" id="product-table">
             <thead>
             <tr>
-                <th>序号</th>
-                <th>品名</th>
-                <th>规格</th>
-                <th>数量</th>
-                <th>单位</th>
-                <th>备注</th>
+                <th style="width: 7%;">序号</th>
+                <th style="width: 15%;">品名</th>
+                <th style="width: 20%;">规格</th>
+                <th style="width: 11%;">数量</th>
+                <th style="width: 7%;">单位</th>
+                <th style="width: 40%;">备注</th>
             </tr>
             </thead>
             <tbody id="table-body">
@@ -792,81 +838,107 @@
         // 创建打印窗口
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>打印发货标签</title>
-            <style>
-                body {
-                    font-family: "Microsoft YaHei", sans-serif;
-                    margin: 0;
-                    padding: 20px;
-                }
-                .labels-print-container {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 15px;
-                    justify-content: center;
-                }
-                .label {
-                    width: 200px;
-                    padding: 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 8px;
-                    background: white;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    font-size: 12px;
-                    page-break-inside: avoid;
-                }
-                .label-header {
-                    text-align: center;
-                    margin-bottom: 8px;
-                    padding-bottom: 5px;
-                    border-bottom: 1px solid #eaeaea;
-                    font-weight: bold;
-                }
-                .label-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 4px;
-                    padding-bottom: 3px;
-                    border-bottom: 1px dashed #f0f0f0;
-                }
-                .label-field {
-                    font-weight: bold;
-                    color: #555;
-                }
-                .label-value {
-                    color: #333;
-                }
-                .checkbox-group, .edit-quantity-btn, .label-actions {
-                    display: none !important;
-                }
-                @media print {
-                    body {
-                        padding: 0;
-                    }
-                    @page {
-                        margin: 10mm;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="labels-print-container">
-                ${selectedLabelsHTML}
-            </div>
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() {
-                        window.close();
-                    }, 500);
-                };
-            <\/script>
-        </body>
-        </html>
-    `);
+<!DOCTYPE html>
+<html>
+<head>
+    <title>打印发货标签</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        .labels-print-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10mm; /* 标签间距 */
+            padding: 10mm; /* 页面边距 */
+            box-sizing: border-box;
+        }
+        /* 固定标签尺寸：100mm × 80mm */
+        .label {
+            width: 100mm; /* 固定宽度 */
+            height: 80mm; /* 固定高度 */
+            padding: 5mm; /* 内边距 */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 3mm; /* 基础字号（根据毫米单位缩放） */
+            page-break-inside: avoid; /* 防止打印时内容被截断 */
+            box-sizing: border-box; /* 确保padding不增加总尺寸 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 隐藏超出部分 */
+        }
+        .label-header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+            border-bottom: 1px solid #eaeaea;
+            font-size: 4mm; /* 标题稍大 */
+        }
+        .label-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* 内容上下分布 */
+        }
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2mm;
+        }
+        .label-field {
+            font-weight: bold;
+            color: #555;
+        }
+        .label-value {
+            color: #333;
+            text-align: right;
+        }
+        /* 隐藏非打印元素 */
+        .checkbox-group, .edit-quantity-btn, .label-actions {
+            display: none !important;
+        }
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+            .labels-print-container {
+                padding: 0;
+                gap: 0;
+            }
+            .label {
+                margin: 0;
+                border: none; /* 打印时隐藏边框（可选） */
+                box-shadow: none;
+            }
+            @page {
+                size: auto; /* 自动适应页面 */
+                margin: 10mm; /* 打印边距 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="labels-print-container">
+        ${selectedLabelsHTML}
+    </div>
+    <script>
+        window.onload = function() {
+            window.print();
+            setTimeout(function() {
+                window.close();
+            }, 500);
+        };
+    <\/script>
+</body>
+</html>
+`);
         printWindow.document.close();
     }
 
@@ -1184,7 +1256,7 @@
 
             <div class="label-row">
                 <span class="label-field">备注:</span>
-                <span class="label-value">${remark || '无'}</span>
+                <span class="label-value">${remark || ''}</span>
             </div>
 
             <div class="label-actions" id="quantity-edit-${labelData.id}" style="display: none; margin-top: 8px;">

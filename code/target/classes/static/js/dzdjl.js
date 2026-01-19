@@ -2098,12 +2098,30 @@ function extractAndDeleteFromUrl(filePath, ddh) {
 }
 
 // 删除函数 - 修复版本
-async function deleteFiles(orderNumber, path) {
+async function deleteFiles(ddh, path,orderNumber) {
+    consloe.log("删除传参数orderNumber",orderNumber)
+    consloe.log("删除传参数path",path)
+
     try {
+
+        let cleanOrderNumber = orderNumber;
+
+        if (orderNumber.includes('.')) {
+            // 方法A：只取第一个点之前的内容
+            cleanOrderNumber = orderNumber.split('.')[0];  // "ceshiceshi.pdf" → "ceshiceshi"
+
+            // 方法B：取最后一个点之前的所有内容（适合多个点的情况）
+            // cleanOrderNumber = orderNumber.substring(0, orderNumber.lastIndexOf('.'));
+
+            console.log('清理订单号:', orderNumber, '→', cleanOrderNumber);
+        }
+
         const params = new URLSearchParams({
-            order_number: orderNumber,
+            order_number: cleanOrderNumber,
             path: path
         });
+
+
 
         // 尝试两种可能的端口
         const endpoints = [

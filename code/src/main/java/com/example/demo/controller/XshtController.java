@@ -84,10 +84,6 @@ public class XshtController {
 
     @PostMapping("/ghf")
     public Result<List<Pzb>> getghf(HttpSession session) {
-        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
-        if (!authResult3.isSuccess()) {
-            return Result.error("权限不足");
-        }
         try {
 
             // 执行查询，传入负责人作为查询条件
@@ -185,6 +181,8 @@ public class XshtController {
             return Result.error("权限不足");
         }
         try {
+
+            log.info("货期(hq): {}", scgd.getHq());
 
             boolean success = scgdService.save(scgd);
             if (success) {

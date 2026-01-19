@@ -1382,6 +1382,84 @@
                 transform: scale(0.8);
             }
         }
+
+        /* 公司搜索样式 */
+        .company-search-container {
+            position: relative;
+        }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-top: 2px;
+        }
+
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: rgba(44, 90, 160, 0.1);
+        }
+
+        .search-result-item.selected {
+            background-color: rgba(44, 90, 160, 0.15);
+            font-weight: 600;
+        }
+
+        .search-result-item .company-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .search-result-item .company-address {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .no-results {
+            padding: 12px;
+            text-align: center;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 768px) {
+            .search-results-dropdown {
+                max-height: 150px;
+                font-size: 14px;
+            }
+
+            .search-result-item {
+                padding: 6px 8px;
+            }
+        }
+
+        .item-model {
+            width: 180px !important;
+        }
     </style>
 </head>
 <body>
@@ -1442,10 +1520,27 @@
         <div class="input-row">
             <div class="form-group">
                 <label for="clientCompany">乙方公司名称</label>
-                <select id="clientCompany" class="form-control">
-                    <option value="">请选择乙方公司</option>
-                    <option value="其他">其他（请在下框中填写）</option>
-                </select>
+                <!-- 添加搜索框 -->
+                <div class="company-search-container" style="position: relative;">
+                    <input type="text"
+                           id="clientCompanySearch"
+                           class="form-control"
+                           placeholder="搜索公司名称..."
+                           autocomplete="off"
+                           style="margin-bottom: 5px;">
+
+                    <!-- 搜索结果下拉框 -->
+                    <div id="companySearchResults"
+                         class="search-results-dropdown"
+                         style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    </div>
+
+                    <!-- 原来的选择框（隐藏） -->
+                    <select id="clientCompany" class="form-control" style="display: none;">
+                        <option value="">请选择乙方公司</option>
+                        <option value="其他">其他（请在下框中填写）</option>
+                    </select>
+                </div>
                 <input type="text" id="clientCompanyOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
             </div>
             <div class="form-group">
@@ -1721,7 +1816,7 @@
     document.addEventListener('DOMContentLoaded', function() {
 
         // 绑定打印预览中的印章控制按钮事件
-        document.getElementById('togglePrintSealBtn')?.addEventListener('click', function() {
+        document.getElementById('togglePrintSealBtn')?.addEventListener('click', function () {
             // 切换全局变量
             showSealInPrint = !showSealInPrint;
 
@@ -1745,7 +1840,7 @@
         // 在显示打印预览时，初始化按钮状态
         const printPreviewModal = document.getElementById('printPreviewModal');
         if (printPreviewModal) {
-            printPreviewModal.addEventListener('show.bs.modal', function() {
+            printPreviewModal.addEventListener('show.bs.modal', function () {
                 // 重置为默认显示状态
                 showSealInPrint = true;
 
@@ -1803,11 +1898,11 @@
         // 下拉选择框事件处理
         setupSelectHandlers();
         // 在页面加载时调用
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             optimizePrintLayout();
 
             // 监听窗口大小变化，重新计算每页产品数
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 if (window.calculatedItemsPerPage) {
                     window.calculatedItemsPerPage = calculateItemsPerPage();
                 }
@@ -1815,7 +1910,7 @@
         });
 
         // 添加商品行
-        document.getElementById('addItem').addEventListener('click', function() {
+        document.getElementById('addItem').addEventListener('click', function () {
             const itemsContainer = document.getElementById('itemsContainer');
             const newItemRow = document.createElement('div');
             newItemRow.className = 'item-row';
@@ -1878,7 +1973,7 @@
             // 为新添加的产品名称下拉框添加事件监听
             const newProductSelect = newItemRow.querySelector('.item-name');
             if (newProductSelect && newProductSelect.tagName === 'SELECT') {
-                newProductSelect.addEventListener('change', function() {
+                newProductSelect.addEventListener('change', function () {
                     if (this.value === '其他') {
                         showProductNameInput(this);
                     }
@@ -1886,11 +1981,10 @@
             }
 
             // 添加删除事件
-            newItemRow.querySelector('.remove-item').addEventListener('click', function() {
+            newItemRow.querySelector('.remove-item').addEventListener('click', function () {
                 itemsContainer.removeChild(newItemRow);
             });
         });
-
 
 
         // 设置初始商品行的品牌默认值
@@ -1898,14 +1992,14 @@
 
         // 初始商品行的删除事件
         document.querySelectorAll('.remove-item').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const itemRow = this.closest('.item-row');
                 document.getElementById('itemsContainer').removeChild(itemRow);
             });
         });
 
         // 生成合同
-        document.getElementById('generateInvoice').addEventListener('click', function() {
+        document.getElementById('generateInvoice').addEventListener('click', function () {
             // 更新基本信息
             document.getElementById('previewContractNumber').textContent =
                 document.getElementById('contractNumber').value || 'GXDD0120251120';
@@ -1919,33 +2013,33 @@
             // 获取乙方公司名称（处理其他选项）
             let clientCompany = document.getElementById('clientCompany').value;
             if (clientCompany === '其他') {
-                clientCompany = document.getElementById('clientCompanyOther').value || '_______________';
+                clientCompany = document.getElementById('clientCompanyOther').value || '';
             }
-            document.getElementById('previewClientCompany').textContent = clientCompany || '_______________';
-            document.getElementById('previewSignatureClientCompany').textContent = clientCompany || '_______________';
+            document.getElementById('previewClientCompany').textContent = clientCompany || '';
+            document.getElementById('previewSignatureClientCompany').textContent = clientCompany || '';
 
             // 获取乙方地址（处理其他选项）
             let clientAddress = document.getElementById('clientAddress').value;
             if (clientAddress === '其他') {
-                clientAddress = document.getElementById('clientAddressOther').value || '_______________';
+                clientAddress = document.getElementById('clientAddressOther').value || '';
             }
-            document.getElementById('previewSignatureClientAddress').textContent = clientAddress || '_______________';
+            document.getElementById('previewSignatureClientAddress').textContent = clientAddress || '';
 
             // 获取收货地址（处理其他选项和"同乙方地址"选项）
             let deliveryAddress = document.getElementById('deliveryAddress').value;
             if (deliveryAddress === '其他') {
-                deliveryAddress = document.getElementById('deliveryAddressOther').value || '_______________';
+                deliveryAddress = document.getElementById('deliveryAddressOther').value || '';
             } else if (deliveryAddress === '同乙方地址') {
                 deliveryAddress = clientAddress || '同乙方地址';
             }
-            document.getElementById('previewDeliveryAddress').textContent = deliveryAddress || '_______________';
+            document.getElementById('previewDeliveryAddress').textContent = deliveryAddress || '';
 
             // 获取乙方要求（处理其他选项）
             let clientRequirements = document.getElementById('clientRequirements').value;
             if (clientRequirements === '其他') {
-                clientRequirements = document.getElementById('clientRequirementsOther').value || '_______________';
+                clientRequirements = document.getElementById('clientRequirementsOther').value || '';
             }
-            document.getElementById('previewClientRequirements').textContent = clientRequirements || '_______________';
+            document.getElementById('previewClientRequirements').textContent = clientRequirements || '';
 
             // 修改位置：获取付款方式 - 优先使用客户数据中的fkfs字段
             let paymentMethod = '';
@@ -1956,10 +2050,10 @@
                 // 否则使用下拉框选择的值
                 paymentMethod = document.getElementById('paymentMethod').value;
                 if (paymentMethod === '其他') {
-                    paymentMethod = document.getElementById('paymentMethodOther').value || '_______________';
+                    paymentMethod = document.getElementById('paymentMethodOther').value || '';
                 }
             }
-            document.getElementById('previewPaymentMethod').textContent = paymentMethod || '_______________';
+            document.getElementById('previewPaymentMethod').textContent = paymentMethod || '';
 
             let taxRateText = '';
             const taxRateValue = document.getElementById('taxRate').value;
@@ -1994,13 +2088,13 @@
             const itemRows = document.querySelectorAll('.item-row');
 
             itemRows.forEach((row, index) => {
-                const name = row.querySelector('.item-name').value || '_______________';
-                const model = row.querySelector('.item-model').value || '_______________';
+                const name = row.querySelector('.item-name').value || '';
+                const model = row.querySelector('.item-model').value || '';
                 const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
                 const price = parseFloat(row.querySelector('.item-price').value) || 0;
                 const amount = quantity * price;
                 const remark = row.querySelector('.item-remark').value || '';
-                const delivery = row.querySelector('.item-delivery').value || '_______________';
+                const delivery = row.querySelector('.item-delivery').value || '';
                 const brand = row.querySelector('.item-brand').value || 'SHAC';
 
                 total += amount;
@@ -2027,13 +2121,13 @@
             updatePageInfo();
 
             // 滚动到合同预览
-            document.getElementById('invoicePreview').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('invoicePreview').scrollIntoView({behavior: 'smooth'});
         });
 
         // 设置下拉选择框事件处理
         function setupSelectHandlers() {
             // 乙方公司名称选择事件
-            document.getElementById('clientCompany').addEventListener('change', function() {
+            document.getElementById('clientCompany').addEventListener('change', function () {
                 const companyName = this.value;
 
                 if (companyName === '其他') {
@@ -2049,13 +2143,13 @@
             });
 
             // 乙方地址
-            document.getElementById('clientAddress').addEventListener('change', function() {
+            document.getElementById('clientAddress').addEventListener('change', function () {
                 document.getElementById('clientAddressOther').style.display =
                     this.value === '其他' ? 'block' : 'none';
             });
 
             // 收货地址
-            document.getElementById('deliveryAddress').addEventListener('change', function() {
+            document.getElementById('deliveryAddress').addEventListener('change', function () {
                 document.getElementById('deliveryAddressOther').style.display =
                     this.value === '其他' ? 'block' : 'none';
 
@@ -2075,7 +2169,7 @@
             // });
 
             // 修改甲方下拉框的选择事件，处理选择后的电话和代表人更新
-            document.getElementById('paymentMethod').addEventListener('change', function() {
+            document.getElementById('paymentMethod').addEventListener('change', function () {
                 const selectedValue = this.value;
 
                 // 如果选择了来自 xialagl 的选项，更新电话和代表人
@@ -2090,7 +2184,7 @@
 
 
             // 增值税率
-            document.getElementById('taxRate').addEventListener('change', function() {
+            document.getElementById('taxRate').addEventListener('change', function () {
                 document.getElementById('taxRateOther').style.display =
                     this.value === '其他' ? 'block' : 'none';
             });
@@ -2141,55 +2235,193 @@
             printBtn.removeEventListener('click', handlePrintContract);
 
             // 添加新的点击事件 - 一键完成所有操作
-            printBtn.addEventListener('click', async function() {
-                // 先验证数据
-                if (!validatePrintData()) {
-                    return;
-                }
-
+            printBtn.addEventListener('click', function () {
                 // 显示简单的加载提示
                 const originalText = this.innerHTML;
+                const originalDisabled = this.disabled;
                 this.innerHTML = '<i class="bi bi-hourglass"></i> 正在准备...';
                 this.disabled = true;
 
                 try {
-                    // 1. 首先触发生成合同，更新所有预览数据
-                    const generateBtn = document.getElementById('generateInvoice');
-                    if (generateBtn) {
-                        generateBtn.click();
+                    // 1. 先验证数据
+                    if (!validatePrintData()) {
+                        this.innerHTML = originalText;
+                        this.disabled = originalDisabled;
+                        return;
                     }
 
-                    // 2. 等待一小段时间让DOM更新完成
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // 2. 同步执行生成合同的所有逻辑（不再等待异步）
+                    generateInvoiceForPrint();
 
-                    // 3. 直接准备并显示打印预览
-                    preparePrintPreview();
-                    showPrintPreview();
+                    // 3. 立即准备打印预览（不需要等待500ms）
+                    preparePrintPreviewImmediately();
+
+                    // 4. 直接显示打印预览
+                    setTimeout(() => {
+                        showPrintPreview();
+                        this.innerHTML = originalText;
+                        this.disabled = originalDisabled;
+                    }, 300); // 只等待300ms确保DOM更新
 
                 } catch (error) {
                     console.error('打印准备失败:', error);
                     alert('打印准备失败，请重试');
-                } finally {
-                    // 恢复按钮状态
                     this.innerHTML = originalText;
-                    this.disabled = false;
+                    this.disabled = originalDisabled;
                 }
             });
         }
 
         // 绑定打印预览中的打印按钮
-        document.getElementById('printFromPreview')?.addEventListener('click', function() {
+        document.getElementById('printFromPreview')?.addEventListener('click', function () {
             executePrintFromPreview();
         });
 
         // 绑定翻页按钮
-        document.getElementById('prevPageBtn')?.addEventListener('click', function() {
+        document.getElementById('prevPageBtn')?.addEventListener('click', function () {
             navigatePage(-1);
         });
 
-        document.getElementById('nextPageBtn')?.addEventListener('click', function() {
+        document.getElementById('nextPageBtn')?.addEventListener('click', function () {
             navigatePage(1);
         });
+
+        // 为打印生成合同（同步版本）
+        function generateInvoiceForPrint() {
+            // 更新基本信息
+            document.getElementById('previewContractNumber').textContent =
+                document.getElementById('contractNumber').value || 'GXDD0120251120';
+
+            const contractDate = new Date(document.getElementById('contractDate').value);
+            const formattedContractDate = contractDate.getFullYear() + '/' +
+                (contractDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                contractDate.getDate().toString().padStart(2, '0');
+            document.getElementById('previewContractDate').textContent = formattedContractDate;
+
+            // 获取乙方公司名称（处理其他选项）
+            let clientCompany = document.getElementById('clientCompany').value;
+            if (clientCompany === '其他') {
+                clientCompany = document.getElementById('clientCompanyOther').value || '';
+            }
+            document.getElementById('previewClientCompany').textContent = clientCompany || '';
+            document.getElementById('previewSignatureClientCompany').textContent = clientCompany || '';
+
+            // 获取乙方地址（处理其他选项）
+            let clientAddress = document.getElementById('clientAddress').value;
+            if (clientAddress === '其他') {
+                clientAddress = document.getElementById('clientAddressOther').value || '';
+            }
+            document.getElementById('previewSignatureClientAddress').textContent = clientAddress || '';
+
+            // 获取收货地址（处理其他选项和"同乙方地址"选项）
+            let deliveryAddress = document.getElementById('deliveryAddress').value;
+            if (deliveryAddress === '其他') {
+                deliveryAddress = document.getElementById('deliveryAddressOther').value || '';
+            } else if (deliveryAddress === '同乙方地址') {
+                deliveryAddress = clientAddress || '同乙方地址';
+            }
+            document.getElementById('previewDeliveryAddress').textContent = deliveryAddress || '';
+
+            // 获取乙方要求
+            let clientRequirements = document.getElementById('clientRequirements').value;
+            document.getElementById('previewClientRequirements').textContent = clientRequirements || '';
+
+            // 修改位置：获取付款方式 - 优先使用客户数据中的fkfs字段
+            let paymentMethod = '';
+            if (currentCustomerData && currentCustomerData.fkfs && currentCustomerData.fkfs.trim() !== '') {
+                // 如果有客户数据且fkfs字段有值，使用fkfs字段的值
+                paymentMethod = currentCustomerData.fkfs.trim();
+            } else {
+                // 否则使用下拉框选择的值
+                paymentMethod = document.getElementById('paymentMethod').value;
+                if (paymentMethod === '其他') {
+                    paymentMethod = document.getElementById('paymentMethodOther').value || '';
+                }
+            }
+            document.getElementById('previewPaymentMethod').textContent = paymentMethod || '';
+
+            // 税率
+            let taxRateText = '';
+            const taxRateValue = document.getElementById('taxRate').value;
+            const taxRateNumber = window.currentShuilv || '12';
+            const taxPercentage = taxRateNumber + '%';
+
+            if (taxRateValue === '1') {
+                taxRateText = shui;
+            } else if (taxRateValue === '2') {
+                taxRateText = '以上报价未税';
+            } else if (taxRateValue === '其他') {
+                const otherTaxRate = document.getElementById('taxRateOther').value || '13%';
+                taxRateText = otherTaxRate.includes('%') ?
+                    `以上报价含税（${otherTaxRate}增值税）` :
+                    `以上报价含税（${otherTaxRate}%增值税）`;
+            } else {
+                taxRateText = `以上报价含税（${taxPercentage}增值税）`;
+            }
+
+            document.getElementById('previewTaxRate').textContent = taxRateText;
+
+            // 更新产品明细
+            const previewItems = document.getElementById('previewItems');
+            previewItems.innerHTML = '';
+
+            let total = 0;
+            const itemRows = document.querySelectorAll('.item-row');
+
+            itemRows.forEach((row, index) => {
+                const name = row.querySelector('.item-name').value || '';
+                const model = row.querySelector('.item-model').value || '';
+                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const amount = quantity * price;
+                const remark = row.querySelector('.item-remark').value || '';
+                const delivery = row.querySelector('.item-delivery').value || '';
+                const brand = row.querySelector('.item-brand').value || 'SHAC';
+
+                total += amount;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${name}</td>
+            <td>${model}</td>
+            <td>${quantity}</td>
+            <td>${price.toFixed(2)}</td>
+            <td>${amount.toFixed(2)}</td>
+            <td>${remark}</td>
+            <td>${delivery}</td>
+            <td>${brand}</td>
+        `;
+                previewItems.appendChild(tr);
+            });
+
+            // 更新总计
+            document.getElementById('previewTotal').textContent = total.toFixed(2) + ' 元';
+
+            // 计算并更新页码信息
+            updatePageInfo();
+        }
+
+// 立即准备打印预览（同步版本）
+        function preparePrintPreviewImmediately() {
+            console.log('立即准备打印预览数据...');
+
+            // 收集打印数据
+            const contractData = collectPrintData();
+            console.log('收集到的打印数据:', contractData);
+
+            // 生成分页数据（每页10条）
+            const pages = generatePrintPages(contractData);
+
+            // 存储到全局变量
+            printData = {
+                pages: pages,
+                currentPage: 0,
+                totalPages: pages.length
+            };
+
+            console.log('准备打印数据完成:', printData);
+        }
 
         // 准备打印预览数据
         function preparePrintPreview() {
@@ -2331,22 +2563,22 @@
                 <img src="../img/khlogo.png" alt="公司logo">
             </div>
             <div class="contract-title">
-                <h2>加工定制合同</h2>
+                <h2 style="position: relative; left: -40px;">加工定制合同</h2>
             </div>
             <div class="page-info">
-                <div>第${page.pageNum}页 / 共${page.totalPages}页</div>
+                <div>第${page.pageNum || 1}页 / 共${page.totalPages || 1}页</div>
             </div>
         </div>
 
         <!-- 合同基本信息 -->
         <div class="print-page-details">
             <div class="print-client-info">
-                <p>甲方(供货方): ${page.contractData.supplierInfo.company}</p>
-                <p>乙方(购货方): ${page.contractData.clientInfo.company}</p>
+                <p>甲方(供货方): ${page.contractData?.supplierInfo?.company || ''}</p>
+                <p>乙方(购货方): ${page.contractData?.clientInfo?.company || ''}</p>
             </div>
             <div class="print-contract-meta">
-                <p>合同编号: ${page.contractData.contractNumber}</p>
-                <p>签约地点: 江苏省昆山市 ${page.contractData.contractDate}</p>
+                <p>合同编号: ${page.contractData?.contractNumber || ''}</p>
+                <p>签约地点: 江苏省昆山市 ${page.contractData?.contractDate || ''}</p>
             </div>
         </div>
 
@@ -2355,13 +2587,13 @@
             <p style="font-size: 14px; font-weight: bold;">一、以下为货物名称、数量、单价及总金额及乙方要求和收货地址：</p>
         </div>
 
-        <!-- 货物明细表格 - 固定10行 -->
+        <!-- 货物明细表格 -->
         <table class="print-items-table">
             <thead>
                 <tr>
                     <th style="width: 5%">序号</th>
-                    <th style="width: 15%">产品名称</th>
-                    <th style="width: 15%">产品型号</th>
+                    <th style="width: 10%">产品名称</th>
+                    <th style="width: 20%">产品型号</th>
                     <th style="width: 8%">订购数量</th>
                     <th style="width: 10%">单价</th>
                     <th style="width: 10%">合计</th>
@@ -2371,7 +2603,7 @@
                 </tr>
             </thead>
             <tbody>
-                ${tableRowsHTML}
+                ${tableRowsHTML || ''}
             </tbody>
         </table>
 
@@ -2380,24 +2612,24 @@
             <table class="print-summary-table">
                 <tr>
                     <td>总计:</td>
-                    <td>${page.pageTotal} 元</td>
+                    <td>${page.pageTotal || 0} 元</td>
                 </tr>
             </table>
         </div>
 
-        <!-- 乙方要求和收货地址 - 与条款字体一致 -->
+        <!-- 乙方要求和收货地址 -->
         <div style="margin-top: 8px;">
-            <p style="font-size: 14px;"><strong>乙方要求：</strong>${page.contractData.clientRequirements}</p>
-            <p style="font-size: 14px;"><strong>收货地址：</strong>${page.contractData.deliveryAddress}</p>
+            <p style="font-size: 14px;"><strong>乙方要求：</strong>${page.contractData?.clientRequirements || ''}</p>
+            <p style="font-size: 14px;"><strong>收货地址：</strong>${page.contractData?.deliveryAddress || ''}</p>
         </div>
 
-        <!-- 合同条款 - 所有页面都显示 -->
+        <!-- 合同条款 -->
         <div class="print-terms">
-            <p style="font-size: 14px;">${page.contractData.taxRate}</p>
+            <p style="font-size: 14px;">${page.contractData?.taxRate || ''}</p>
             <p style="font-size: 14px;"><strong>二、合同履行，付款方式及期限，交货方式。</strong></p>
             <p style="font-size: 14px;"> 1.本合同请乙方于3个工作日内加盖合同章或公章向甲方回传，双方盖章（签字）后合同生效。</p>
             <p style="font-size: 14px;"> 2.交货地点：甲方负责将货物交付到乙方指定的国内交货地点，并承担运输费用；由乙方负责货物卸车。</p>
-            <p style="font-size: 14px;"> 3.付款方式：${page.contractData.paymentMethod}</p>
+            <p style="font-size: 14px;"> 3.付款方式：${page.contractData?.paymentMethod || ''}</p>
             <p style="font-size: 14px;"> 4.交货方式：乙方应在甲方完成加工入库并收到甲方通知（不限书面，微信QQ等亦可）提货后7日内提完相应货物，若乙方未在约定时间内提完，甲方有权自行处置本合同产品，由此给乙方造成的全部损失，由乙方自行承担。</p>
             <p style="font-size: 14px;"><strong>三、质保期：</strong>本合同项下货物，自乙方收到之日起保修期为一年。在质保期内，如果因产品质量问题，由甲方负责维修；非产品质量问题，经协商一致，甲方可以提供维修服务，由此产生的费用，由乙方承担。</p>
             <p style="font-size: 14px;"><strong>四、货物验收：</strong>乙方收到货物后，应于3日内进行验收确认，如果有质量问题，须以书面形式通知甲方。如逾期未提出任何异议的，视为验收合格。</p>
@@ -2405,47 +2637,49 @@
             <p style="font-size: 14px;"><strong>六、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
         </div>
 
-        <!-- 签名区域 - 所有页面都显示，左右分部 -->
+        <!-- 签名区域 -->
         <div class="print-signature-area">
             <!-- 供货方签名 -->
             <div class="print-supplier-signature" style="position: relative;">
                 <h5 style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">供货方签字盖章</h5>
-                ${page.contractData.sealInfo.hasSeal ? `
-                <div class="seal-overlay ${sealClass}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; opacity: 0.8; ${sealDisplayStyle}">
+                ${page.contractData?.sealInfo?.hasSeal ? `
+                <div class="seal-overlay ${sealClass || ''}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; opacity: 0.8; ${sealDisplayStyle || ''}">
+                    ${page.contractData.sealInfo.sealPath ? `
                     <img src="${page.contractData.sealInfo.sealPath}"
-                         style="width: ${page.contractData.sealInfo.sealWidth}; max-width: 180px;"
+                         style="width: ${page.contractData.sealInfo.sealWidth || '150px'}; max-width: 180px;"
                          alt="公司印章"
                          onerror="this.style.display='none'">
+                    ` : ''}
                 </div>
                 ` : ''}
                 <table class="print-signature-table">
                     <tr>
                         <td style="width: 15%; font-size: 11px;">甲方：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.company}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.company || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">开户行：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.bank}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.bank || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">账号：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.account}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.account || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">税号：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.taxNumber}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.taxNumber || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">地址：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.address}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.address || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">电话：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.phone}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.phone || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">代表人：</td>
-                        <td style="font-size: 11px;">${page.contractData.supplierInfo.representative}</td>
+                        <td style="font-size: 11px;">${page.contractData?.supplierInfo?.representative || ''}</td>
                     </tr>
                 </table>
             </div>
@@ -2456,31 +2690,31 @@
                 <table class="print-signature-table">
                     <tr>
                         <td style="width: 15%; font-size: 11px;">乙方：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.company}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.company || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">开户行：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.bank || ''}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.bank || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">账号：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.account || ''}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.account || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">税号：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.taxNumber || ''}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.taxNumber || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">地址：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.address}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.address || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">电话：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.phone || ''}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.phone || ''}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 11px;">代表人：</td>
-                        <td style="font-size: 11px;">${page.contractData.clientInfo.representative || ''}</td>
+                        <td style="font-size: 11px;">${page.contractData?.clientInfo?.representative || ''}</td>
                     </tr>
                 </table>
             </div>
@@ -2550,9 +2784,9 @@
 
         // 生成页码指示器
         function generatePageIndicator(container) {
-        if (printData.totalPages <= 1) return;
+            if (printData.totalPages <= 1) return;
 
-        container.innerHTML = `
+            container.innerHTML = `
         <button type="button" class="btn btn-outline-secondary btn-sm" id="firstPageBtn">
         <i class="bi bi-chevron-double-left"></i> 第一页
         </button>
@@ -2569,23 +2803,23 @@
         </button>
         `;
 
-        // 绑定页码指示器点击事件
-        container.querySelectorAll('.page-dot').forEach(dot => {
-        dot.addEventListener('click', function() {
-        const pageNum = parseInt(this.getAttribute('data-page'));
-        showPage(pageNum);
-        });
-        });
+            // 绑定页码指示器点击事件
+            container.querySelectorAll('.page-dot').forEach(dot => {
+                dot.addEventListener('click', function () {
+                    const pageNum = parseInt(this.getAttribute('data-page'));
+                    showPage(pageNum);
+                });
+            });
 
-        // 绑定第一页按钮
-        document.getElementById('firstPageBtn')?.addEventListener('click', function() {
-        showPage(0);
-        });
+            // 绑定第一页按钮
+            document.getElementById('firstPageBtn')?.addEventListener('click', function () {
+                showPage(0);
+            });
 
-        // 绑定最后一页按钮
-        document.getElementById('lastPageBtn')?.addEventListener('click', function() {
-        showPage(printData.totalPages - 1);
-        });
+            // 绑定最后一页按钮
+            document.getElementById('lastPageBtn')?.addEventListener('click', function () {
+                showPage(printData.totalPages - 1);
+            });
         }
 
         // 显示指定页面 - 修复版
@@ -2610,47 +2844,47 @@
         // 显示当前页面
         const currentPage = document.getElementById(`print-page-${pageNum + 1}`);
         if (currentPage) {
-        currentPage.style.display = 'block';
-        printData.currentPage = pageNum;
+            currentPage.style.display = 'block';
+            printData.currentPage = pageNum;
 
-        // 更新页码指示器
-        updatePageIndicator();
-        updatePageNavigation();
+            // 更新页码指示器
+            updatePageIndicator();
+            updatePageNavigation();
         }
 
 
         // 更新页码指示器
         function updatePageIndicator() {
-        document.querySelectorAll('.page-dot').forEach((dot, index) => {
-        if (index === printData.currentPage) {
-        dot.classList.add('active');
-        } else {
-        dot.classList.remove('active');
-        }
-        });
+            document.querySelectorAll('.page-dot').forEach((dot, index) => {
+                if (index === printData.currentPage) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
         }
 
         // 翻页导航
         function navigatePage(direction) {
-        const newPage = printData.currentPage + direction;
+            const newPage = printData.currentPage + direction;
 
-        if (newPage >= 0 && newPage < printData.totalPages) {
-        showPage(newPage);
-        }
+            if (newPage >= 0 && newPage < printData.totalPages) {
+                showPage(newPage);
+            }
         }
 
         // 更新翻页按钮状态
         function updatePageNavigation() {
-        const prevBtn = document.getElementById('prevPageBtn');
-        const nextBtn = document.getElementById('nextPageBtn');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
 
-        if (prevBtn) {
-        prevBtn.disabled = printData.currentPage === 0;
-        }
+            if (prevBtn) {
+                prevBtn.disabled = printData.currentPage === 0;
+            }
 
-        if (nextBtn) {
-        nextBtn.disabled = printData.currentPage === printData.totalPages - 1;
-        }
+            if (nextBtn) {
+                nextBtn.disabled = printData.currentPage === printData.totalPages - 1;
+            }
         }
 
         // 从预览执行打印 - 修复打印取消后页面变灰的问题
@@ -2800,7 +3034,7 @@
                 };
 
                 // 添加afterprint事件监听
-                window.addEventListener('afterprint', handleAfterPrint, { once: true });
+                window.addEventListener('afterprint', handleAfterPrint, {once: true});
 
                 // 设置一个超时，确保即使打印事件没有触发也能恢复
                 setTimeout(() => {
@@ -2824,14 +3058,12 @@
         }
 
 
-
-
         function collectPrintData() {
             // 基础信息
             const contractNumber = document.getElementById('contractNumber').value || '无';
             const contractDate = document.getElementById('contractDate').value || '';
             const formattedDate = contractDate ?
-                `${contractDate.slice(0,4)}/${contractDate.slice(5,7)}/${contractDate.slice(8,10)}` : '';
+                `${contractDate.slice(0, 4)}/${contractDate.slice(5, 7)}/${contractDate.slice(8, 10)}` : '';
 
             // 客户信息
             let clientCompany = document.getElementById('clientCompany').value || '';
@@ -2853,11 +3085,19 @@
 
             const clientRequirements = document.getElementById('clientRequirements').value || '无';
 
-            // 付款方式
-            let paymentMethod = document.getElementById('paymentMethod').value || '';
-            if (paymentMethod === '其他') {
-                paymentMethod = document.getElementById('paymentMethodOther').value || '无';
+            // 付款方式 - 修改：优先使用客户数据中的fkfs字段
+            let paymentMethod = '';
+            if (currentCustomerData && currentCustomerData.fkfs && currentCustomerData.fkfs.trim() !== '') {
+                // 如果有客户数据且fkfs字段有值，使用fkfs字段的值
+                paymentMethod = currentCustomerData.fkfs.trim();
+            } else {
+                // 否则使用下拉框选择的值
+                paymentMethod = document.getElementById('paymentMethod').value;
+                if (paymentMethod === '其他') {
+                    paymentMethod = document.getElementById('paymentMethodOther').value || '无';
+                }
             }
+
 
             // 税率信息
             const taxRateText = document.getElementById('previewTaxRate').textContent || '以上报价含税（13%增值税）';
@@ -3026,13 +3266,13 @@
                 const allItems = [];
 
                 itemRows.forEach(row => {
-                    const name = row.querySelector('.item-name').value || '_______________';
-                    const model = row.querySelector('.item-model').value || '_______________';
+                    const name = row.querySelector('.item-name').value || '';
+                    const model = row.querySelector('.item-model').value || '';
                     const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
                     const price = parseFloat(row.querySelector('.item-price').value) || 0;
                     const amount = quantity * price;
                     const remark = row.querySelector('.item-remark').value || '';
-                    const delivery = row.querySelector('.item-delivery').value || '_______________';
+                    const delivery = row.querySelector('.item-delivery').value || '';
                     const brand = row.querySelector('.item-brand').value || 'SHAC';
 
                     allItems.push({
@@ -3337,11 +3577,11 @@
         }
 
 // 在DOM加载完成后调用
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             addPrintOptimizationStyles();
         });
 
-        // 验证打印数据
+        // 验证打印数据（快速版本）
         function validatePrintData() {
             const contractNumber = document.getElementById('contractNumber').value;
             const clientCompany = document.getElementById('clientCompany').value;
@@ -3373,13 +3613,13 @@
                 const allItems = [];
 
                 itemRows.forEach(row => {
-                    const name = row.querySelector('.item-name').value || '_______________';
-                    const model = row.querySelector('.item-model').value || '_______________';
+                    const name = row.querySelector('.item-name').value || '';
+                    const model = row.querySelector('.item-model').value || '';
                     const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
                     const price = parseFloat(row.querySelector('.item-price').value) || 0;
                     const amount = quantity * price;
                     const remark = row.querySelector('.item-remark').value || '';
-                    const delivery = row.querySelector('.item-delivery').value || '_______________';
+                    const delivery = row.querySelector('.item-delivery').value || '';
                     const brand = row.querySelector('.item-brand').value || 'SHAC';
 
                     allItems.push({
@@ -3667,7 +3907,7 @@
         }
 
 // 在页面加载时调用
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             addPrintOptimizationCSS();
         });
 
@@ -3684,7 +3924,7 @@
             document.getElementById('invoicePreview').style.display = 'block';
         }
 
-        document.getElementById('yincanggongzhang').addEventListener('click', function() {
+        document.getElementById('yincanggongzhang').addEventListener('click', function () {
             const sealElement = document.querySelector('.seal-overlay');
             const button = this;
 
@@ -3715,7 +3955,7 @@
         // });
 
         // 修改甲方下拉框的选择事件，处理选择后的电话和代表人更新
-        document.getElementById('paymentMethod').addEventListener('change', function() {
+        document.getElementById('paymentMethod').addEventListener('change', function () {
             const selectedValue = this.value;
 
             // 如果选择了来自 xialagl 的选项，更新电话和代表人
@@ -3729,13 +3969,13 @@
 
 
         // 增值税率
-        document.getElementById('taxRate').addEventListener('change', function() {
+        document.getElementById('taxRate').addEventListener('change', function () {
             document.getElementById('taxRateOther').style.display =
                 this.value === '其他' ? 'block' : 'none';
         });
 
         // 保存数据按钮事件
-        document.getElementById('saveData').addEventListener('click', function() {
+        document.getElementById('saveData').addEventListener('click', function () {
             // 先验证必要数据
             if (!validateSaveData()) {
                 return;
@@ -3748,6 +3988,7 @@
         });
 
         window.addEventListener('resize', updatePageInfo);
+
     });
 
     // 重置地址、要求和联系方式
@@ -4034,44 +4275,276 @@
     let customerList = [];
     let currentCustomerData = null;
 
-    function getKH() {
-        $.ajax({
-            type: 'post',
-            url: '/hetong/kehu',
-            contentType: 'application/json',
-            dataType: 'json',
-            success: function(res) {
-                if (res.success) {
-                    console.log("返回的客户信息", res);
+        function getKH() {
+            $.ajax({
+                type: 'post',
+                url: '/hetong/kehu',
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        console.log("返回的客户信息", res);
 
-                    // 使用返回的数据填充客户相关下拉框
-                    if (res.data && res.data.length > 0) {
-                        customerList = res.data;
-                        fillCustomerCompanyDropdown(res.data);
+                        // 使用返回的数据填充客户相关下拉框
+                        if (res.data && res.data.length > 0) {
+                            customerList = res.data;
 
-                        // 初始化乙方要求为文本框
-                        initClientRequirementsAsInput();
-                    }
-                } else {
-                    console.error("查询失败:", res.message);
+                            // 1. 填充客户公司下拉框
+                            fillCustomerCompanyDropdown(res.data);
 
-                    // 处理权限错误
-                    if (res.code === 401) {
-                        alert("登录已过期，请重新登录");
-                        window.location.href = "/login.html";
-                    } else if (res.code === 403) {
-                        alert("权限不足，无法访问此功能");
+                            // 2. 添加搜索功能
+                            initCompanySearch(res.data);
+
+                            // 3. 初始化乙方要求为文本框
+                            initClientRequirementsAsInput();
+                        }
                     } else {
-                        alert("查询失败: " + res.message);
+                        console.error("查询失败:", res.message);
+                        // 处理权限错误...
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX请求失败:", error);
+                    alert("请求失败，请检查网络连接");
+                }
+            });
+        }
+
+        // 初始化公司搜索功能
+        function initCompanySearch(customerData) {
+            const searchInput = document.getElementById('clientCompanySearch');
+            const searchResults = document.getElementById('companySearchResults');
+            const companySelect = document.getElementById('clientCompany');
+
+            if (!searchInput || !searchResults || !companySelect) return;
+
+            // 搜索功能
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toLowerCase();
+
+                if (searchTerm.length === 0) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                // 模糊搜索
+                const filteredCompanies = customerData.filter(customer => {
+                    if (!customer.khmc) return false;
+
+                    // 搜索公司名称
+                    if (customer.khmc.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+
+                    // 也可以搜索地址等其他信息
+                    if (customer.dz && customer.dz.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+
+                    // 搜索联系人
+                    if (customer.lxr1 && customer.lxr1.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                // 显示搜索结果
+                displaySearchResults(filteredCompanies, searchTerm);
+            });
+
+            // 点击外部关闭搜索结果
+            document.addEventListener('click', function(e) {
+                if (!searchResults.contains(e.target) && e.target !== searchInput) {
+                    searchResults.style.display = 'none';
+                }
+            });
+
+            // 键盘导航
+            let selectedIndex = -1;
+
+            searchInput.addEventListener('keydown', function(e) {
+                const results = searchResults.querySelectorAll('.search-result-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
+                    updateSelection(results);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    updateSelection(results);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && results[selectedIndex]) {
+                        selectCompany(results[selectedIndex]);
+                    }
+                } else if (e.key === 'Escape') {
+                    searchResults.style.display = 'none';
+                }
+            });
+
+            function updateSelection(results) {
+                results.forEach((item, index) => {
+                    item.classList.toggle('selected', index === selectedIndex);
+                });
+            }
+        }
+
+// 显示搜索结果
+        function displaySearchResults(companies, searchTerm) {
+            const searchResults = document.getElementById('companySearchResults');
+            const searchInput = document.getElementById('clientCompanySearch');
+
+            if (!searchResults || !searchInput) return;
+
+            if (companies.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">未找到匹配的公司</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            // 高亮搜索关键词
+            const highlightText = (text) => {
+                if (!text || !searchTerm) return text;
+
+                const lowerText = text.toLowerCase();
+                const lowerSearch = searchTerm.toLowerCase();
+                const index = lowerText.indexOf(lowerSearch);
+
+                if (index === -1) return text;
+
+                const before = text.substring(0, index);
+                const match = text.substring(index, index + searchTerm.length);
+                const after = text.substring(index + searchTerm.length);
+
+                return `${before}<span style="background-color: #ffeb3b; font-weight: bold;">${match}</span>${after}`;
+            };
+
+            // 生成结果HTML
+            let resultsHTML = '';
+
+            companies.forEach(company => {
+                const companyName = company.khmc || '未命名公司';
+                const companyAddress = company.dz || '暂无地址';
+
+                resultsHTML += `
+            <div class="search-result-item"
+                 data-company="${companyName}"
+                 data-company-data='${JSON.stringify(company).replace(/'/g, "&apos;")}'>
+                <div class="company-name">${highlightText(companyName)}</div>
+                <div class="company-address">${companyAddress}</div>
+            </div>
+        `;
+            });
+
+            searchResults.innerHTML = resultsHTML;
+            searchResults.style.display = 'block';
+
+            // 绑定点击事件
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectCompany(this);
+                });
+            });
+
+            // 重置选中索引
+            selectedIndex = -1;
+        }
+
+// 选择公司
+        function selectCompany(selectedElement) {
+            const companyData = JSON.parse(selectedElement.getAttribute('data-company-data'));
+            const companyName = selectedElement.getAttribute('data-company');
+
+            // 更新搜索框显示
+            const searchInput = document.getElementById('clientCompanySearch');
+            const searchResults = document.getElementById('companySearchResults');
+            const companySelect = document.getElementById('clientCompany');
+
+            if (searchInput) {
+                searchInput.value = companyName;
+            }
+
+            if (searchResults) {
+                searchResults.style.display = 'none';
+            }
+
+            // 更新隐藏的select元素
+            if (companySelect) {
+                // 确保选项存在
+                let optionExists = false;
+                for (let i = 0; i < companySelect.options.length; i++) {
+                    if (companySelect.options[i].value === companyName) {
+                        optionExists = true;
+                        break;
                     }
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("AJAX请求失败:", error);
-                alert("请求失败，请检查网络连接");
+
+                if (!optionExists) {
+                    // 添加选项
+                    const option = document.createElement('option');
+                    option.value = companyName;
+                    option.textContent = companyName;
+                    companySelect.appendChild(option);
+                }
+
+                companySelect.value = companyName;
             }
-        });
-    }
+
+            // 触发change事件（调用原有的更新逻辑）
+            if (companySelect) {
+                // 存储当前选择的客户数据
+                currentCustomerData = companyData;
+
+                // 手动触发地址、要求等的更新
+                updateAddressAndRequirements(companyName);
+
+                // 触发change事件，确保其他监听器也能收到
+                const event = new Event('change');
+                companySelect.dispatchEvent(event);
+            }
+
+            console.log('选择了公司:', companyName, companyData);
+        }
+
+// 修改fillCustomerCompanyDropdown函数，使其只初始化隐藏的select
+        function fillCustomerCompanyDropdown(data) {
+            const clientCompanySelect = document.getElementById('clientCompany');
+
+            if (!clientCompanySelect) return;
+
+            // 清空现有选项（保留第一个"请选择乙方公司"选项）
+            while (clientCompanySelect.children.length > 1) {
+                clientCompanySelect.removeChild(clientCompanySelect.lastChild);
+            }
+
+            // 使用Set去重
+            const uniqueCompanies = new Set();
+
+            // 遍历数据，提取khmc字段
+            data.forEach(item => {
+                if (item.khmc && item.khmc.trim() !== '') {
+                    uniqueCompanies.add(item.khmc.trim());
+                }
+            });
+
+            // 添加去重后的选项到隐藏的select
+            uniqueCompanies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company;
+                option.textContent = company;
+                clientCompanySelect.appendChild(option);
+            });
+
+            // 添加"其他"选项
+            const otherOption = document.createElement('option');
+            otherOption.value = '其他';
+            otherOption.textContent = '其他（请在下框中填写）';
+            clientCompanySelect.appendChild(otherOption);
+
+            console.log("乙方公司名称选项已添加到隐藏select:", Array.from(uniqueCompanies));
+        }
 
     function getghf() {
         $.ajax({
@@ -4242,33 +4715,77 @@
 
     // 根据选择的公司名称更新地址和要求
     function updateAddressAndRequirements(companyName) {
-        // 查找对应的客户数据
-        const customerData = customerList.find(item => item.khmc === companyName);
-        currentCustomerData = customerData;
+            // 查找对应的客户数据
+            let customerData;
 
-        if (customerData) {
-            // 更新乙方地址下拉框
-            updateClientAddressDropdown(customerData);
+            // 如果已经通过搜索选择了公司，使用存储的数据
+            if (currentCustomerData && currentCustomerData.khmc === companyName) {
+                customerData = currentCustomerData;
+            } else {
+                // 否则从列表中查找
+                customerData = customerList.find(item => item.khmc === companyName);
+                currentCustomerData = customerData;
+            }
 
-            // 更新收货地址下拉框
-            updateDeliveryAddressDropdown(customerData);
+            if (customerData) {
+                // 更新乙方地址下拉框
+                updateClientAddressDropdown(customerData);
 
-            // 更新乙方要求输入框
-            updateClientRequirements(customerData);
+                // 更新收货地址下拉框
+                updateDeliveryAddressDropdown(customerData);
 
-            // 更新购货方联系方式
-            updateClientContactInfo(customerData);
+                // 更新乙方要求输入框
+                updateClientRequirements(customerData);
 
-            // 更新购货方签字盖章部分的银行信息
-            updateClientBankInfo(customerData);
+                // 更新购货方联系方式
+                updateClientContactInfo(customerData);
 
-            // 新增：更新 khzy 字段到文本框
-            updateKhzyField(customerData);
-        } else {
-            // 如果没有找到客户数据，清空 khzy 字段
-            document.getElementById('khzyField').value = '';
+                // 更新购货方签字盖章部分的银行信息
+                updateClientBankInfo(customerData);
+
+                // 新增：更新 khzy 字段到文本框
+                updateKhzyField(customerData);
+            } else {
+                // 如果没有找到客户数据，清空 khzy 字段
+                document.getElementById('khzyField').value = '';
+            }
         }
-    }
+
+        // 添加"其他"选项处理
+        function initOtherOptionHandler() {
+            const searchInput = document.getElementById('clientCompanySearch');
+            const companySelect = document.getElementById('clientCompany');
+            const otherInput = document.getElementById('clientCompanyOther');
+
+            if (!searchInput || !companySelect || !otherInput) return;
+
+            // 监听搜索框输入，如果输入内容不在选项中，认为是"其他"
+            searchInput.addEventListener('blur', function() {
+                const inputValue = this.value.trim();
+                if (!inputValue) return;
+
+                // 检查是否在现有选项中
+                let found = false;
+                for (let i = 0; i < companySelect.options.length; i++) {
+                    if (companySelect.options[i].value === inputValue) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    // 选择"其他"选项
+                    companySelect.value = '其他';
+
+                    // 显示"其他"输入框并填充值
+                    otherInput.style.display = 'block';
+                    otherInput.value = inputValue;
+
+                    // 清空地址和要求
+                    resetAddressAndRequirements();
+                }
+            });
+        }
 
     // 新增函数：更新 khzy 字段到文本框
     function updateKhzyField(customerData) {
@@ -4513,9 +5030,11 @@
             htbh: document.getElementById('contractNumber').value, // 合同编号
             zt: '待处理', // 状态
             bz: getRemarks(), // 备注（多个用逗号分隔）
+            hq: getHuoQi(), // 货期（多个用逗号分隔）
             // 新增的两个字段
             yq: getClientRequirements(), // 乙方要求
-            kpzt: getInvoiceStatus() // 开票状态
+            kpzt: getInvoiceStatus(), // 开票状态
+            shdz: getDeliveryAddress() // 收货地址
         };
 
         console.log("保存的数据:", formData); // 调试用
@@ -4559,20 +5078,56 @@
     function getProductNames() {
         const productNames = [];
         document.querySelectorAll('.item-name').forEach(input => {
-            if (input.value && input.value.trim() !== '') {
-                productNames.push(input.value.trim());
-            }
+            const value = input.value ? input.value.trim() : '';
+            // 如果没有值，用空格占位
+            productNames.push(value || '');
         });
         return productNames.join(',');
     }
 
-    // 获取所有产品型号（逗号分隔）
+        // 获取所有货期（用空格占位）
+        function getHuoQi() {
+            const HuoQiNames = [];
+            document.querySelectorAll('.item-delivery').forEach(input => {
+                const value = input.value ? input.value.trim() : '';
+                HuoQiNames.push(value || '');
+            });
+            return HuoQiNames.join(',');
+        }
+
+        // 获取收货地址
+        function getDeliveryAddress() {
+            const deliveryAddress = document.getElementById('deliveryAddress').value;
+            let finalAddress = '';
+
+            if (deliveryAddress === '其他') {
+                // 获取其他输入框的值
+                const otherInput = document.getElementById('deliveryAddressOther');
+                finalAddress = otherInput ? otherInput.value.trim() : '';
+            } else if (deliveryAddress === '同乙方地址') {
+                // 获取乙方地址
+                const clientAddressSelect = document.getElementById('clientAddress');
+                const clientAddressValue = clientAddressSelect ? clientAddressSelect.value : '';
+
+                if (clientAddressValue === '其他') {
+                    const clientAddressOther = document.getElementById('clientAddressOther');
+                    finalAddress = clientAddressOther ? clientAddressOther.value.trim() : '';
+                } else {
+                    finalAddress = clientAddressValue || '';
+                }
+            } else {
+                finalAddress = deliveryAddress || '';
+            }
+
+            return finalAddress;
+        }
+
+    // 获取所有产品型号（用空格占位）
     function getProductModels() {
         const productModels = [];
         document.querySelectorAll('.item-model').forEach(input => {
-            if (input.value && input.value.trim() !== '') {
-                productModels.push(input.value.trim());
-            }
+            const value = input.value ? input.value.trim() : '';
+            productModels.push(value || '');
         });
         return productModels.join(',');
     }
@@ -4610,13 +5165,12 @@
         return total.toFixed(2);
     }
 
-    // 获取所有备注（逗号分隔）
+    // 获取所有备注（用空格占位）
     function getRemarks() {
         const remarks = [];
         document.querySelectorAll('.item-remark').forEach(input => {
-            if (input.value && input.value.trim() !== '') {
-                remarks.push(input.value.trim());
-            }
+            const value = input.value ? input.value.trim() : '';
+            remarks.push(value || '');
         });
         return remarks.join(',');
     }
@@ -4752,6 +5306,8 @@
                 }
             });
 
+
+            //--------
             // 选择按钮点击事件
             $(modalElement).on('click', '#selectBtn', function() {
                 const selectedRadio = document.querySelector('.rejected-select-radio:checked');
@@ -4761,7 +5317,15 @@
 
                     if (selectedData) {
                         modal.hide();
-                        loadSelectedRejectedData(selectedData);
+
+                        // 加载数据到原始表单，但不改变页面结构
+                        loadRejectedDataToForm(selectedData);
+
+                        // 2. 在选择查看后隐藏保存数据按钮
+                        hideSaveDataButton();
+
+                        // 更新按钮状态：隐藏保存按钮，显示修改/删除按钮
+                        updateActionButtonsForRejected(selectedData.id);
                     }
                 }
             });
@@ -4782,18 +5346,321 @@
             });
         }
 
-        // 加载选择的驳回数据
+        // 隐藏保存数据按钮
+        function hideSaveDataButton() {
+            const saveDataBtn = document.getElementById('saveData');
+            if (saveDataBtn) {
+                saveDataBtn.style.display = 'none';
+                console.log('已隐藏保存数据按钮');
+            }
+        }
+
+        // 加载驳回数据到表单（不改变页面结构）
+        function loadRejectedDataToForm(rejectedData) {
+            console.log("加载驳回数据到表单:", rejectedData);
+
+            // 保存驳回数据ID到全局变量
+            window.currentRejectedDataId = rejectedData.id;
+
+
+
+            if (rejectedData.ddrq) {
+                const formattedDate = formatDateForInput(rejectedData.ddrq);
+                document.getElementById('contractDate').value = formattedDate;
+            }
+
+            // 2. 处理客户公司（使用搜索框方式）
+            if (rejectedData.khcm) {
+                const searchInput = document.getElementById('clientCompanySearch');
+                const companySelect = document.getElementById('clientCompany');
+
+                if (searchInput) {
+                    searchInput.value = rejectedData.khcm;
+                }
+
+                if (companySelect) {
+                    // 确保选项存在
+                    let optionExists = false;
+                    for (let i = 0; i < companySelect.options.length; i++) {
+                        if (companySelect.options[i].value === rejectedData.khcm) {
+                            optionExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!optionExists) {
+                        const option = document.createElement('option');
+                        option.value = rejectedData.khcm;
+                        option.textContent = rejectedData.khcm;
+                        companySelect.appendChild(option);
+                    }
+
+                    companySelect.value = rejectedData.khcm;
+
+                    // 触发change事件来加载客户数据
+                    const changeEvent = new Event('change');
+                    companySelect.dispatchEvent(changeEvent);
+                }
+            }
+
+            // 3. 等待客户数据加载完成后，填充其他字段
+            setTimeout(() => {
+                // 乙方要求
+                if (rejectedData.yq) {
+                    document.getElementById('clientRequirements').value = rejectedData.yq;
+                }
+
+                // 收货地址
+                if (rejectedData.shdz) {
+                    const deliveryAddressSelect = document.getElementById('deliveryAddress');
+                    if (deliveryAddressSelect) {
+                        deliveryAddressSelect.value = rejectedData.shdz;
+                    }
+                }
+
+                // 负责人（甲方）
+                if (rejectedData.fzr) {
+                    const paymentMethodSelect = document.getElementById('paymentMethod');
+                    if (paymentMethodSelect) {
+                        paymentMethodSelect.value = rejectedData.fzr;
+
+                        // 触发change事件来更新电话和代表人
+                        const changeEvent = new Event('change');
+                        paymentMethodSelect.dispatchEvent(changeEvent);
+                    }
+                }
+
+
+
+                // 4. 填充产品信息
+                fillProductItemsFromRejectedData(rejectedData);
+
+                // 5. 延迟生成合同预览
+                setTimeout(() => {
+                    // 1. 填充基础表单字段
+                    if (rejectedData.htbh) {
+                        document.getElementById('contractNumber').value = rejectedData.htbh;
+                    }
+
+                    document.getElementById('generateInvoice').click();
+                }, 1000);
+
+            }, 500); // 给客户数据加载一些时间
+        }
+
+        // 从驳回数据填充产品信息（保持原有产品行结构）
+        function fillProductItemsFromRejectedData(data) {
+            // 清空现有产品行（保留第一个空行）
+            const itemsContainer = document.getElementById('itemsContainer');
+
+            // 查找并保留第一个空行作为模板
+            let emptyRow = null;
+            const existingRows = itemsContainer.querySelectorAll('.item-row');
+
+            // 清空所有行
+            itemsContainer.innerHTML = '';
+
+            // 解析产品数据
+            const productNames = data.pp ? data.pp.split(',') : [];
+            const productModels = data.cpxh ? data.cpxh.split(',') : [];
+            const quantities = data.sl ? data.sl.split(',') : [];
+            const prices = data.dj ? data.dj.split(',') : [];
+            const remarks = data.bz ? data.bz.split(',') : [];
+            const huoqi = data.hq ? data.hq.split(',') : [];
+
+            // 创建产品行
+            const maxLength = Math.max(
+                productNames.length,
+                productModels.length,
+                quantities.length,
+                prices.length,
+                remarks.length,
+                huoqi.length
+            );
+
+            for (let i = 0; i < maxLength; i++) {
+                // 使用原始的添加产品行逻辑
+                document.getElementById('addItem').click();
+
+                // 获取最新添加的行
+                const newRows = itemsContainer.querySelectorAll('.item-row');
+                const latestRow = newRows[newRows.length - 1];
+
+                // 填充数据
+                if (latestRow) {
+                    // 产品名称
+                    const nameInput = latestRow.querySelector('.item-name');
+                    if (nameInput && productNames[i]) {
+                        nameInput.value = productNames[i];
+
+                        // 如果是下拉框，需要特殊处理
+                        if (nameInput.tagName === 'SELECT' && nameInput.value === '') {
+                            // 尝试设置为其他，然后手动输入
+                            nameInput.value = '其他';
+                            const inputEvent = new Event('change');
+                            nameInput.dispatchEvent(inputEvent);
+
+                            // 稍后设置输入框的值
+                            setTimeout(() => {
+                                const newInput = latestRow.querySelector('.item-name');
+                                if (newInput && newInput.tagName === 'INPUT') {
+                                    newInput.value = productNames[i];
+                                }
+                            }, 100);
+                        }
+                    }
+
+                    // 产品型号
+                    const modelInput = latestRow.querySelector('.item-model');
+                    if (modelInput && productModels[i]) {
+                        modelInput.value = productModels[i];
+                    }
+
+                    // 数量
+                    const quantityInput = latestRow.querySelector('.item-quantity');
+                    if (quantityInput && quantities[i]) {
+                        quantityInput.value = quantities[i];
+                    }
+
+                    // 单价
+                    const priceInput = latestRow.querySelector('.item-price');
+                    if (priceInput && prices[i]) {
+                        priceInput.value = prices[i];
+                    }
+
+                    // 备注
+                    const remarkInput = latestRow.querySelector('.item-remark');
+                    if (remarkInput && remarks[i]) {
+                        remarkInput.value = remarks[i];
+                    }
+
+                    // 货期
+                    const deliveryInput = latestRow.querySelector('.item-delivery');
+                    if (deliveryInput && huoqi[i]) {
+                        deliveryInput.value = huoqi[i];
+                    }
+
+                    // 品牌（默认SHAC）
+                    const brandInput = latestRow.querySelector('.item-brand');
+                    if (brandInput) {
+                        brandInput.value = data.pp ? 'SHAC' : '';
+                    }
+                }
+            }
+
+            // 如果没有产品，添加一个空行
+            if (maxLength === 0) {
+                document.getElementById('addItem').click();
+            }
+        }
+
+        // 为驳回数据更新操作按钮
+        function updateActionButtonsForRejected(dataId) {
+            const actionButtons = document.querySelector('.action-buttons');
+
+            if (!actionButtons) {
+                console.error('未找到操作按钮区域');
+                return;
+            }
+
+            // 保存当前状态
+            window.currentRejectedDataId = dataId;
+
+            // 修改操作按钮区域的HTML
+            actionButtons.innerHTML = `
+        <button id="updateData" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> 修改数据
+        </button>
+        <button id="deleteData" class="btn btn-danger">
+            <i class="bi bi-trash"></i> 删除数据
+        </button>
+        <button id="exportContractExcel" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> 导出合同Excel
+        </button>
+    `;
+
+            // 重新绑定按钮事件
+            bindActionButtonsForRejected();
+        }
+
+        // 为驳回数据绑定按钮事件
+        function bindActionButtonsForRejected() {
+            // 更新数据按钮
+            const updateBtn = document.getElementById('updateData');
+            if (updateBtn) {
+                updateBtn.addEventListener('click', function() {
+                    if (window.currentRejectedDataId) {
+                        updateRejectedData(window.currentRejectedDataId);
+                    }
+                });
+            }
+
+            // 删除数据按钮
+            const deleteBtn = document.getElementById('deleteData');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    if (window.currentRejectedDataId) {
+                        deleteRejectedData(window.currentRejectedDataId);
+                    }
+                });
+            }
+
+            // 打印合同按钮（使用原有的打印逻辑）
+            const printBtn = document.getElementById('printInvoice');
+            if (printBtn) {
+                // 使用事件委托，避免重复绑定
+                printBtn.onclick = null; // 清除旧的事件
+                printBtn.addEventListener('click', handlePrintContract);
+            }
+
+            // 导出Excel按钮
+            const exportBtn = document.getElementById('exportContractExcel');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportContractToExcel);
+            }
+        }
+
         function loadSelectedRejectedData(rejectedData) {
             console.log("选择的驳回数据:", rejectedData);
 
             if (rejectedData) {
-                // 填充数据到表单
-                fillFormWithRejectedData(rejectedData);
+                // 先清空可能覆盖的数据
+                clearFormData();
 
-                // 修改打印单上的按钮状态
-                updatePrintButtonsState(rejectedData.id);
+                // 延迟执行填充，确保页面初始化完成
+                setTimeout(() => {
+                    // 填充数据到表单
+                    fillFormWithRejectedData(rejectedData);
+
+                    // 修改打印单上的按钮状态
+                    if (rejectedData.id) {
+                        setTimeout(() => {
+                            updatePrintButtonsState(rejectedData.id);
+                        }, 300);
+                    }
+                }, 500); // 增加延迟
             } else {
                 alert("没有找到选择的驳回数据");
+            }
+        }
+
+        // 新增：清空表单数据的辅助函数
+        function clearFormData() {
+            // 清空合同编号，防止被默认值覆盖
+            const contractNumberInput = document.getElementById('contractNumber');
+            if (contractNumberInput) {
+                contractNumberInput.value = '';
+            }
+
+            // 清空其他可能被覆盖的字段
+            const clientCompanySelect = document.getElementById('clientCompany');
+            if (clientCompanySelect) {
+                clientCompanySelect.value = '';
+            }
+
+            const clientCompanySearch = document.getElementById('clientCompanySearch');
+            if (clientCompanySearch) {
+                clientCompanySearch.value = '';
             }
         }
 
@@ -4859,7 +5726,18 @@
     function fillFormWithRejectedData(data) {
         // 填充基础信息
         if (data.khcm) {
-            document.getElementById('clientCompany').value = data.khcm;
+            const clientCompanySelect = document.getElementById('clientCompany');
+            const clientCompanySearch = document.getElementById('clientCompanySearch');
+
+            // 更新隐藏的下拉框
+            if (clientCompanySelect) {
+                clientCompanySelect.value = data.khcm;
+            }
+
+            // 更新显示的搜索框
+            if (clientCompanySearch) {
+                clientCompanySearch.value = data.khcm;
+            }
 
             // 手动查找并设置客户数据
             const customerData = customerList.find(item => item.khmc === data.khcm);
@@ -4867,11 +5745,42 @@
                 currentCustomerData = customerData;
                 // 手动更新地址和要求
                 updateAddressAndRequirements(data.khcm);
+            } else {
+                console.warn("未找到客户数据:", data.khcm);
+                // 如果找不到客户数据，至少设置乙方要求
+                if (data.yq) {
+                    document.getElementById('clientRequirements').value = data.yq;
+                }
             }
         }
 
         if (data.htbh) {
             document.getElementById('contractNumber').value = data.htbh;
+        }
+
+        if (data.shdz) {
+            // 设置收货地址
+            const deliveryAddressSelect = document.getElementById('deliveryAddress');
+            const deliveryAddressOther = document.getElementById('deliveryAddressOther');
+
+            // 检查收货地址是否在选项中
+            let addressFound = false;
+            for (let i = 0; i < deliveryAddressSelect.options.length; i++) {
+                if (deliveryAddressSelect.options[i].value === data.shdz) {
+                    deliveryAddressSelect.value = data.shdz;
+                    addressFound = true;
+                    break;
+                }
+            }
+
+            if (!addressFound) {
+                // 不在选项中，设置为"其他"
+                deliveryAddressSelect.value = '其他';
+                if (deliveryAddressOther) {
+                    deliveryAddressOther.style.display = 'block';
+                    deliveryAddressOther.value = data.shdz;
+                }
+            }
         }
 
         if (data.ddrq) {
@@ -4975,6 +5884,7 @@
         const quantities = data.sl ? data.sl.split(',') : [];
         const prices = data.dj ? data.dj.split(',') : [];
         const remarks = data.bz ? data.bz.split(',') : [];
+        const huoqi = data.hq ? data.hq.split(',') : [];
 
         // 添加产品行
         const maxLength = Math.max(
@@ -4982,7 +5892,8 @@
             productModels.length,
             quantities.length,
             prices.length,
-            remarks.length
+            remarks.length,
+            huoqi.length
         );
 
         for (let i = 0; i < maxLength; i++) {
@@ -4992,6 +5903,7 @@
                 quantities[i] || '1',
                 prices[i] || '0',
                 remarks[i] || '',
+                huoqi[i] || '',
                 'SHAC' // 默认品牌
             );
         }
@@ -5003,7 +5915,7 @@
     }
 
     // 添加产品行（带数据）
-    function addProductItem(name, model, quantity, price, remark, brand) {
+    function addProductItem(name, model, quantity, price, remark, delivery, brand) {
         const itemsContainer = document.getElementById('itemsContainer');
         const newItemRow = document.createElement('div');
         newItemRow.className = 'item-row';
@@ -5048,7 +5960,7 @@
     </div>
     <div class="form-group">
         <label>货期</label>
-        <input type="text" class="form-control item-delivery" placeholder="货期">
+        <input type="text" class="form-control item-delivery" placeholder="货期" value="${delivery || ''}">  <!-- 添加货期输入框 -->
     </div>
     <div class="form-group">
         <label>品牌</label>
@@ -5079,99 +5991,202 @@
         function updatePrintButtonsState(dataId) {
             const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
 
+            if (!printActionButtons) {
+                console.error('未找到action-buttons容器');
+                return;
+            }
+
             // 保存原始ID到全局变量
             window.currentRejectedDataId = dataId;
 
-            // 修改打印单上的按钮HTML - 确保包含隐藏印章按钮
+            // 修改打印单上的按钮HTML - 确保按钮ID正确
             printActionButtons.innerHTML = `
-        <button id="updateData" class="btn btn-warning">修改数据</button>
-        <button id="deleteData" class="btn btn-danger">删除数据</button>
-        <button id="printInvoiceBtn" class="btn btn-primary">打印合同</button>
-        <button id="exportContractExcel" class="btn btn-success">
+        <button type="button" id="updateData" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> 修改数据
+        </button>
+        <button type="button" id="deleteData" class="btn btn-danger">
+            <i class="bi bi-trash"></i> 删除数据
+        </button>
+        <button type="button" id="printInvoice" class="btn btn-primary">
+            <i class="bi bi-printer"></i> 打印合同
+        </button>
+        <button type="button" id="exportContractExcel" class="btn btn-success">
             <i class="bi bi-file-earmark-excel"></i> 导出合同Excel
         </button>
     `;
 
-            // 使用事件委托绑定所有按钮事件
-            bindPrintButtonsEvents();
+            // 立即绑定按钮事件
+            setTimeout(() => {
+                bindPrintButtonsEvents();
+            }, 50);
 
             console.log("打印单按钮已更新为修改模式");
         }
 
-    // 处理打印合同
-    function handlePrintContract() {
-        // 确保页面信息已更新
-        updatePageInfo();
-
-        // 延迟一下确保DOM更新完成
-        setTimeout(() => {
-            try {
-                window.print();
-                console.log("打印功能已调用");
-            } catch (error) {
-                console.error("打印失败:", error);
-                alert("打印失败，请检查浏览器打印设置");
+        // 专门绑定驳回状态下的按钮事件
+        function bindRejectedButtonEvents() {
+            // 更新数据按钮
+            const updateBtn = document.getElementById('updateData');
+            if (updateBtn) {
+                updateBtn.addEventListener('click', function() {
+                    if (window.currentRejectedDataId) {
+                        updateRejectedData(window.currentRejectedDataId);
+                    }
+                });
             }
-        }, 100);
-    }
+
+            // 删除数据按钮
+            const deleteBtn = document.getElementById('deleteData');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    if (window.currentRejectedDataId) {
+                        deleteRejectedData(window.currentRejectedDataId);
+                    }
+                });
+            }
+
+            // 打印合同按钮 - 使用与原始相同的打印逻辑
+            const printBtn = document.getElementById('printInvoice');
+            if (printBtn) {
+                // 移除可能存在的旧事件监听器
+                printBtn.removeEventListener('click', handlePrintContract);
+
+                // 添加新的事件监听器
+                printBtn.addEventListener('click', handlePrintContract);
+            }
+
+            // 导出Excel按钮
+            const exportBtn = document.getElementById('exportContractExcel');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportContractToExcel);
+            }
+        }
+
+    // 处理打印合同
+        // 2. 修改 handlePrintContract 函数，确保它能正常工作
+        function handlePrintContract() {
+            console.log('=== handlePrintContract 被调用 ===');
+
+            // 确保页面信息已更新
+            updatePageInfo();
+
+            // 显示打印预览
+            try {
+                // 调用您的打印预览逻辑
+                preparePrintPreview();
+                showPrintPreview();
+            } catch (error) {
+                console.error('打印预览失败:', error);
+
+                // 备用方案：直接打印
+                setTimeout(() => {
+                    try {
+                        window.print();
+                        console.log("直接打印功能已调用");
+                    } catch (printError) {
+                        console.error("打印失败:", printError);
+                        alert("打印失败，请检查浏览器打印设置或使用打印预览功能");
+                    }
+                }, 100);
+            }
+        }
 
     // 修改驳回数据
-    function updateRejectedData(dataId) {
-        // 先验证必要数据
-        if (!validateSaveData()) {
-            return;
-        }
+        function updateRejectedData(dataId) {
+            // 先验证必要数据
+            if (!validateSaveData()) {
+                return;
+            }
 
-        // 收集表单数据
-        const formData = {
-            id: dataId, // 包含ID用于更新
-            khcm: document.getElementById('clientCompany').value,
-            lxr: getClientRepresentative(),
-            lxdh: getClientPhone(),
-            ddrq: document.getElementById('contractDate').value,
-            pp: getProductNames(),
-            cpxh: getProductModels(),
-            sl: getProductQuantities(),
-            dj: getProductPrices(),
-            hj: calculateTotalAmount(),
-            fzr: document.getElementById('previewRepresentative').textContent,
-            htbh: document.getElementById('contractNumber').value,
-            zt: '待处理', // 重新设置为待处理状态
-            bz: getRemarks(),
-            yq: getClientRequirements(),
-            kpzt: getInvoiceStatus()
-        };
+            const contractDateInput = document.getElementById('contractDate').value;
+            let formattedDate = '';
 
-        console.log("修改的数据:", formData);
+            if (contractDateInput) {
+                formattedDate = contractDateInput.replace(/-/g, '/');
+            }
 
-        // 确认修改
-        if (confirm('确定要修改这条驳回数据吗？')) {
-            $.ajax({
-                type: 'post',
-                url: '/hetong/updateScgd', // 需要后端提供更新接口
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                dataType: 'json',
-                success: function(res) {
-                    if (res.success) {
-                        alert('数据修改成功！');
-                        console.log('修改成功:', res);
-                        // 恢复打印单原始按钮状态
-                        resetPrintButtonsState();
-                        // 刷新页面数据
-                        refreshPageData();
-                    } else {
-                        console.error("修改失败:", res.message);
-                        alert("修改失败: " + res.message);
+            // 收集表单数据（使用原始表单的数据）
+            const formData = {
+                id: dataId, // 包含ID用于更新
+                khcm: document.getElementById('clientCompany').value,
+                lxr: getClientRepresentative(),
+                lxdh: getClientPhone(),
+                ddrq: formattedDate,
+                pp: getProductNames(),
+                cpxh: getProductModels(),
+                sl: getProductQuantities(),
+                dj: getProductPrices(),
+                hj: calculateTotalAmount(),
+                fzr: document.getElementById('previewRepresentative').textContent,
+                htbh: document.getElementById('contractNumber').value,
+                zt: '待处理', // 重新设置为待处理状态
+                bz: getRemarks(),
+                hq: getHuoQi(),
+                yq: getClientRequirements(),
+                kpzt: getInvoiceStatus(),
+                shdz: getDeliveryAddress()
+            };
+
+            console.log("修改的数据:", formData);
+
+            // 确认修改
+            if (confirm('确定要修改这条驳回数据吗？')) {
+                $.ajax({
+                    type: 'post',
+                    url: '/hetong/updateScgd',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success) {
+                            alert('数据修改成功！');
+
+                            // 修改成功后，恢复原始按钮状态
+                            resetActionButtonsToNormal();
+
+                            // 刷新页面
+                            window.location.href = window.location.href;
+                        } else {
+                            console.error("修改失败:", res.message);
+                            alert("修改失败: " + res.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX请求失败:", error);
+                        alert("修改失败，请检查网络连接");
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX请求失败:", error);
-                    alert("修改失败，请检查网络连接");
-                }
-            });
+                });
+            }
         }
-    }
+
+        // 恢复原始操作按钮
+        function resetActionButtonsToNormal() {
+            const actionButtons = document.querySelector('.action-buttons');
+
+            if (!actionButtons) return;
+
+            actionButtons.innerHTML = `
+        <button id="generateInvoice" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> 生成合同
+        </button>
+        <button id="importExcel" class="btn btn-info">
+            <i class="bi bi-file-earmark-excel"></i> 导入Excel
+        </button>
+    `;
+
+            // 重新绑定原始按钮事件
+            document.getElementById('generateInvoice').addEventListener('click', function() {
+                // 原有的生成合同逻辑
+                document.getElementById('generateInvoice').click();
+            });
+
+            document.getElementById('importExcel').addEventListener('click', function() {
+                document.getElementById('excelFileInput').click();
+            });
+
+            // 清除驳回数据ID
+            window.currentRejectedDataId = null;
+        }
 
 
 
@@ -5189,11 +6204,12 @@
                         alert('数据删除成功！');
                         console.log('删除成功:', res);
                         // 恢复打印单原始按钮状态
-                        resetPrintButtonsState();
-                        // 清空表单
-                        clearForm();
-                        // 刷新页面数据
-                        refreshPageData();
+                        // resetPrintButtonsState();
+                        // // 清空表单
+                        // clearForm();
+                        // // 刷新页面数据
+                        // refreshPageData();
+                        window.location.href = window.location.href;
                     } else {
                         console.error("删除失败:", res.message);
                         alert("删除失败: " + res.message);
@@ -5272,16 +6288,13 @@
         console.log('表单状态重置完成');
     }
 
-    // 恢复打印单原始按钮状态
+        // 恢复打印单原始按钮状态
         function resetPrintButtonsState() {
             const printActionButtons = document.querySelector('#invoicePreview .action-buttons');
             if (printActionButtons) {
                 printActionButtons.innerHTML = `
             <button id="saveData" class="btn btn-primary">保存数据</button>
             <button id="printInvoice" class="btn btn-primary">打印合同</button>
-            <button id="yincanggongzhang" class="btn btn-primary">
-                <i class="bi bi-eye-slash"></i> 隐藏印章
-            </button>
         `;
 
                 // 重新绑定所有按钮事件
@@ -5294,81 +6307,100 @@
             console.log("打印单按钮已恢复为原始状态");
         }
 
-        // 统一绑定打印区域按钮事件的函数
+        // 1. 修改 bindPrintButtonsEvents 函数，确保打印按钮被正确处理
         function bindPrintButtonsEvents() {
             const actionButtons = document.querySelector('#invoicePreview .action-buttons');
 
             if (!actionButtons) return;
 
+            // 移除旧的事件监听器
+            const newButtons = actionButtons.cloneNode(true);
+            actionButtons.parentNode.replaceChild(newButtons, actionButtons);
+
+            // 获取更新后的按钮容器
+            const updatedButtons = document.querySelector('#invoicePreview .action-buttons');
+
             // 使用事件委托绑定所有按钮事件
-            actionButtons.addEventListener('click', function(e) {
+            updatedButtons.addEventListener('click', function(e) {
                 const button = e.target.closest('button');
                 if (!button) return;
 
                 const buttonId = button.id;
+                console.log(`按钮点击: ${buttonId}`, e);
 
-                if (buttonId === 'saveData') {
-                    if (!validateSaveData()) return;
-                    if (confirm('确定要保存销售订单数据吗？')) {
-                        saveDataToDatabase();
-                    }
-                } else if (buttonId === 'printInvoice' || buttonId === 'printInvoiceBtn') {
-                    handlePrintContract();
-                } else if (buttonId === 'yincanggongzhang') {
-                    // 隐藏印章按钮的逻辑
-                    const sealElement = document.querySelector('.seal-overlay');
+                switch(buttonId) {
+                    case 'saveData':
+                        e.preventDefault();
+                        if (!validateSaveData()) return;
+                        if (confirm('确定要保存销售订单数据吗？')) {
+                            saveDataToDatabase();
+                        }
+                        break;
 
-                    // 切换hidden类
-                    sealElement.classList.toggle('hidden');
+                    case 'printInvoice':
+                    case 'printInvoiceBtn':
+                        e.preventDefault();
+                        console.log('打印按钮被点击');
+                        handlePrintContract();
+                        break;
 
-                    // 更新按钮状态
-                    if (sealElement.classList.contains('hidden')) {
-                        button.innerHTML = '<i class="bi bi-eye"></i> 显示印章';
-                        button.classList.remove('btn-secondary');
-                        button.classList.add('btn-success');
-                    } else {
-                        button.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏印章';
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-secondary');
-                    }
-                } else if (buttonId === 'updateData') {
-                    updateRejectedData(window.currentRejectedDataId);
-                } else if (buttonId === 'deleteData') {
-                    deleteRejectedData(window.currentRejectedDataId);
-                } else if (buttonId === 'exportContractExcel') {
-                    exportContractToExcel();
+                    case 'yincanggongzhang':
+                        e.preventDefault();
+                        toggleSealVisibility(button);
+                        break;
+
+                    case 'updateData':
+                        e.preventDefault();
+                        console.log('修改数据按钮被点击');
+                        if (window.currentRejectedDataId) {
+                            updateRejectedData(window.currentRejectedDataId);
+                        }
+                        break;
+
+                    case 'deleteData':
+                        e.preventDefault();
+                        console.log('删除数据按钮被点击');
+                        if (window.currentRejectedDataId) {
+                            deleteRejectedData(window.currentRejectedDataId);
+                        }
+                        break;
+
+                    case 'exportContractExcel':
+                        e.preventDefault();
+                        exportContractToExcel();
+                        break;
+
+                    default:
+                        console.log('未知按钮:', buttonId);
                 }
             });
+
+            console.log('按钮事件绑定完成');
         }
 
-    // 恢复原始按钮状态
-    // function resetButtonState() {
-    //     const actionButtons = document.querySelector('.action-buttons');
-    //     actionButtons.innerHTML = `
-    //     <button id="saveData" class="btn btn-primary">保存数据</button>
-    //     <button id="printInvoice" class="btn btn-primary">打印合同</button>
-    //      <button id="yincanggongzhang" class="btn btn-primary">隐藏印章</button>
-    // `;
-    //
-    //     // 重新绑定保存数据事件
-    //     document.getElementById('saveData').addEventListener('click', function() {
-    //         if (!validateSaveData()) {
-    //             return;
-    //         }
-    //         if (confirm('确定要保存销售订单数据吗？')) {
-    //             saveDataToDatabase();
-    //         }
-    //     });
-    //
-    //     // 重新绑定打印事件
-    //     document.getElementById('printInvoice').addEventListener('click', function() {
-    //         updatePageInfo();
-    //         window.print();
-    //     });
-    //
-    //     // 清除全局ID
-    //     window.currentRejectedDataId = null;
-    // }
+
+
+// 独立的印章切换函数
+        function toggleSealVisibility(button) {
+            const sealElement = document.querySelector('.seal-overlay');
+
+            if (!sealElement) return;
+
+            // 切换hidden类
+            sealElement.classList.toggle('hidden');
+
+            // 更新按钮状态
+            if (sealElement.classList.contains('hidden')) {
+                button.innerHTML = '<i class="bi bi-eye"></i> 显示印章';
+                button.classList.remove('btn-secondary');
+                button.classList.add('btn-success');
+            } else {
+                button.innerHTML = '<i class="bi bi-eye-slash"></i> 隐藏印章';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-secondary');
+            }
+        }
+
 
     // 修改 updatePageInfo 函数
     function updatePageInfo() {
@@ -6906,19 +7938,44 @@
 
 
 
-    $(document).ready(function() {
-        getKH();
-        getXL();
-        getList();
-        getghf();
-        returnlist();
+        $(document).ready(function() {
+            getKH();
+            getXL();
+            getList();
+            getghf();
+            returnlist();
 
-        // 初始化Excel导入
-        initExcelImport();
-        setTimeout(function() {
-            getXLGL();
-        }, 100);
-    });
+            // 初始化Excel导入
+            initExcelImport();
+
+            // 初始化其他选项处理
+            setTimeout(function() {
+                getXLGL();
+                initOtherOptionHandler();
+
+                // 初始绑定原始按钮事件
+                bindOriginalButtonEvents();
+            }, 100);
+        });
+
+// 绑定原始按钮事件
+        function bindOriginalButtonEvents() {
+            // 生成合同按钮
+            const generateBtn = document.getElementById('generateInvoice');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    // 原有的生成合同逻辑
+                });
+            }
+
+            // 导入Excel按钮
+            const importBtn = document.getElementById('importExcel');
+            if (importBtn) {
+                importBtn.addEventListener('click', function() {
+                    document.getElementById('excelFileInput').click();
+                });
+            }
+        }
 </script>
 </body>
 </html>

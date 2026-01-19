@@ -47,10 +47,10 @@ public class DyshdController {
     public  Result<PageResult<Dyshd>> getshdList(HttpSession session, @RequestBody PageRequestDTO request) {
         try {
             // 权限检查
-            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
-            if (!authResult.isSuccess()) {
-                return Result.error(authResult.getCode(), authResult.getMessage());
-            }
+//            Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+//            if (!authResult.isSuccess()) {
+//                return Result.error(authResult.getCode(), authResult.getMessage());
+//            }
 
             // 执行查询
             PageResult<Dyshd> result = dyshdService.getshdlist(request);
@@ -67,7 +67,7 @@ public class DyshdController {
     @PostMapping("/shipProducts")
     public Result updateShipDate(HttpSession session, @RequestBody Map<String, Object> params) {
         // 权限检查
-        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+        Result<?> authResult = AuthUtil4.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }

@@ -8,6 +8,7 @@ var departmentMap = {};
 var selectedWorkOrders = []; // 存储选中的产品索引
 var productWorkOrders = {}; // 存储每个产品的工单号
 var productPrintCounts = {}; // 存储每个产品的打印次数
+var employeeList = []; // 添加这个变量来存储员工信息
 var currentDetailData = null;
 var chanpindanwei = [];
 
@@ -19,6 +20,7 @@ $(document).ready(function() {
     initToolbarEvents();
     initDetailModalEvents();
     getDW();
+    getListDH();
     resetDailySequence();
 
     // 确保统计区域可见
@@ -1059,7 +1061,7 @@ function generateWorkOrderNumber() {
     // 获取当前序列号，如果不存在或小于0，则从0开始
     var sequence = parseInt(localStorage.getItem(storageKey));
     if (isNaN(sequence) || sequence < 0) {
-        sequence = 0;
+        sequence = 1;
     }
 
     // 生成工单号（格式：GD + 日期 + 3位序号）
@@ -1073,15 +1075,30 @@ function generateWorkOrderNumber() {
     return workOrderNumber;
 }
 
-// 新增：重置每日序列号的函数（可选）
+// 修改初始化函数，确保每天从001开始
 function resetDailySequence() {
     var today = new Date().toISOString().split('T')[0].replace(/-/g, '');
     var storageKey = 'workOrderSequence_' + today;
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    var yesterdayKey = 'workOrderSequence_' + yesterday.toISOString().split('T')[0].replace(/-/g, '');
 
-    // 检查是否已初始化今天的序列号
-    if (!localStorage.getItem(storageKey)) {
-        localStorage.setItem(storageKey, '0');
-        console.log('初始化今日序列号为0');
+    // 检查是否是新的日期
+    var currentSequence = localStorage.getItem(storageKey);
+    var yesterdaySequence = localStorage.getItem(yesterdayKey);
+
+    // 如果是新的一天，重置序列号为1
+    if (!currentSequence) {
+        localStorage.setItem(storageKey, '1');
+        console.log('新的一天，初始化今日序列号为1');
+    } else {
+        console.log('今日序列号:', currentSequence);
+    }
+
+    // 可选：清理前一天的序列号
+    if (yesterdaySequence) {
+        localStorage.removeItem(yesterdayKey);
+        console.log('清理昨日序列号');
     }
 }
 
@@ -1163,6 +1180,17 @@ function generateDetailForm(data) {
 
         formHtml = `
             <div class="table-responsive">
+                <div class="select-all-container" style="margin-bottom: 10px;">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="selectAllProducts">
+                        <label class="form-check-label" for="selectAllProducts" style="font-weight: bold; color: #2196f3;">
+                            <i class="bi bi-check-square"></i> 全选/取消全选
+                        </label>
+                        <span id="selectedInfo" style="margin-left: 15px; color: #666;">
+                            
+                        </span>
+                    </div>
+                </div>
                 <table class="table table-bordered table-striped detail-table">
                     <thead>
                         <tr>
@@ -1192,7 +1220,6 @@ function generateDetailForm(data) {
 
             var productKey = i.toString();
             var isChecked = selectedWorkOrders.includes(productKey) ? 'checked' : '';
-            // 使用已初始化的工单号，如果没有就留空
             var workOrder = productWorkOrders[productKey] || '';
 
             formHtml += `
@@ -1224,13 +1251,14 @@ function generateDetailForm(data) {
                 </table>
             </div>`;
 
+        // 添加样式
         if (!$('#detail-table-styles').length) {
             $('<style id="detail-table-styles">')
                 .prop('type', 'text/css')
                 .html(`
                     .detail-table {
                         font-size: 14px;
-                        margin-top: 15px;
+                        margin-top: 10px;
                     }
                     .detail-table th {
                         background-color: #409EFF;
@@ -1257,6 +1285,22 @@ function generateDetailForm(data) {
                     .product-radio {
                         transform: scale(1.2);
                     }
+                    .select-all-container {
+                        background-color: #f8f9fa;
+                        padding: 8px 15px;
+                        border-radius: 4px;
+                        border: 1px solid #dee2e6;
+                    }
+                    #selectedInfo {
+                        font-size: 14px;
+                    }
+                    #selectedCount {
+                        font-weight: bold;
+                        color: #2196f3;
+                    }
+                    #totalCount {
+                        font-weight: bold;
+                    }
                 `)
                 .appendTo('head');
         }
@@ -1266,11 +1310,98 @@ function generateDetailForm(data) {
 
     $('#detailFormContainer').html(formHtml);
 
+    // 初始化全选状态
+    updateSelectAllCheckbox();
+
     // 绑定单选按钮事件
     bindProductRadioEvents();
+
+    // 绑定全选复选框事件
+    bindSelectAllEvents();
 }
 
-// 修改绑定产品选择事件，改为多选逻辑
+// 绑定全选复选框事件
+function bindSelectAllEvents() {
+    $('#selectAllProducts').off('change').on('change', function() {
+        var isChecked = $(this).prop('checked');
+
+        // 更新所有产品的复选框状态
+        $('.product-radio').each(function() {
+            var productIndex = $(this).data('index');
+            var productKey = productIndex.toString();
+
+            if (isChecked) {
+                // 全选：如果不在选中数组中，则添加
+                if (!selectedWorkOrders.includes(productKey)) {
+                    selectedWorkOrders.push(productKey);
+                }
+            } else {
+                // 取消全选：从选中数组中移除
+                var index = selectedWorkOrders.indexOf(productKey);
+                if (index > -1) {
+                    selectedWorkOrders.splice(index, 1);
+                }
+            }
+
+            // 更新复选框状态和行样式
+            $(this).prop('checked', isChecked);
+            var row = $(this).closest('.product-row');
+            if (isChecked) {
+                row.addClass('selected');
+            } else {
+                row.removeClass('selected');
+            }
+        });
+
+        updateSelectedCountDisplay();
+    });
+}
+
+// 更新全选复选框状态
+function updateSelectAllCheckbox() {
+    var totalProducts = $('.product-radio').length;
+    var checkedProducts = $('.product-radio:checked').length;
+
+    var selectAllCheckbox = $('#selectAllProducts');
+
+    if (totalProducts === 0) {
+        selectAllCheckbox.prop('checked', false);
+        selectAllCheckbox.prop('disabled', true);
+    } else if (checkedProducts === totalProducts) {
+        selectAllCheckbox.prop('checked', true);
+        selectAllCheckbox.prop('indeterminate', false);
+    } else if (checkedProducts > 0) {
+        selectAllCheckbox.prop('checked', false);
+        selectAllCheckbox.prop('indeterminate', true);
+    } else {
+        selectAllCheckbox.prop('checked', false);
+        selectAllCheckbox.prop('indeterminate', false);
+    }
+}
+
+// 修改更新选中数量显示函数
+function updateSelectedCountDisplay() {
+    var selectedCount = selectedWorkOrders.length;
+    var totalCount = $('.product-radio').length;
+
+    // 更新数量显示
+    $('#selectedCount').text(selectedCount);
+    $('#totalCount').text(totalCount);
+
+    // 更新全选复选框状态
+    updateSelectAllCheckbox();
+
+    // 更新打印按钮上的提示
+    $('#selectedCountDisplay').text(selectedCount);
+
+    // 如果选中了多个产品，显示提示信息
+    if (selectedCount > 1) {
+        $('#printHint').show().html(`已选择 <strong>${selectedCount}</strong> 个产品，将按选择顺序批量打印`);
+    } else {
+        $('#printHint').hide();
+    }
+}
+
 function bindProductRadioEvents() {
     $('.product-radio').off('change').on('change', function() {
         var productIndex = $(this).data('index');
@@ -1551,7 +1682,6 @@ function updateProductPrintCount(productKey) {
     updateSelectedCountDisplay();
 }
 
-// 生成单个产品的打印内容
 function generateSinglePrintContent(rowData, detailData, productIndex, workOrderNumber, printCount) {
     try {
         var printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
@@ -1582,6 +1712,9 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             bz: bzArray[productIndex] || ''
         };
 
+        // 获取收货地址
+        var shippingAddress = detailData.shdz || '';
+
         var printContent = `
 <!DOCTYPE html>
 <html>
@@ -1591,23 +1724,24 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'SimSun', '宋体', serif; font-size: 16px; line-height: 1.4; color: #000; background: white; }
-        .triple-form { width: 240mm; height: 130mm; border: 2px solid #000; margin: 0; padding: 0; background: white; }
+        .triple-form { width: 240mm; height: 140mm; border: 2px solid #000; margin: 0; padding: 0; background: white; } /* 增加高度以容纳收货地址 */
         .form-header { text-align: center; font-size: 22px; font-weight: bold; padding: 8px 0; background-color: #f0f0f0; }
         .form-table { width: 100%; border-collapse: collapse; }
         .form-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; height: 32px; }
         .label-cell { font-weight: bold; background-color: #f9f9f9; width: 80px; text-align: center; }
         .value-cell { background-color: white; }
         .large-cell { height: 40px; }
-        .info-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; padding: 0 15px; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; padding: 0 15px; }
         .info-item { display: flex; align-items: center; font-size: 14px; }
-        .info-label { font-weight: bold; margin-right: 5px; }
+        .info-label { font-weight: bold; margin-right: 5px; min-width: 70px; }
+        .address-info { display: block; width: 100%; }
         .signature-area { display: flex; justify-content: space-between; margin-top: 10px; padding: 10px 15px; }
         .signature { text-align: center; display: flex; flex-direction: column; align-items: center; min-width: 100px; }
         .signature-label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         
         @media print {
-            @page { size: 240mm 130mm; margin: 0; padding: 0; }
-            body { width: 240mm; height: 130mm; margin: 0; padding: 0; font-size: 16px; }
+            @page { size: 240mm 140mm; margin: 0; padding: 0; }
+            body { width: 240mm; height: 140mm; margin: 0; padding: 0; font-size: 16px; }
             .triple-form { width: 100%; height: 100%; border: 2px solid #000; page-break-after: always; }
         }
         
@@ -1638,6 +1772,14 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             <div class="info-item"><span class="info-label">购方要求：</span>${rowData.yq || ''}</div>
         </div>
         
+        <!-- 添加收货地址行 -->
+        <div class="info-row">
+            <div class="address-info">
+                <span class="info-label">收货地址：</span>
+                <span>${shippingAddress}</span>
+            </div>
+        </div>
+        
         <table class="form-table">
             <tr>
                 <th class="label-cell">工单号</th>
@@ -1658,6 +1800,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             <tr><td class="label-cell">品名</td><td class="value-cell" colspan="5">${currentProduct.pp}</td></tr>
             <tr><td class="label-cell">规格</td><td class="value-cell" colspan="5">${currentProduct.cpxh}</td></tr>
             <tr><td class="label-cell">客户</td><td class="value-cell" colspan="5">${rowData.khcm || ''}</td></tr>
+            <tr><td class="label-cell">收货地址</td><td class="value-cell large-cell" colspan="5">${shippingAddress}</td></tr>
             <tr><td class="label-cell">备注</td><td class="value-cell large-cell" colspan="5">${currentProduct.bz || rowData.zbz || ''}</td></tr>
             <tr><td class="label-cell">购方要求</td><td class="value-cell large-cell" colspan="5">${rowData.yq || ''}</td></tr>
         </table>
@@ -1909,7 +2052,6 @@ function addTableStyles() {
         .appendTo('head');
 }
 
-// 生成批量打印预览内容
 function generateBatchPrintPreview(rowData, selectedProductIndexes) {
     try {
         var previewWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,toolbar=yes,location=no,status=no');
@@ -1918,6 +2060,24 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             swal('预览窗口被浏览器拦截，请允许弹出窗口后重试。');
             return null;
         }
+
+        // 获取负责人对应的联系电话
+        var contactPhone = getContactByFzr(rowData.fzr);
+        var displayPhone = contactPhone || rowData.lxdh || '';
+
+        // 获取收货地址 - 从详情数据中获取
+        var shippingAddress = '';
+        if (currentDetailData && currentDetailData.shdz) {
+            shippingAddress = currentDetailData.shdz;
+        }
+
+        console.log('批量打印预览 - 负责人电话:', {
+            负责人: rowData.fzr,
+            原始电话: rowData.lxdh,
+            替换电话: contactPhone,
+            显示电话: displayPhone,
+            收货地址: shippingAddress
+        });
 
         // 准备产品数据（按照选择的顺序）
         var selectedProducts = [];
@@ -1936,193 +2096,357 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         });
 
         // 计算分页
-        var itemsPerPage = 20; // 每页显示10条数据
+        var itemsPerPage = 20; // 每页显示20条数据
         var totalPages = Math.ceil(selectedProducts.length / itemsPerPage);
 
         var previewContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>批量打印预览 - ${rowData.khcm || ''}</title>
+    <title>制造工单物控档批量打印 - ${rowData.khcm || ''}</title>
     <meta charset="UTF-8">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
             font-family: 'SimSun', '宋体', serif; 
+        }
+        
+        body { 
             font-size: 12px; 
-            line-height: 1.4; 
-            color: #000; 
+            line-height: 1.6; 
+            color: #333; 
             background: white;
         }
         
-        /* 打印控制栏样式 */
+        /* 打印控制栏样式 - 更紧凑 */
         .print-control-bar {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-bottom: 2px solid #dee2e6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8px 15px;
+            border-bottom: 2px solid #4a5568;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        .print-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        .print-btn:hover {
-            background: #218838;
-        }
-        .cancel-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        .cancel-btn:hover {
-            background: #c82333;
-        }
-        .preview-info {
+        
+        .print-control-bar .preview-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
+        
         .info-item {
             display: flex;
             align-items: center;
-            font-size: 14px;
+            font-size: 13px;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        
         .info-label {
             font-weight: bold;
             margin-right: 5px;
-            color: #495057;
-        }
-        .info-value {
-            color: #212529;
+            color: #2d3748;
         }
         
-        /* 打印内容样式 */
+        .info-value {
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        /* 按钮样式优化 */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .print-btn {
+            background: linear-gradient(to right, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
+        }
+        
+        .print-btn:hover {
+            background: linear-gradient(to right, #218838, #1aa179);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+        }
+        
+        .cancel-btn {
+            background: linear-gradient(to right, #dc3545, #e74c3c);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+        }
+        
+        .cancel-btn:hover {
+            background: linear-gradient(to right, #c82333, #d6453d);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        }
+        
+       /* 打印内容样式 */
         .print-content {
             width: 210mm;
             margin: 0 auto;
+            background: #ffffff; /* 白色背景 */
         }
         
-        /* 单页样式 */
+        /* 单页样式 - 更贴近实际打印效果 */
         .print-page {
             width: 210mm;
             min-height: 297mm;
-            padding: 15mm;
-            border: 1px solid #ddd;
-            margin-bottom: 20px;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            break-inside: avoid;
+            position: relative;
+            box-sizing: border-box;
+            background: #ffffff; /* 白色背景 */
+            margin-bottom: 30px;
         }
         
-        /* 表头样式 */
+        /* 页面内容区域 */
+        .page-content {
+            border: 1px solid #000000; /* 黑色边框 */
+            background: #ffffff; /* 白色背景 */
+            min-height: 240mm;
+            position: relative;
+        }
+        
+        /* 表头样式 - 更加突出 */
         .page-header {
             text-align: center;
         }
+        
         .page-title {
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .header-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
+            color: #000000; /* 黑色文字 */
             margin-bottom: 10px;
         }
         
-        /* 表格样式 */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-bottom: 20px;
+        
+        .info-block {
+            text-align: center;
+            padding: 5px;
+            display: flex;
         }
+        
+        .info-block-label {
+            margin-bottom: 2px;
+            font-weight: bold;
+            color: #000000; /* 黑色文字 */
+            font-size: 13px;
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .info-block-value {
+            color: #000000; /* 黑色文字 */
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 13px;
+        }
+        
+        /* 收货地址样式 - 更醒目 */
+        .shipping-address-section {
+            padding: 8px 12px;
+        }
+        
+        .shipping-address-label {
+            font-weight: bold;
+            color: #000000; /* 黑色文字 */
+            font-size: 13px;
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .shipping-address-value {
+            color: #000000; /* 黑色文字 */
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        /* 要求信息样式 */
+        .requirements-section {
+            margin: 0px 3px;
+            padding: 0px 10px;
+        }
+        
+        .requirements-label {
+            font-weight: bold;
+            color: #000000; /* 黑色文字 */
+            font-size: 12px;
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .requirements-value {
+            color: #000000; /* 黑色文字 */
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        /* 表格样式 - 更清晰 */
+        .data-table {
+            width: 96%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 15px;
+            border: 2px solid #000000; /* 黑色边框 */
+        }
+        
+        .data-table thead {
+            background: #ffffff; /* 白色背景 */
+            color: #000000; /* 黑色文字 */
+        }
+        
         .data-table th {
-            border: 1px solid #000;
-            background: #f8f9fa;
+            border: 1px solid #000000; /* 黑色边框 */
             text-align: center;
             font-weight: bold;
             height: 30px;
             vertical-align: middle;
-        }
-        .data-table td {
-            border: 1px solid #000;
             padding: 6px 4px;
-            height: 30px;
-            vertical-align: middle;
+            background: #ffffff; /* 白色背景 */
+            color: #000000; /* 黑色文字 */
         }
-        .col-1 { width: 10%; }   /* 工单号 */
-        .col-2 { width: 5%; }    /* 序号 */
-        .col-3 { width: 15%; }   /* 产品型号 */
-        .col-4 { width: 20%; }   /* 产品名称 */
-        .col-5 { width: 10%; }   /* 数量 */
-        .col-6 { width: 40%; }   /* 备注 */
+        
+        .data-table td {
+            border: 1px solid #000000; /* 黑色边框 */
+            padding: 6px 4px;
+            height: 28px;
+            vertical-align: middle;
+            text-align: center;
+            background: #ffffff; /* 白色背景 */
+            color: #000000; /* 黑色文字 */
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #ffffff; /* 白色背景 */
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background-color: #ffffff; /* 白色背景 */
+        }
+        
+        /* 列宽调整 */
+        .col-1 { width: 8%; }   /* 序号 */
+        .col-2 { width: 25%; }  /* 产品型号 */
+        .col-3 { width: 17%; }  /* 产品名称 */
+        .col-4 { width: 10%; }  /* 数量 */
+        .col-5 { width: 40%; }  /* 备注 */
         
         /* 页脚样式 */
         .page-footer {
-            margin-top: 30px;
         }
+        
         .signature-area {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin-top: 20px;
         }
+        
         .signature {
             text-align: center;
             min-width: 100px;
             display: flex;
         }
+        
         .signature-label {
             font-weight: bold;
+            color: #000000; /* 黑色文字 */
             margin-bottom: 40px;
+            font-size: 13px;
+            margin-left: 15px;
         }
         
         /* 页码样式 */
         .page-number {
             text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #666;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #000000; /* 黑色文字 */
+            font-style: italic;
         }
         
-        /* 打印时隐藏控制栏 */
+        /* 页码指示器 */
+        .page-indicator {
+            position: absolute;
+            bottom: 1mm;
+            right: 5mm;
+            background: #ffffff; /* 白色背景 */
+            color: #000000; /* 黑色文字 */
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #000000; /* 黑色边框 */
+        }
+        
+        /* 公司信息页眉 */
+        .company-header {
+            position: absolute;
+            top: 5mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 10px;
+            color: #000000; /* 黑色文字 */
+            border-bottom: 1px solid #000000; /* 黑色边框 */
+            padding-bottom: 3mm;
+        }
+        
+        .company-name {
+            font-weight: bold;
+            color: #000000; /* 黑色文字 */
+            font-size: 12px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .print-control-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .preview-info {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .info-blocks {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* 打印样式 - 隐藏控制栏，其他样式保持不变 */
         @media print {
             .print-control-bar { 
                 display: none !important; 
-            }
-            body { 
-                font-size: 11px; 
-                background: white !important;
-            }
-            .print-content {
-                width: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            .print-page {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0;
-                padding: 15mm;
-                border: none;
-                box-shadow: none;
-                page-break-after: always;
             }
             @page {
                 size: A4;
@@ -2133,17 +2457,18 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         /* 屏幕预览样式 */
         @media screen {
             body { 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
                 min-height: 100vh;
-                padding: 20px;
+                padding: 15px;
             }
             .preview-container {
                 background: white;
-                border-radius: 12px;
-                padding: 20px;
-                box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
                 max-width: 1200px;
                 margin: 0 auto;
+                overflow: hidden;
             }
         }
     </style>
@@ -2158,17 +2483,25 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                     <span class="info-value">${rowData.khcm || ''}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">选中数量：</span>
-                    <span class="info-value">${selectedProducts.length} 个产品</span>
+                    <span class="info-label">选中产品：</span>
+                    <span class="info-value">${selectedProducts.length} 个</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">总页数：</span>
                     <span class="info-value">${totalPages} 页</span>
                 </div>
+                <div class="info-item">
+                    <span class="info-label">负责人：</span>
+                    <span class="info-value">${rowData.fzr || ''}</span>
+                </div>
             </div>
-            <div>
-                <button id="cancelBtn" class="cancel-btn">关闭预览</button>
-                <button id="printBtn" class="print-btn">确认打印</button>
+            <div class="btn-group">
+                <button id="cancelBtn" class="cancel-btn">
+                    <span>✕</span> 关闭预览
+                </button>
+                <button id="printBtn" class="print-btn">
+                    <span>🖨️</span> 确认打印
+                </button>
             </div>
         </div>
                 
@@ -2183,80 +2516,150 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
             // 每页的序号从 (pageNum * itemsPerPage + 1) 开始
             var pageStartNumber = pageNum * itemsPerPage + 1;
 
+            // 获取第一个产品的工单号放在表头
+            var firstWorkOrderNumber = "";
+            if (selectedProducts.length > 0 && selectedProducts[0].workOrderNumber) {
+                firstWorkOrderNumber = selectedProducts[0].workOrderNumber;
+            }
+
             previewContent += `
-            <div class="print-page" id="page-${pageNum + 1}">
-                <div class="page-header">
-                    <div class="page-title">制造工单物控档</div>
-                    <div class="header-info">
-                        <div>订单号：${rowData.htbh || ''}</div>
-                        <div>客户：${rowData.khcm || ''}</div>
-                        <div>日期：${rowData.ddrq || ''}</div>
-                        
+    <div class="print-page" id="page-${pageNum + 1}">
+        
+        <!-- 公司信息页眉 -->
+        <div class="company-header">
+            <div class="company-name">制造工单物控档</div>
+            <div>工单日期: ${new Date().toLocaleDateString('zh-CN')}</div>
+        </div>
+        
+        <div class="page-content">
+            <div class="page-header">
+                <div class="page-title">制造工单物控档</div>
+                
+                <!-- 主要信息块 -->
+                <div class="info-blocks">
+                    <div class="info-block">
+                        <div class="info-block-label">工单号：</div>
+                        <div class="info-block-value">${firstWorkOrderNumber || rowData.htbh || ''}</div>
                     </div>
-                    <div class="header-info">
-                        <div>部门：${rowData.bm || ''}</div>
-                        <div>负责人：${rowData.fzr || ''}</div>
-                        <div>联系电话：${rowData.lxdh || ''}</div>
-                    </div>
-                    <div class="header-info">
-                        <div>购方要求：${rowData.yq || ''}</div>
+                    <div class="info-block">
+                        <div class="info-block-label">订单号：</div>
+                        <div class="info-block-value">${rowData.htbh || ''}</div>
                     </div>
                 </div>
                 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th class="col-1">工单号</th>
-                            <th class="col-2">序号</th>
-                            <th class="col-3">产品型号</th>
-                            <th class="col-4">产品名称</th>
-                            <th class="col-5">数量</th>
-                            <th class="col-6">备注</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                <div class="info-blocks">
+                    <div class="info-block">
+                        <div class="info-block-label">客&nbsp户：</div>
+                        <div class="info-block-value">${rowData.khcm || ''}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">日&nbsp期：</div>
+                        <div class="info-block-value">${rowData.ddrq || ''}</div>
+                    </div>
+                </div>
+                
+                <!-- 次要信息块 -->
+                <div class="info-blocks" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="info-block">
+                        <div class="info-block-label">部&nbsp门：</div>
+                        <div class="info-block-value">${rowData.bm || ''}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">负责人：</div>
+                        <div class="info-block-value">${rowData.fzr || ''}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">联系电话：</div>
+                        <div class="info-block-value">${displayPhone}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 收货地址 -->
+            ${shippingAddress ? `
+            <div class="shipping-address-section">
+                <span class="shipping-address-label">收货地址：</span>
+                <span class="shipping-address-value">${shippingAddress}</span>
+            </div>
+            ` : ''}
+            
+            <!-- 购方要求 -->
+            ${rowData.yq ? `
+            <div class="requirements-section">
+                <span class="requirements-label">购方要求：</span>
+                <span class="requirements-value">${rowData.yq}</span>
+            </div>
+            ` : ''}
+            
+            <!-- 产品表格 -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="col-1">序号</th>
+                        <th class="col-2">产品型号</th>
+                        <th class="col-3">产品名称</th>
+                        <th class="col-4">数量</th>
+                        <th class="col-5">备注</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
             // 生成表格行
             pageProducts.forEach(function(product, index) {
                 var displayNumber = pageStartNumber + index;
-                var workOrderNumber = product.workOrderNumber || '';
 
                 previewContent += `
-                        <tr>
-                            <td class="col-1" style="text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${workOrderNumber}</td>
-                            <td class="col-2" style="text-align: center;">${displayNumber}</td>
-                            <td class="col-3">${product.cpxh}</td>
-                            <td class="col-4">${product.pp}</td>
-                            <td class="col-5" style="text-align: right;">${product.sl}</td>
-                            <td class="col-6">${product.bz || ''}</td>
-                        </tr>`;
+                    <tr>
+                        <td class="col-1">${displayNumber}</td>
+                        <td class="col-2">${product.cpxh || ''}</td>
+                        <td class="col-3">${product.pp || ''}</td>
+                        <td class="col-4">${product.sl || ''}</td>
+                        <td class="col-5" style="text-align: left; padding-left: 8px;">${product.bz || ''}</td>
+                    </tr>`;
             });
 
+            // 如果本页数据不足，填充空行
+            var remainingRows = itemsPerPage - pageProducts.length;
+            for (var i = 0; i < remainingRows; i++) {
+                previewContent += `
+                    <tr>
+                        <td class="col-1">&nbsp;</td>
+                        <td class="col-2">&nbsp;</td>
+                        <td class="col-3">&nbsp;</td>
+                        <td class="col-4">&nbsp;</td>
+                        <td class="col-5">&nbsp;</td>
+                    </tr>`;
+            }
+
             previewContent += `
-                    </tbody>
-                </table>
-                
-                <div class="page-footer">
-                    <div class="signature-area">
-                        <div class="signature">
-                            <div class="signature-label">制作：</div>
-                            <div>___________________</div>
-                        </div>
-                        <div class="signature">
-                            <div class="signature-label">审核：</div>
-                            <div>___________________</div>
-                        </div>
-                        <div class="signature">
-                            <div class="signature-label">入库：</div>
-                            <div>___________________</div>
-                        </div>
+                </tbody>
+            </table>
+            
+            <!-- 页脚 -->
+            <div class="page-footer">
+                <div class="signature-area">
+                    <div class="signature">
+                        <div class="signature-label">制作：</div>
+                        <div style="margin-top: 20px; border-top: 1px solid #cbd5e0; width: 70%;"></div>
                     </div>
-                    
-                    <div class="page-number">
-                        第 ${pageNum + 1} 页 / 共 ${totalPages} 页
+                    <div class="signature">
+                        <div class="signature-label">审核：</div>
+                        <div style="margin-top: 20px; border-top: 1px solid #cbd5e0; width: 70%;"></div>
+                    </div>
+                    <div class="signature">
+                        <div class="signature-label">入库：</div>
+                        <div style="margin-top: 20px; border-top: 1px solid #cbd5e0; width: 70%;"></div>
                     </div>
                 </div>
-            </div>`;
+                
+            </div>
+            
+            <!-- 页码指示器 -->
+            <div class="page-indicator">
+                第 ${pageNum + 1} / ${totalPages}
+            </div>
+        </div>
+    </div>`;
         }
 
         previewContent += `
@@ -2266,7 +2669,6 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
     <script>
         // 打印按钮点击事件
         document.getElementById('printBtn').onclick = function() {
-            
             // 更新所有选中产品的打印次数
             ${selectedProductIndexes.map(productKey => `
                 window.opener.updateProductPrintCount('${productKey}');
@@ -2308,6 +2710,10 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         
         // 滚动到顶部
         window.scrollTo(0, 0);
+        
+        // 添加页面切换提示
+        console.log('批量打印预览已打开，共' + ${totalPages} + '页');
+        
     </script>
 </body>
 </html>`;
@@ -2370,4 +2776,73 @@ function updateProductPrintCountAndSave(productKey, orderId) {
     // 保存到数据库
     saveWorkOrdersAndPrintCounts(orderId);
 
+}
+
+// 修改 getListDH 函数保存员工信息
+function getListDH() {
+    $.ajax({
+        type: 'post',
+        url: '/ygxx/getList',
+        success: function (res) {
+            console.log('获取员工数据响应:', res);
+            if (res.code == 200) {
+                // 保存员工信息到全局变量
+                employeeList = res.data || [];
+                console.log('员工信息已保存，共', employeeList.length, '条记录');
+
+                // 打印员工信息方便调试
+                employeeList.forEach(emp => {
+                    console.log(`员工: ${emp.xm}, 电话: ${emp.lxfs}, 部门: ${emp.bm}`);
+                });
+            } else {
+                // 处理权限错误
+                if (res.code === 401) {
+                    swal("登录已过期，请重新登录");
+                    window.location.href = "/login.html";
+                } else if (res.code === 403) {
+                    swal("权限不足，无法访问此功能");
+                } else {
+                    swal("查询失败: " + res.message);
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('获取员工列表失败:', error);
+            swal("获取员工信息失败", "网络错误", "error");
+        }
+    });
+}
+
+// 根据负责人名称查找对应的联系电话
+function getContactByFzr(fzrName) {
+    if (!fzrName || !employeeList || employeeList.length === 0) {
+        console.log('负责人名称为空或员工列表为空');
+        return null;
+    }
+
+    console.log('查找负责人的电话，负责人:', fzrName);
+    console.log('员工列表:', employeeList);
+
+    // 精确匹配员工姓名
+    var employee = employeeList.find(emp => {
+        return emp && emp.xm && emp.xm.trim() === fzrName.trim();
+    });
+
+    if (employee) {
+        console.log('找到匹配的员工:', employee.xm, '电话:', employee.lxfs);
+        return employee.lxfs || '';
+    } else {
+        console.log('未找到匹配的员工，负责人:', fzrName);
+        // 尝试模糊匹配
+        var fuzzyMatch = employeeList.find(emp => {
+            return emp && emp.xm && emp.xm.includes(fzrName.trim());
+        });
+
+        if (fuzzyMatch) {
+            console.log('模糊匹配到员工:', fuzzyMatch.xm, '电话:', fuzzyMatch.lxfs);
+            return fuzzyMatch.lxfs || '';
+        }
+    }
+
+    return null;
 }

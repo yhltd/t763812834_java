@@ -329,7 +329,7 @@ function createExcelFile(data, filename) {
         var excelData = data.map(function(item) {
             return {
                 '客户编号': item.khbh || '',
-                '客户简称': item.khjc || '',
+                // '客户简称': item.khjc || '',
                 '客户名称': item.khmc || '',
                 '建档日期': item.jdrq || '',
                 '开行户': item.khh || '',
@@ -359,7 +359,7 @@ function createExcelFile(data, filename) {
         // 设置列宽
         var colWidths = [
             { wch: 12 }, // 客户编号
-            { wch: 15 }, // 客户简称
+            // { wch: 15 }, // 客户简称
             { wch: 20 }, // 客户名称
             { wch: 12 }, // 建档日期
             { wch: 15 }, // 开行户
@@ -489,7 +489,7 @@ function fillTable(data) {
         <thead>
             <tr>
                 <th width="100">客户编号</th>
-                <th width="120">客户简称</th>
+<!--                <th width="120">客户简称</th>-->
                 <th width="200">客户名称</th>
                 <th width="100">建档日期</th>
                 <th width="120">开行户</th>
@@ -518,7 +518,7 @@ function fillTable(data) {
             tableBody += `
                 <tr data-id="${item.id}" data-version="${item.version || 0}">
                     <td>${item.khbh || ''}</td>
-                    <td>${item.khjc || ''}</td>
+             
                     <td>${item.khmc || ''}</td>
                     <td>${item.jdrq || ''}</td>
                     <td>${item.khh || ''}</td>
@@ -542,7 +542,7 @@ function fillTable(data) {
     } else {
         tableBody += `
             <tr>
-                <td colspan="19" style="text-align: center; color: #999;">暂无客户数据</td>
+                <td colspan="18" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
     }
@@ -577,33 +577,88 @@ function getSelectedRow() {
 
     var rowData = {
         id: selectedRow.data('id'),
-        version: rowVersion || 0,  // 确保使用正确的版本号
+        version: rowVersion || 0,
         khbh: selectedRow.find('td:eq(0)').text().trim(),
-        khjc: selectedRow.find('td:eq(1)').text().trim(),
-        khmc: selectedRow.find('td:eq(2)').text().trim(),
-        jdrq: selectedRow.find('td:eq(3)').text().trim(),
-        khh: selectedRow.find('td:eq(4)').text().trim(),
-        zh: selectedRow.find('td:eq(5)').text().trim(),
-        sh: selectedRow.find('td:eq(6)').text().trim(),
-        dz: selectedRow.find('td:eq(7)').text().trim(),
-        lxr1: selectedRow.find('td:eq(8)').text().trim(),
-        lxdh1: selectedRow.find('td:eq(9)').text().trim(),
-        yq: selectedRow.find('td:eq(10)').text().trim(),
-        dz1: selectedRow.find('td:eq(11)').text().trim(),
-        dz2: selectedRow.find('td:eq(12)').text().trim(),
-        dz3: selectedRow.find('td:eq(13)').text().trim(),
-        dz4: selectedRow.find('td:eq(14)').text().trim(),
-        dz5: selectedRow.find('td:eq(15)').text().trim(),
-        fkfs: selectedRow.find('td:eq(16)').text().trim(),
-        fzr: selectedRow.find('td:eq(17)').text().trim(),
-        khzy: selectedRow.find('td:eq(18)').text().trim()
+        // khjc: selectedRow.find('td:eq(1)').text().trim(),  // 删除这一行
+        khmc: selectedRow.find('td:eq(1)').text().trim(),     // 原来eq(2)改为eq(1)
+        jdrq: selectedRow.find('td:eq(2)').text().trim(),     // 原来eq(3)改为eq(2)
+        khh: selectedRow.find('td:eq(3)').text().trim(),      // 原来eq(4)改为eq(3)
+        zh: selectedRow.find('td:eq(4)').text().trim(),       // 原来eq(5)改为eq(4)
+        sh: selectedRow.find('td:eq(5)').text().trim(),       // 原来eq(6)改为eq(5)
+        dz: selectedRow.find('td:eq(6)').text().trim(),       // 原来eq(7)改为eq(6)
+        lxr1: selectedRow.find('td:eq(7)').text().trim(),     // 原来eq(8)改为eq(7)
+        lxdh1: selectedRow.find('td:eq(8)').text().trim(),    // 原来eq(9)改为eq(8)
+        yq: selectedRow.find('td:eq(9)').text().trim(),       // 原来eq(10)改为eq(9)
+        dz1: selectedRow.find('td:eq(10)').text().trim(),     // 原来eq(11)改为eq(10)
+        dz2: selectedRow.find('td:eq(11)').text().trim(),     // 原来eq(12)改为eq(11)
+        dz3: selectedRow.find('td:eq(12)').text().trim(),     // 原来eq(13)改为eq(12)
+        dz4: selectedRow.find('td:eq(13)').text().trim(),     // 原来eq(14)改为eq(13)
+        dz5: selectedRow.find('td:eq(14)').text().trim(),     // 原来eq(15)改为eq(14)
+        fkfs: selectedRow.find('td:eq(15)').text().trim(),    // 原来eq(16)改为eq(15)
+        fzr: selectedRow.find('td:eq(16)').text().trim(),     // 原来eq(17)改为eq(16)
+        khzy: selectedRow.find('td:eq(17)').text().trim()     // 原来eq(18)改为eq(17)
     };
-
     console.log('选中行完整数据:', rowData);
     return rowData;
 }
 
 // 显示客户信息模态框 - 修复版本号设置问题
+// function showKhxxModal(type, data) {
+//     console.log('显示模态框:', type, data);
+//
+//     $('#khxx-form')[0].reset();
+//     $('#editId').val('');
+//     $('#editVersion').remove();
+//
+//     if (type === 'add') {
+//         $('#modalTitle').text('新增客户信息');
+//
+//         // 自动生成客户编号
+//         getLastId().then(customerCode => {
+//             $('input[name="khbh"]').val(customerCode);
+//             console.log('自动生成客户编号:', customerCode);
+//         }).catch(error => {
+//             console.error('生成客户编号失败:', error);
+//             // 失败时使用默认值
+//             $('input[name="khbh"]').val('HYX001');
+//         });
+//
+//     } else {
+//         $('#modalTitle').text('修改客户信息');
+//         if (data) {
+//             console.log('填充表单数据，版本号:', data.version);
+//             $('#editId').val(data.id);
+//             $('#khxx-form').append('<input type="hidden" name="version" id="editVersion" value="' + (data.version || 0) + '">');
+//
+//             // 填充表单数据
+//             $('input[name="khbh"]').val(data.khbh || '');
+//             $('input[name="khjc"]').val(data.khjc || '');
+//             $('input[name="khmc"]').val(data.khmc || '');
+//             $('input[name="jdrq"]').val(data.jdrq || '');
+//             $('input[name="khh"]').val(data.khh || '');
+//             $('input[name="zh"]').val(data.zh || '');
+//             $('input[name="sh"]').val(data.sh || '');
+//             $('input[name="dz"]').val(data.dz || '');
+//             $('input[name="lxr1"]').val(data.lxr1 || '');
+//             $('input[name="lxdh1"]').val(data.lxdh1 || '');
+//             $('input[name="dz1"]').val(data.dz1 || '');
+//             $('input[name="dz2"]').val(data.dz2 || '');
+//             $('input[name="dz3"]').val(data.dz3 || '');
+//             $('input[name="dz4"]').val(data.dz4 || '');
+//             $('input[name="dz5"]').val(data.dz5 || '');
+//             $('select[name="fkfs"]').val(data.fkfs || ''); // 修改为下拉框
+//             $('input[name="fzr"]').val(data.fzr || '');
+//             $('textarea[name="yq"]').val(data.yq || '');
+//             $('textarea[name="khzy"]').val(data.khzy || '');
+//         }
+//     }
+//
+//     // 确保付款方式下拉框已加载
+//     getXL();
+//
+//     $('#khxxModal').modal('show');
+// }
+// 修改 showKhxxModal 函数中关于付款方式下拉框的处理
 function showKhxxModal(type, data) {
     console.log('显示模态框:', type, data);
 
@@ -611,60 +666,116 @@ function showKhxxModal(type, data) {
     $('#editId').val('');
     $('#editVersion').remove();
 
-    if (type === 'add') {
-        $('#modalTitle').text('新增客户信息');
+    // 先获取下拉数据，然后再设置表单值
+    getXL().then(function() {
+        if (type === 'add') {
+            $('#modalTitle').text('新增客户信息');
 
-        // 自动生成客户编号
-        getLastId().then(customerCode => {
-            $('input[name="khbh"]').val(customerCode);
-            console.log('自动生成客户编号:', customerCode);
-        }).catch(error => {
-            console.error('生成客户编号失败:', error);
-            // 失败时使用默认值
-            $('input[name="khbh"]').val('HYX001');
-        });
+            // 自动生成客户编号
+            getLastId().then(customerCode => {
+                $('input[name="khbh"]').val(customerCode);
+                console.log('自动生成客户编号:', customerCode);
+            }).catch(error => {
+                console.error('生成客户编号失败:', error);
+                $('input[name="khbh"]').val('HYX001');
+            });
 
-    } else {
-        $('#modalTitle').text('修改客户信息');
-        if (data) {
-            console.log('填充表单数据，版本号:', data.version);
-            $('#editId').val(data.id);
-            $('#khxx-form').append('<input type="hidden" name="version" id="editVersion" value="' + (data.version || 0) + '">');
+        } else {
+            $('#modalTitle').text('修改客户信息');
+            if (data) {
+                console.log('填充表单数据，版本号:', data.version);
+                $('#editId').val(data.id);
+                $('#khxx-form').append('<input type="hidden" name="version" id="editVersion" value="' + (data.version || 0) + '">');
 
-            // 填充表单数据
-            $('input[name="khbh"]').val(data.khbh || '');
-            $('input[name="khjc"]').val(data.khjc || '');
-            $('input[name="khmc"]').val(data.khmc || '');
-            $('input[name="jdrq"]').val(data.jdrq || '');
-            $('input[name="khh"]').val(data.khh || '');
-            $('input[name="zh"]').val(data.zh || '');
-            $('input[name="sh"]').val(data.sh || '');
-            $('input[name="dz"]').val(data.dz || '');
-            $('input[name="lxr1"]').val(data.lxr1 || '');
-            $('input[name="lxdh1"]').val(data.lxdh1 || '');
-            $('input[name="dz1"]').val(data.dz1 || '');
-            $('input[name="dz2"]').val(data.dz2 || '');
-            $('input[name="dz3"]').val(data.dz3 || '');
-            $('input[name="dz4"]').val(data.dz4 || '');
-            $('input[name="dz5"]').val(data.dz5 || '');
-            $('select[name="fkfs"]').val(data.fkfs || ''); // 修改为下拉框
-            $('input[name="fzr"]').val(data.fzr || '');
-            $('textarea[name="yq"]').val(data.yq || '');
-            $('textarea[name="khzy"]').val(data.khzy || '');
+                // 填充表单数据
+                $('input[name="khbh"]').val(data.khbh || '');
+                // $('input[name="khjc"]').val(data.khjc || '');//客户简称
+                $('input[name="khmc"]').val(data.khmc || '');
+                $('input[name="jdrq"]').val(data.jdrq || '');
+                $('input[name="khh"]').val(data.khh || '');
+                $('input[name="zh"]').val(data.zh || '');
+                $('input[name="sh"]').val(data.sh || '');
+                $('input[name="dz"]').val(data.dz || '');
+                $('input[name="lxr1"]').val(data.lxr1 || '');
+                $('input[name="lxdh1"]').val(data.lxdh1 || '');
+                $('input[name="dz1"]').val(data.dz1 || '');
+                $('input[name="dz2"]').val(data.dz2 || '');
+                $('input[name="dz3"]').val(data.dz3 || '');
+                $('input[name="dz4"]').val(data.dz4 || '');
+                $('input[name="dz5"]').val(data.dz5 || '');
+                // 注意：这里需要在getXL()加载完成后设置付款方式
+                setTimeout(function() {
+                    $('select[name="fkfs"]').val(data.fkfs || '');
+                }, 100);
+                $('input[name="fzr"]').val(data.fzr || '');
+                $('textarea[name="yq"]').val(data.yq || '');
+                $('textarea[name="khzy"]').val(data.khzy || '');
+            }
         }
-    }
 
-    // 确保付款方式下拉框已加载
-    getXL();
-
-    $('#khxxModal').modal('show');
+        $('#khxxModal').modal('show');
+    });
 }
 
+// 修改 getXL 函数，使其返回 Promise
+function getXL() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'post',
+            url: '/hetong/xiala',
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    console.log("返回的下拉数据", res);
+
+                    if (res.data && res.data.length > 0) {
+                        var fkfsSelect = $('select[name="fkfs"]');
+                        if (fkfsSelect.length === 0) {
+                            console.warn('付款方式下拉框未找到');
+                            resolve();
+                            return;
+                        }
+
+                        // 保存当前选中的值
+                        var currentValue = fkfsSelect.val();
+
+                        fkfsSelect.empty();
+                        fkfsSelect.append('<option value="">请选择付款方式</option>');
+
+                        res.data.forEach(function(item) {
+                            if (item.fukuanfangshi) {
+                                fkfsSelect.append('<option value="' + item.fukuanfangshi + '">' + item.fukuanfangshi + '</option>');
+                            }
+                        });
+
+                        // 恢复之前选中的值（如果是修改操作）
+                        if (currentValue) {
+                            fkfsSelect.val(currentValue);
+                        }
+
+                        console.log('付款方式下拉框填充完成');
+                        resolve();
+                    } else {
+                        resolve();
+                    }
+                } else {
+                    console.error("查询失败:", res.message);
+                    reject(res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                reject(error);
+            }
+        });
+    });
+}
 // 保存客户信息 - 修复乐观锁问题
 function saveKhxx() {
     var formData = {
         khbh: $('input[name="khbh"]').val(),
-        khjc: $('input[name="khjc"]').val(),
+        // khjc: $('input[name="khjc"]').val(),
         khmc: $('input[name="khmc"]').val(),
         jdrq: $('input[name="jdrq"]').val(),
         khh: $('input[name="khh"]').val(),
