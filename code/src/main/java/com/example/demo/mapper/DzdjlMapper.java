@@ -22,26 +22,13 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
             "           khmc, " +
             "           MAX(fzr) as fzr, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
-            "               )" +
+            "               SUM(yfsj_distinct)" +
             "           ) as yfsj, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
-            "               )" +
+            "               SUM(yifu_distinct)" +
             "           ) as yifu, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
-            "               ) - " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
-            "               )" +
+            "               SUM(yfsj_distinct) - SUM(yifu_distinct)" +
             "           ) as wf, " +
             "           MAX(kpsj) as kpsj, " +
             "           sfkp, " +
@@ -51,10 +38,21 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
             "           MAX(pdf_file_name) as pdf_file_name, " +
             "           duizhangriqi, " +
             "           MAX(dzscwj) as dzscwj " +
-            "    FROM dingdanmingx " +
-            "    <where>" +
-            "      <if test='ew != null'>${ew.sqlSegment}</if>" +
-            "    </where>" +
+            "    FROM (" +
+            "        SELECT *, " +
+            "               CASE WHEN ROW_NUMBER() OVER (PARTITION BY duizhangdanhao, ddh ORDER BY ddrq DESC) = 1 " +
+            "                    THEN CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                             ELSE CONVERT(DECIMAL(18,2), yfsj) END " +
+            "                    ELSE 0 END as yfsj_distinct, " +
+            "               CASE WHEN ROW_NUMBER() OVER (PARTITION BY duizhangdanhao, ddh ORDER BY ddrq DESC) = 1 " +
+            "                    THEN CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                             ELSE CONVERT(DECIMAL(18,2), yifu) END " +
+            "                    ELSE 0 END as yifu_distinct " +
+            "        FROM dingdanmingx " +
+            "        <where>" +
+            "          <if test='ew != null'>${ew.sqlSegment}</if>" +
+            "        </where>" +
+            "    ) distinct_data " +
             "    GROUP BY duizhangdanhao, khmc, sfkp, duizhangriqi " +
             ") temp " +
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
@@ -96,31 +94,18 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
 
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, ddrq DESC) as rn, " +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, MAX(ddrq) DESC) as rn, " +
             "           MAX(ddrq) as ddrq, " +
             "           khmc, " +
             "           MAX(fzr) as fzr, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
-            "               )" +
+            "               SUM(yfsj_distinct)" +
             "           ) as yfsj, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
-            "               )" +
+            "               SUM(yifu_distinct)" +
             "           ) as yifu, " +
             "           CONVERT(DECIMAL(18,2), " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yfsj) END" +
-            "               ) - " +
-            "               SUM(DISTINCT " +
-            "                   CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
-            "                        ELSE CONVERT(DECIMAL(18,2), yifu) END" +
-            "               )" +
+            "               SUM(yfsj_distinct) - SUM(yifu_distinct)" +
             "           ) as wf, " +
             "           MAX(kpsj) as kpsj, " +
             "           sfkp, " +
@@ -130,14 +115,25 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
             "           MAX(pdf_file_name) as pdf_file_name, " +
             "           duizhangriqi, " +
             "           MAX(dzscwj) as dzscwj " +
-            "    FROM dingdanmingx " +
-            "    <where>" +
-            "      (fzr = #{fuzeren} OR #{fuzeren} = '' OR #{fuzeren} IS NULL) " +
-            "      <if test='ew != null and ew.sqlSegment != null and ew.sqlSegment != \"\"'>" +
-            "        AND ${ew.sqlSegment}" +
-            "      </if>" +
-            "    </where>" +
-            "    GROUP BY duizhangdanhao, khmc, sfkp, duizhangriqi, ddrq " +
+            "    FROM (" +
+            "        SELECT *, " +
+            "               CASE WHEN ROW_NUMBER() OVER (PARTITION BY duizhangdanhao, ddh ORDER BY ddrq DESC) = 1 " +
+            "                    THEN CASE WHEN yfsj LIKE '%[^0-9.]%' OR yfsj IS NULL OR yfsj = '' THEN 0 " +
+            "                             ELSE CONVERT(DECIMAL(18,2), yfsj) END " +
+            "                    ELSE 0 END as yfsj_distinct, " +
+            "               CASE WHEN ROW_NUMBER() OVER (PARTITION BY duizhangdanhao, ddh ORDER BY ddrq DESC) = 1 " +
+            "                    THEN CASE WHEN yifu LIKE '%[^0-9.]%' OR yifu IS NULL OR yifu = '' THEN 0 " +
+            "                             ELSE CONVERT(DECIMAL(18,2), yifu) END " +
+            "                    ELSE 0 END as yifu_distinct " +
+            "        FROM dingdanmingx " +
+            "        <where>" +
+            "          (fzr = #{fuzeren} OR #{fuzeren} = '' OR #{fuzeren} IS NULL) " +
+            "          <if test='ew != null and ew.sqlSegment != null and ew.sqlSegment != \"\"'>" +
+            "            AND ${ew.sqlSegment}" +
+            "          </if>" +
+            "        </where>" +
+            "    ) distinct_data " +
+            "    GROUP BY duizhangdanhao, khmc, sfkp, duizhangriqi " +
             ") temp " +
             "WHERE temp.rn BETWEEN #{start} + 1 AND #{start} + #{end}" +
             "</script>")
@@ -191,7 +187,8 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
     @Update("UPDATE dingdanmingx SET sfkp = #{sfkp}, duizhangdanhao = '', duizhangriqi = '', kpsj = '' WHERE duizhangdanhao = #{duizhangdanhao}")
     boolean updateDzztStatusByDuizhangdanhao(@Param("duizhangdanhao") String duizhangdanhao, @Param("sfkp") String sfkp);
 
-    @Select("SELECT DISTINCT dzscwj FROM dingdanmingx WHERE duizhangdanhao = #{duizhangdanhao}")
+//    @Select("SELECT DISTINCT dzscwj FROM dingdanmingx WHERE duizhangdanhao = #{duizhangdanhao}")
+    @Select("SELECT DISTINCT ISNULL(dzscwj, '') FROM dingdanmingx WHERE duizhangdanhao = #{duizhangdanhao}")
     String getpdffilename(@Param("duizhangdanhao") String duizhangdanhao);
 
     @Update("update dingdanmingx set dzscwj = #{dzscwj} where duizhangdanhao = #{duizhangdanhao}")

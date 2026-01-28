@@ -148,7 +148,8 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
     @Update("update dingdanmingx set pdf_file_name = #{pdfFileName} where ddh = #{ddh}")
     boolean updatePdfFileNameByDdh(@Param("ddh") String ddh, @Param("pdfFileName") String pdfFileName);
 
-    @Select("SELECT DISTINCT pdf_file_name FROM dingdanmingx  WHERE ddh = #{ddh}")
+//    @Select("SELECT DISTINCT pdf_file_name FROM dingdanmingx  WHERE ddh = #{ddh}")
+    @Select("SELECT DISTINCT ISNULL(pdf_file_name, '') FROM dingdanmingx  WHERE ddh = #{ddh}")
     String getpdffilename(@Param("ddh") String ddh);
 
 
