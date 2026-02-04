@@ -110,11 +110,11 @@ function generateDetailForm(data) {
         console.log('标准化后的数据:', normalizedData);
 
         // 安全地分割字符串为数组 - 添加空值检查
-        var ppArray = normalizedData.pp ? normalizedData.pp.split(',') : [];
-        var cpxhArray = normalizedData.cpxh ? normalizedData.cpxh.split(',') : [];
-        var slArray = normalizedData.sl ? normalizedData.sl.split(',') : [];
-        var djArray = normalizedData.dj ? normalizedData.dj.split(',') : [];
-        var bzArray = normalizedData.bz ? normalizedData.bz.split(',') : [];
+        var ppArray = normalizedData.pp ? normalizedData.pp.split('|||') : [];
+        var cpxhArray = normalizedData.cpxh ? normalizedData.cpxh.split('|||') : [];
+        var slArray = normalizedData.sl ? normalizedData.sl.split('|||') : [];
+        var djArray = normalizedData.dj ? normalizedData.dj.split('|||') : [];
+        var bzArray = normalizedData.bz ? normalizedData.bz.split('|||') : [];
 
         console.log('分割后的数组:', {
             pp: ppArray,
@@ -641,11 +641,11 @@ function generatePrintContent(rowData, detailData) {
         var mainData = detailData[0]; // 获取主要数据对象
 
         // 安全地分割各个字段
-        var ppArray = mainData.pp ? mainData.pp.split(',') : [];
-        var cpxhArray = mainData.cpxh ? mainData.cpxh.split(',') : [];
-        var slArray = mainData.sl ? mainData.sl.split(',') : [];
-        var djArray = mainData.dj ? mainData.dj.split(',') : [];
-        var bzArray = mainData.bz ? mainData.bz.split(',') : [];
+        var ppArray = mainData.pp ? mainData.pp.split('|||') : [];
+        var cpxhArray = mainData.cpxh ? mainData.cpxh.split('|||') : [];
+        var slArray = mainData.sl ? mainData.sl.split('|||') : [];
+        var djArray = mainData.dj ? mainData.dj.split('|||') : [];
+        var bzArray = mainData.bz ? mainData.bz.split('|||') : [];
 
         // 确保所有数组长度一致，取最大长度
         var maxLength = Math.max(
@@ -772,8 +772,8 @@ function calculateTotalFromDetail(detailData) {
     var mainData = detailData[0];
 
     // 安全地分割各个字段
-    var slArray = mainData.sl ? mainData.sl.split(',') : [];
-    var djArray = mainData.dj ? mainData.dj.split(',') : [];
+    var slArray = mainData.sl ? mainData.sl.split('|||') : [];
+    var djArray = mainData.dj ? mainData.dj.split('|||') : [];
 
     var total = 0;
     var maxLength = Math.max(slArray.length, djArray.length);

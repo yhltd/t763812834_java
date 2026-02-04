@@ -11,6 +11,9 @@ var productPrintCounts = {}; // 存储每个产品的打印次数
 var employeeList = []; // 添加这个变量来存储员工信息
 var currentDetailData = null;
 var chanpindanwei = [];
+var productHq = {};
+var currentSortField = '';
+var currentSortOrder = 'asc';
 
 // 页面加载完成后初始化
 $(document).ready(function() {
@@ -511,12 +514,12 @@ function getProductListFromCurrentData() {
 
     // 检查是否有逗号分隔的产品数据
     if (currentDetailData.pp && currentDetailData.cpxh) {
-        var ppArray = currentDetailData.pp.split(',');
-        var cpxhArray = currentDetailData.cpxh.split(',');
-        var slArray = currentDetailData.sl ? currentDetailData.sl.split(',') : [];
-        var djArray = currentDetailData.dj ? currentDetailData.dj.split(',') : [];
-        var scgdArray = currentDetailData.scgd ? currentDetailData.scgd.split(',') : [];
-        var bzArray = currentDetailData.bz ? currentDetailData.bz.split(',') : [];
+        var ppArray = currentDetailData.pp.split('|||');
+        var cpxhArray = currentDetailData.cpxh.split('|||');
+        var slArray = currentDetailData.sl ? currentDetailData.sl.split('|||') : [];
+        var djArray = currentDetailData.dj ? currentDetailData.dj.split('|||') : [];
+        var scgdArray = currentDetailData.scgd ? currentDetailData.scgd.split('|||') : [];
+        var bzArray = currentDetailData.bz ? currentDetailData.bz.split('|||') : [];
         var jeArray = []; // 计算金额
 
         // 计算每个产品的金额
@@ -748,6 +751,11 @@ function hideLoading() {
 // 搜索功能
 function searchKhxx() {
     var searchParams = getSearchParams();
+
+    // 添加排序参数
+    searchParams.sortField = currentSortField;
+    searchParams.sortOrder = currentSortOrder;
+
     currentPage = 1;
     getList(currentPage, pageSize, searchParams);
 }
@@ -1013,33 +1021,43 @@ function getDetailInfo(id) {
 
 
 // 从数据库初始化产品数据
-// 从数据库初始化产品数据
 function initProductDataFromDB(data) {
     if (!data || !data.pp || !data.cpxh) return;
 
-    var ppArray = data.pp.split(',');
+    var ppArray = data.pp.split('|||');
 
     // 如果有数据库中的工单号，使用数据库的值
+    var workOrderArray = [];
     if (data.scgd) {
-        var workOrderArray = data.scgd.split(',');
+        workOrderArray = data.scgd.split('|||');
+    }
 
-        for (var i = 0; i < ppArray.length; i++) {
-            var productKey = i.toString();
-            // 使用数据库中的工单号，如果没有就留空
-            productWorkOrders[productKey] = workOrderArray[i] || '';
-            console.log(`产品 ${i} (${ppArray[i]}) 的工单号: ${productWorkOrders[productKey]}`);
+    // 获取货期数据（如果有的话）
+    var hqArray = [];
+    if (data.hq) {
+        hqArray = data.hq.split('|||');
+        console.log('从数据库获取的货期数据:', hqArray);
+    }
+
+    for (var i = 0; i < ppArray.length; i++) {
+        var productKey = i.toString();
+
+        // 工单号
+        productWorkOrders[productKey] = workOrderArray[i] || '';
+
+        // 货期（新增）- 从数据库获取
+        if (hqArray[i] && hqArray[i].trim() !== '') {
+            productHq[productKey] = hqArray[i];
+        } else {
+            productHq[productKey] = ''; // 如果没有货期，设为空
         }
-    } else {
-        // 没有数据库工单号，全部留空
-        for (var i = 0; i < ppArray.length; i++) {
-            var productKey = i.toString();
-            productWorkOrders[productKey] = '';
-        }
+
+        console.log(`产品 ${i} (${ppArray[i]}) 的工单号: ${productWorkOrders[productKey]}, 货期: ${productHq[productKey]}`);
     }
 
     // 初始化打印次数
     if (data.printCount) {
-        var printCountArray = data.printCount.split(',');
+        var printCountArray = data.printCount.split('|||');
         for (var i = 0; i < ppArray.length; i++) {
             var productKey = i.toString();
             productPrintCounts[productKey] = printCountArray[i] || "0";
@@ -1052,6 +1070,7 @@ function initProductDataFromDB(data) {
     }
 
     console.log('从数据库初始化工单号完成:', productWorkOrders);
+    console.log('从数据库初始化货期完成:', productHq);
 }
 
 function generateWorkOrderNumber() {
@@ -1170,11 +1189,11 @@ function generateDetailForm(data) {
     var formHtml = '';
 
     if (data && data.pp && data.cpxh && data.sl && data.dj) {
-        var ppArray = data.pp.split(',');
-        var cpxhArray = data.cpxh.split(',');
-        var slArray = data.sl.split(',');
-        var djArray = data.dj.split(',');
-        var bzArray = data.bz ? data.bz.split(',') : [];
+        var ppArray = data.pp.split('|||');
+        var cpxhArray = data.cpxh.split('|||');
+        var slArray = data.sl.split('|||');
+        var djArray = data.dj.split('|||');
+        var bzArray = data.bz ? data.bz.split('|||') : [];
 
         var maxLength = Math.max(ppArray.length, cpxhArray.length, slArray.length, djArray.length);
 
@@ -1187,7 +1206,7 @@ function generateDetailForm(data) {
                             <i class="bi bi-check-square"></i> 全选/取消全选
                         </label>
                         <span id="selectedInfo" style="margin-left: 15px; color: #666;">
-                            
+                            <span id="selectedCount">0</span>/<span id="totalCount">${maxLength}</span> 个产品
                         </span>
                     </div>
                 </div>
@@ -1201,6 +1220,7 @@ function generateDetailForm(data) {
                             <th width="100">订购数量</th>
                             <th width="100">含税单价</th>
                             <th width="150">生产工单</th>
+                            <th width="120">货期</th> <!-- 新增货期列 -->
                             <th width="100">小计</th>
                             <th>备注</th>
                         </tr>
@@ -1221,6 +1241,7 @@ function generateDetailForm(data) {
             var productKey = i.toString();
             var isChecked = selectedWorkOrders.includes(productKey) ? 'checked' : '';
             var workOrder = productWorkOrders[productKey] || '';
+            var hq = productHq[productKey] || ''; // 获取货期
 
             formHtml += `
                         <tr class="product-row" data-index="${i}">
@@ -1236,6 +1257,9 @@ function generateDetailForm(data) {
                             <td style="text-align: center;">
                                 <span class="work-order-number">${workOrder}</span>
                             </td>
+                            <td style="text-align: center; font-weight: bold; color: #1890ff;">
+                                <span class="hq-display" data-index="${i}">${hq}</span>
+                            </td>
                             <td style="text-align: right; font-weight: bold;">${subtotal.toFixed(2)}</td>
                             <td>${bz}</td>
                         </tr>`;
@@ -1243,7 +1267,7 @@ function generateDetailForm(data) {
 
         formHtml += `
                         <tr>
-                            <td colspan="7" style="text-align: right; font-weight: bold;">合计金额：</td>
+                            <td colspan="8" style="text-align: right; font-weight: bold;">合计金额：</td>
                             <td style="text-align: right; font-weight: bold; color: #ff6b35;">${totalAmount.toFixed(2)}</td>
                             <td></td>
                         </tr>
@@ -1300,6 +1324,16 @@ function generateDetailForm(data) {
                     }
                     #totalCount {
                         font-weight: bold;
+                    }
+                    .hq-display {
+                        font-weight: bold;
+                        color: #1890ff;
+                        padding: 4px 8px;
+                        font-size: 13px;
+                        background-color: #f8f9fa;
+                        border-radius: 4px;
+                        display: inline-block;
+                        min-width: 80px;
                     }
                 `)
                 .appendTo('head');
@@ -1633,23 +1667,27 @@ function printSingleProduct(rowData, productIndex) {
 function saveWorkOrdersAndPrintCounts(orderId) {
     var workOrdersArray = [];
     var printCountsArray = [];
+    var hqArray = []; // 新增：货期数组
 
     // 确保遍历所有产品
     if (currentDetailData && currentDetailData.pp) {
-        var ppArray = currentDetailData.pp.split(',');
+        var ppArray = currentDetailData.pp.split('|||');
 
         for (var i = 0; i < ppArray.length; i++) {
             var key = i.toString();
             workOrdersArray.push(productWorkOrders[key] || '');
             printCountsArray.push(productPrintCounts[key] || '0');
+            hqArray.push(productHq[key] || ''); // 保存货期
         }
     }
 
-    var workOrdersString = workOrdersArray.join(',');
-    var printCountsString = printCountsArray.join(',');
+    var workOrdersString = workOrdersArray.join('|||');
+    var printCountsString = printCountsArray.join('|||');
+    var hqString = hqArray.join('|||'); // 货期字符串
 
     console.log('保存工单号:', workOrdersString);
     console.log('保存打印次数:', printCountsString);
+    console.log('保存货期:', hqString);
 
     $.ajax({
         url: '/xiadan/saveWorkOrdersAndPrintCounts',
@@ -1658,11 +1696,12 @@ function saveWorkOrdersAndPrintCounts(orderId) {
         data: JSON.stringify({
             id: orderId,
             scgd: workOrdersString,
-            printCount: printCountsString
+            printCount: printCountsString,
+            hq: hqString // 新增货期字段
         }),
         success: function(result) {
             if (result.success) {
-                console.log('生产工单和打印次数保存成功');
+                console.log('生产工单、打印次数和货期保存成功');
             } else {
                 console.error('保存失败:', result.message);
             }
@@ -1697,11 +1736,11 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             currentDate.getDate().toString().padStart(2, '0');
 
         // 解析产品数据
-        var ppArray = detailData.pp.split(',');
-        var cpxhArray = detailData.cpxh.split(',');
-        var slArray = detailData.sl.split(',');
-        var djArray = detailData.dj.split(',');
-        var bzArray = detailData.bz ? detailData.bz.split(',') : [];
+        var ppArray = detailData.pp.split('|||');
+        var cpxhArray = detailData.cpxh.split('|||');
+        var slArray = detailData.sl.split('|||');
+        var djArray = detailData.dj.split('|||');
+        var bzArray = detailData.bz ? detailData.bz.split('|||') : [];
 
         // 获取当前产品的数据
         var currentProduct = {
@@ -1715,6 +1754,10 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
         // 获取收货地址
         var shippingAddress = detailData.shdz || '';
 
+        // 获取当前产品的货期
+        var productKey = productIndex.toString();
+        var productHqValue = productHq[productKey] || '';
+
         var printContent = `
 <!DOCTYPE html>
 <html>
@@ -1724,7 +1767,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'SimSun', '宋体', serif; font-size: 16px; line-height: 1.4; color: #000; background: white; }
-        .triple-form { width: 240mm; height: 140mm; border: 2px solid #000; margin: 0; padding: 0; background: white; } /* 增加高度以容纳收货地址 */
+        .triple-form { width: 240mm; height: 140mm; border: 2px solid #000; margin: 0; padding: 0; background: white; }
         .form-header { text-align: center; font-size: 22px; font-weight: bold; padding: 8px 0; background-color: #f0f0f0; }
         .form-table { width: 100%; border-collapse: collapse; }
         .form-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; height: 32px; }
@@ -1766,6 +1809,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
             <div class="info-item"><span class="info-label">客户：</span>${rowData.khcm || ''}</div>
             <div class="info-item"><span class="info-label">业务员：</span>${rowData.fzr || ''}</div>
             <div class="info-item"><span class="info-label">电话：</span>${rowData.lxdh || ''}</div>
+            <div class="info-item"><span class="info-label">货期：</span>${productHqValue}</div> <!-- 新增货期显示 -->
         </div>
         
         <div class="info-row">
@@ -1787,6 +1831,7 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
                 <th class="label-cell">产品型号（cpxh）</th>
                 <th class="label-cell">产品名称（pp）</th>
                 <th class="label-cell">数量（sl）</th>
+                <th class="label-cell">货期</th> <!-- 新增货期列 -->
                 <th class="label-cell">备注（bz）</th>
             </tr>
             <tr>
@@ -1795,14 +1840,15 @@ function generateSinglePrintContent(rowData, detailData, productIndex, workOrder
                 <td class="value-cell">${currentProduct.cpxh}</td>
                 <td class="value-cell">${currentProduct.pp}</td>
                 <td class="value-cell">${currentProduct.sl}</td>
+                <td class="value-cell">${productHqValue}</td> <!-- 货期单元格 -->
                 <td class="value-cell">${currentProduct.bz || rowData.zbz || ''}</td>
             </tr>
-            <tr><td class="label-cell">品名</td><td class="value-cell" colspan="5">${currentProduct.pp}</td></tr>
-            <tr><td class="label-cell">规格</td><td class="value-cell" colspan="5">${currentProduct.cpxh}</td></tr>
-            <tr><td class="label-cell">客户</td><td class="value-cell" colspan="5">${rowData.khcm || ''}</td></tr>
-            <tr><td class="label-cell">收货地址</td><td class="value-cell large-cell" colspan="5">${shippingAddress}</td></tr>
-            <tr><td class="label-cell">备注</td><td class="value-cell large-cell" colspan="5">${currentProduct.bz || rowData.zbz || ''}</td></tr>
-            <tr><td class="label-cell">购方要求</td><td class="value-cell large-cell" colspan="5">${rowData.yq || ''}</td></tr>
+            <tr><td class="label-cell">品名</td><td class="value-cell" colspan="6">${currentProduct.pp}</td></tr>
+            <tr><td class="label-cell">规格</td><td class="value-cell" colspan="6">${currentProduct.cpxh}</td></tr>
+            <tr><td class="label-cell">客户</td><td class="value-cell" colspan="6">${rowData.khcm || ''}</td></tr>
+            <tr><td class="label-cell">收货地址</td><td class="value-cell large-cell" colspan="6">${shippingAddress}</td></tr>
+            <tr><td class="label-cell">备注</td><td class="value-cell large-cell" colspan="6">${currentProduct.bz || rowData.zbz || ''}</td></tr>
+            <tr><td class="label-cell">购方要求</td><td class="value-cell large-cell" colspan="6">${rowData.yq || ''}</td></tr>
         </table>
         
         <div class="signature-area">
@@ -2096,7 +2142,7 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         });
 
         // 计算分页
-        var itemsPerPage = 20; // 每页显示20条数据
+        var itemsPerPage = 18; // 每页显示20条数据
         var totalPages = Math.ceil(selectedProducts.length / itemsPerPage);
 
         var previewContent = `
@@ -2313,7 +2359,7 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         .data-table {
             width: 96%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 13px;
             margin: 15px;
             border: 2px solid #000000; /* 黑色边框 */
         }
@@ -2353,11 +2399,13 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
         }
         
         /* 列宽调整 */
-        .col-1 { width: 8%; }   /* 序号 */
-        .col-2 { width: 25%; }  /* 产品型号 */
-        .col-3 { width: 17%; }  /* 产品名称 */
-        .col-4 { width: 10%; }  /* 数量 */
-        .col-5 { width: 40%; }  /* 备注 */
+        .col-1 { width: 6%; }   /* 序号 */
+        .col-2 { width: 22%; }  /* 产品型号 */
+        .col-3 { width: 22%; }  /* 产品名称 */
+        .col-4 { width: 8%; }   /* 数量 */
+        .col-5 { width: 15%; }  /* 货期 - 新增 */
+        .col-6 { width: 27%; }  /* 备注 */
+
         
         /* 页脚样式 */
         .page-footer {
@@ -2572,6 +2620,10 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                         <div class="info-block-label">联系电话：</div>
                         <div class="info-block-value">${displayPhone}</div>
                     </div>
+                    <div class="info-block">
+                        <div class="info-block-label">货&nbsp期：</div>
+                        <div class="info-block-value">${selectedProducts.length > 0 ? selectedProducts[0].hq : ''}</div>
+                    </div>
                 </div>
             </div>
             
@@ -2599,7 +2651,8 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                         <th class="col-2">产品型号</th>
                         <th class="col-3">产品名称</th>
                         <th class="col-4">数量</th>
-                        <th class="col-5">备注</th>
+                        <th class="col-5">货期</th> <!-- 新增货期列 -->
+                        <th class="col-6">备注</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -2614,7 +2667,8 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                         <td class="col-2">${product.cpxh || ''}</td>
                         <td class="col-3">${product.pp || ''}</td>
                         <td class="col-4">${product.sl || ''}</td>
-                        <td class="col-5" style="text-align: left; padding-left: 8px;">${product.bz || ''}</td>
+                        <td class="col-5">${product.hq || ''}</td> <!-- 货期单元格 -->
+                    <td class="col-6" style="border: 1px solid #000000 !important; text-align: left; padding-left: 8px;">${product.bz || ''}</td>
                     </tr>`;
             });
 
@@ -2628,6 +2682,7 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
                         <td class="col-3">&nbsp;</td>
                         <td class="col-4">&nbsp;</td>
                         <td class="col-5">&nbsp;</td>
+                        <td class="col-6">&nbsp;</td>
                     </tr>`;
             }
 
@@ -2736,21 +2791,22 @@ function generateBatchPrintPreview(rowData, selectedProductIndexes) {
 function getProductDataByIndex(index) {
     if (!currentDetailData) return null;
 
-    var ppArray = currentDetailData.pp.split(',');
-    var cpxhArray = currentDetailData.cpxh.split(',');
-    var slArray = currentDetailData.sl ? currentDetailData.sl.split(',') : [];
-    var bzArray = currentDetailData.bz ? currentDetailData.bz.split(',') : [];
+    var ppArray = currentDetailData.pp.split('|||');
+    var cpxhArray = currentDetailData.cpxh.split('|||');
+    var slArray = currentDetailData.sl ? currentDetailData.sl.split('|||') : [];
+    var bzArray = currentDetailData.bz ? currentDetailData.bz.split('|||') : [];
 
     if (index < 0 || index >= ppArray.length) return null;
 
+    var productKey = index.toString(); // 定义 productKey 变量
     return {
         pp: ppArray[index] || '',
         cpxh: cpxhArray[index] || '',
         sl: slArray[index] || '',
-        bz: bzArray[index] || ''
+        bz: bzArray[index] || '',
+        hq: productHq[productKey] || '' // 使用已定义的 productKey 变量
     };
 }
-
 // 更新多个产品的打印次数并保存
 function updateMultipleProductPrintCounts(productKeys, orderId) {
     productKeys.forEach(function(productKey) {
@@ -2845,4 +2901,40 @@ function getContactByFzr(fzrName) {
     }
 
     return null;
+}
+
+// 排序函数
+function sortTable(field) {
+    // 如果点击同一个字段，切换排序方向
+    if (currentSortField === field) {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        // 点击不同字段，默认升序
+        currentSortField = field;
+        currentSortOrder = 'asc';
+    }
+
+    console.log('排序字段:', currentSortField, '排序方向:', currentSortOrder);
+
+    // 更新排序图标
+    updateSortIcons();
+
+    // 重新获取数据
+    var searchParams = getSearchParams();
+    searchParams.sortField = currentSortField;
+    searchParams.sortOrder = currentSortOrder;
+
+    currentPage = 1; // 排序后回到第一页
+    getList(currentPage, pageSize, searchParams);
+}
+
+function updateSortIcons() {
+    // 清除所有图标
+    $('.sort-icon').html('');
+
+    // 设置当前排序字段的图标
+    if (currentSortField) {
+        var icon = currentSortOrder === 'asc' ? '↑' : '↓';
+        $('#sort-' + currentSortField).html(icon);
+    }
 }

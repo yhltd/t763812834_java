@@ -468,6 +468,9 @@ function fillTable(data) {
     console.log("返回数据", data);
     $('#ddmxTable').empty();
 
+    // 重新绑定所有事件
+    bindTableEvents();
+
     // 重置统计变量
     totalYingfuAmount = 0;
     totalYifuAmount = 0;
@@ -663,6 +666,217 @@ function fillTable(data) {
     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
 }
 
+// 统一的事件绑定函数
+function bindTableEvents() {
+    // 清理所有.ddmx命名空间的事件
+    $(document).off('.ddmx');
+
+    // 使用事件委托，一次性绑定所有
+    $(document)
+        .on('click.ddmx', '.view-file-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $btn = $(this);
+            var filePath = $btn.data('filepath');
+            var ddh = $btn.closest('tr').find('td:eq(1)').text().trim();
+
+            if (!filePath) {
+                swal('错误', '文件路径为空，无法查看文件', 'error');
+                return;
+            }
+
+            showFileViewModal(ddh, filePath);
+        })
+        .on('click.ddmx', '.detail-btn', function(e) {
+            e.stopPropagation();
+
+            // 先选中当前行
+            $('#ddmxTable tbody tr').removeClass('selected-row');
+            $(this).closest('tr').addClass('selected-row');
+
+            // 获取当前行的订单号和订单日期
+            var $row = $(this).closest('tr');
+            var ddh = $(this).data('ddh');
+            var ddrq = $row.find('td:eq(0)').text().trim();
+
+            showDetailModal(ddh, ddrq);
+        })
+        .on('click.ddmx', '.withdraw-btn', function(e) {
+            e.stopPropagation();
+
+            var $btn = $(this);
+            var ddh = $btn.data('ddh');
+
+            if (!ddh) {
+                swal('订单号不能为空');
+                return;
+            }
+
+            // 确认撤回操作
+            if (!confirm('确定要撤回订单 ' + ddh + ' 吗？')) {
+                return;
+            }
+
+            withdrawOrder(ddh, $btn);
+        })
+        .on('click.ddmx', '.sortable', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var field = $(this).data('field');
+            handleSortClick(field);
+        })
+        .on('dblclick.ddmx', '.editable-yifu', function() {
+            // 使用现有的editable-yifu处理逻辑
+            var $cell = $(this);
+            var originalValue = parseFloat($cell.text().trim()) || 0;
+            var ddh = $cell.data('ddh');
+
+            createEditableInput($cell, originalValue, 'number', ddh, 'yifu');
+        })
+        .on('dblclick.ddmx', '.editable-wldh', function() {
+            var $cell = $(this);
+            var originalValue = $cell.text().trim();
+            var ddh = $cell.data('ddh');
+
+            createEditableInput($cell, originalValue, 'text', ddh, 'wldh');
+        })
+        .on('dblclick.ddmx', '.editable-zk', function() {
+            var $cell = $(this);
+            var originalValue = $cell.text().trim();
+            var ddh = $cell.data('ddh');
+
+            createEditableInput($cell, originalValue, 'text', ddh, 'zk');
+        })
+        .on('change.ddmx', '.sfkp-select', function() {
+            var $select = $(this);
+            var newValue = $select.val();
+            var ddh = $select.closest('td').data('ddh');
+            var $kpsjCell = $select.closest('tr').find('.kpsj-cell');
+            var $row = $select.closest('tr');
+
+            $select.data('original-value', $select.val());
+
+            if (newValue === '已开票') {
+                var currentTime = formatDateTime(new Date());
+                $kpsjCell.text(currentTime);
+
+                $ajax({
+                    type: 'post',
+                    url: '/ddmx/updateMultipleByDdh',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        ddh: ddh,
+                        sfkp: newValue,
+                        kpsj: currentTime
+                    }),
+                    dataType: 'json'
+                }, false, '', function (res) {
+                    if (res.code === 200) {
+                        console.log("开票状态和开票时间更新成功");
+                        updateYingfuWeifuDisplay($row);
+                    } else if(res.code === 403){
+                        swal("权限不足！ ");
+                    } else {
+                        console.error("开票状态更新失败:", res.message);
+                        swal("开票状态更新失败: " + (res.message || '未知错误'));
+                        $select.val('未开票');
+                        $kpsjCell.text('');
+                    }
+                });
+            } else {
+                $kpsjCell.text('');
+                updateField(ddh, 'sfkp', newValue, function() {
+                    updateYingfuWeifuDisplay($row);
+                });
+            }
+        });
+}
+
+// 辅助函数：创建可编辑输入框
+function createEditableInput($cell, originalValue, type, ddh, field) {
+    // 获取单元格的实际宽度
+    var cellWidth = $cell.width();
+
+    var input = $('<input>')
+        .addClass('form-control input-sm editable-input')
+        .val(originalValue)
+        .css({
+            'width': '100%',
+            'height': '100%',
+            'min-width': '100%',
+            'max-width': '100%',
+            'border': '2px solid #409EFF',
+            'padding': '4px 6px',
+            'box-sizing': 'border-box',
+            'position': 'absolute',
+            'top': '0',
+            'left': '0',
+            'z-index': '1000',
+            'font-size': 'inherit',
+            'line-height': 'normal'
+        });
+
+    if (type === 'number') {
+        input.attr('type', 'number').attr('step', '0.01');
+    } else if (type === 'text') {
+        input.attr('type', 'text');
+    }
+
+    // 设置单元格为相对定位，以便输入框绝对定位
+    $cell.css('position', 'relative').html(input);
+
+    input.focus().select();
+
+    // 保存函数
+    function saveValue() {
+        var newValue = input.val().trim();
+
+        if (type === 'number') {
+            if (newValue === '') newValue = '0';
+            var newNumValue = parseFloat(newValue);
+            if (isNaN(newNumValue)) {
+                swal("输入错误", "请输入有效的数字", "error");
+                $cell.text(originalValue.toFixed(2));
+                return;
+            }
+            $cell.text(newNumValue.toFixed(2));
+            newValue = newNumValue.toFixed(2);
+        } else {
+            $cell.text(newValue);
+        }
+
+        if (newValue !== originalValue.toString()) {
+            updateField(ddh, field, newValue, function() {
+                var $row = $cell.closest('tr');
+                updateYingfuWeifuDisplay($row);
+            });
+        }
+    }
+
+    // 失去焦点保存
+    input.blur(saveValue);
+
+    // 回车键保存
+    input.keypress(function(e) {
+        if (e.which === 13) {
+            input.blur();
+        }
+    });
+
+    // ESC键取消编辑
+    input.keydown(function(e) {
+        if (e.keyCode === 27) {
+            if (type === 'number') {
+                $cell.text(originalValue.toFixed(2));
+            } else {
+                $cell.text(originalValue);
+            }
+        }
+    });
+}
+
 // 绑定查看文件事件 - 修改为显示弹窗
 function bindViewFileEvents() {
     console.log('绑定查看文件事件...');
@@ -693,7 +907,7 @@ function bindViewFileEvents() {
 // 显示文件查看弹窗
 function showFileViewModal(ddh, filePath) {
     // 解析文件路径（可能是逗号分隔的多个文件）
-    var fileUrls = filePath.split(',');
+    var fileUrls = filePath.split('|||');
     var cleanFileUrls = [];
 
     // 清理URL，去除空格
@@ -909,8 +1123,8 @@ function removeFileFromDatabase(ddh, fileUrl) {
             console.log('当前数据库中的文件列表:', currentFiles);
 
             // 如果当前有多个文件，需要移除被删除的那个
-            if (currentFiles && currentFiles.includes(',')) {
-                var fileList = currentFiles.split(',');
+            if (currentFiles && currentFiles.includes('|||')) {
+                var fileList = currentFiles.split('|||');
                 var newFileList = [];
 
                 for (var i = 0; i < fileList.length; i++) {
@@ -921,7 +1135,7 @@ function removeFileFromDatabase(ddh, fileUrl) {
                     }
                 }
 
-                var newFiles = newFileList.join(',');
+                var newFiles = newFileList.join('|||');
                 console.log('删除后的新文件列表:', newFiles);
 
                 // 更新数据库
@@ -969,7 +1183,7 @@ function updateRemainingFiles(ddh) {
         }
     });
 
-    var newFileList = remainingFiles.join(',');
+    var newFileList = remainingFiles.join('|||');
     console.log('更新剩余文件列表:', newFileList);
 
     updatePdfFileNameInDatabase(ddh, newFileList);
@@ -3259,7 +3473,7 @@ $(function () {
 
                 if (currentFileName && currentFileName.trim() !== '') {
                     // 检查是否已包含相同的文件名（避免重复）
-                    var fileList = currentFileName.split(',');
+                    var fileList = currentFileName.split('|||');
                     var alreadyExists = false;
 
                     for (var i = 0; i < fileList.length; i++) {
@@ -3275,7 +3489,7 @@ $(function () {
                         console.log('文件名已存在，不重复添加');
                     } else {
                         // 如果不存在，用逗号分隔追加
-                        finalFileName = currentFileName + ',' + pdfFileName;
+                        finalFileName = currentFileName + '|||' + pdfFileName;
                         console.log('追加新文件名，最终值:', finalFileName);
                     }
                 } else {
@@ -3544,7 +3758,7 @@ function clearFileRecord(ddh, fileUrlToRemove) {
 
                 if (currentFiles && currentFiles.trim() !== '') {
                     // 从文件列表中移除指定的文件
-                    var fileList = currentFiles.split(',');
+                    var fileList = currentFiles.split('|||');
                     var newFileList = [];
 
                     for (var i = 0; i < fileList.length; i++) {
@@ -3554,7 +3768,7 @@ function clearFileRecord(ddh, fileUrlToRemove) {
                         }
                     }
 
-                    var newFiles = newFileList.join(',');
+                    var newFiles = newFileList.join('|||');
                     console.log('删除后新的文件列表:', newFiles);
 
                     // 更新数据库
@@ -3794,29 +4008,36 @@ function exportToExcel(fileName) {
     // 获取当前搜索条件
     var searchParams = getSearchParams();
 
-    // 调用后端接口获取全部数据
+    // 改回原来的调用方式（去掉sortField和sortOrder）
     $ajax({
         type: 'post',
         url: '/ddmx/daochuexcel',
         contentType: 'application/json',
         data: JSON.stringify({
             pageNum: 1,
-            pageSize: 99999999,
-            // 传递搜索条件
+            pageSize: 999999,  // 改为大数值，获取所有筛选数据
+            // 传递搜索条件（包括当前筛选条件）
             ddh: searchParams.ddh || '',
             khmc: searchParams.khmc || '',
             fzr: searchParams.fzr || '',
             bm: searchParams.bm || '',
             startDate: searchParams.startDate || '',
-            endDate: searchParams.endDate || ''
+            endDate: searchParams.endDate || '',
+            yingfuStartDate: searchParams.yingfuStartDate || '',
+            yingfuEndDate: searchParams.yingfuEndDate || '',
+            weifuZero: searchParams.weifuZero || false
+            // 移除这两行：
+            // sortField: sortField,      // 删除这行
+            // sortOrder: sortOrder       // 删除这行
         }),
         dataType: 'json'
     }, false, '', function (res) {
         swal.close();
 
         if (res.code === 200 && res.data) {
-            // 根据返回的数据结构处理数据并导出
+            // 处理数据并导出
             processExportData(res.data, selectedColumns, selectedColumnNames, fileName);
+            setTimeout(restoreAfterExport, 800);
         } else {
             swal('导出失败', res.message || '数据获取失败', 'error');
         }
@@ -4080,18 +4301,28 @@ function handleSortClick(field) {
 
     // 使用防抖，避免快速多次点击
     sortTimer = setTimeout(function() {
-        console.log('执行排序操作，字段:', field);
+        console.log('=== 排序点击调试 ===');
+        console.log('点击字段:', field);
+        console.log('原排序字段:', sortField);
+        console.log('原排序方向:', sortOrder);
+
+        // 记录之前的排序状态用于比较
+        var oldSortField = sortField;
+        var oldSortOrder = sortOrder;
 
         // 如果点击的是当前排序字段，切换排序方向
         if (sortField === field) {
             sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            console.log('切换方向: ' + oldSortOrder + ' -> ' + sortOrder);
         } else {
             // 点击新字段，默认降序
             sortField = field;
             sortOrder = 'desc';
+            console.log('切换字段: ' + oldSortField + ' -> ' + sortField);
         }
 
-        console.log('新排序字段:', sortField, '新排序方向:', sortOrder);
+        console.log('新排序字段:', sortField);
+        console.log('新排序方向:', sortOrder);
 
         // 重置到第一页并重新加载数据
         currentPage = 1;
@@ -4101,6 +4332,12 @@ function handleSortClick(field) {
 
         // 获取搜索参数
         var searchParams = getSearchParams();
+
+        console.log('发送请求参数:', {
+            sortField: sortField,
+            sortOrder: sortOrder,
+            currentPage: currentPage
+        });
 
         // 重新加载数据
         getList(currentPage, pageSize, searchParams);

@@ -265,4 +265,26 @@ public class KhxxController {
         }
     }
 
+    @PostMapping("/getkehuxx")
+    public Result getKeHuXX(@RequestBody(required = false) Map<String, Object> params) { // 添加@RequestBody注解
+        try {
+            System.out.println("接收获取客户要求请求，参数: " + params);
+
+            // 指定返回类型为List<Map<String, Object>>
+            List<Map<String, Object>> yaoqiu = khxxService.getKeHuXX();
+
+            System.out.println("查询结果数量: " + (yaoqiu != null ? yaoqiu.size() : 0));
+
+            if (yaoqiu != null) {
+                return Result.success(yaoqiu);
+            } else {
+                return Result.success(new ArrayList<>());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("获取客户要求异常: " + e.getMessage());
+            return Result.error("获取客户要求失败: " + e.getMessage());
+        }
+    }
+
 }

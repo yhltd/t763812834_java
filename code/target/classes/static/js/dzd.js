@@ -1020,12 +1020,37 @@ function showLoading() {
 function hideLoading() {
     // 加载完成后的处理
 }
+//---- 0128
+function cleanSearchParams(params) {
+    var cleaned = {};
+
+    // 清理每个参数
+    cleaned.ddh = params.htbh ? params.htbh.trim() : '';
+    cleaned.khmc = params.khmc ? params.khmc.trim() : '';
+    cleaned.fzr = params.fzr ? params.fzr.trim() : '';
+    cleaned.startDate = params.startDate ? params.startDate.trim() : '';
+    cleaned.endDate = params.endDate ? params.endDate.trim() : '';
+
+    console.log('清理前参数:', params);
+    console.log('清理后参数:', cleaned);
+
+    return cleaned;
+}
 
 // 搜索功能
 function searchDdmx() {
     var searchParams = getSearchParams();
+
+    // 清理参数
+    var cleanedParams = cleanSearchParams(searchParams);
+
+    // 如果负责人名称不为空，添加特殊处理
+    if (cleanedParams.fzr) {
+        console.log('负责人搜索特殊处理:', cleanedParams.fzr);
+    }
+
     currentPage = 1;
-    getList(currentPage, pageSize, searchParams);
+    getList(currentPage, pageSize, cleanedParams);
 }
 
 // 计算未付金额
@@ -2559,7 +2584,73 @@ function updateSelectAllCheckbox() {
     $('#selectAllColumns').prop('checked', allChecked);
 }
 
-// 导出到Excel
+// // 导出到Excel
+// function exportToExcel(fileName) {
+//     // 显示导出进度
+//     swal({
+//         title: '正在导出...',
+//         text: '正在获取数据并生成Excel文件，请稍候...',
+//         icon: 'info',
+//         buttons: false,
+//         closeOnClickOutside: false,
+//         closeOnEsc: false
+//     });
+//
+//     // 获取用户选择的字段
+//     var selectedColumns = exportColumnsConfig.mainColumns;
+//
+//     // 如果没有选择任何字段，使用所有字段
+//     if (selectedColumns.length === 0) {
+//         selectedColumns = exportColumnsConfig.allMainColumns.map(col => col.key);
+//     }
+//
+//     console.log('=== 导出配置信息 ===');
+//     console.log('用户选择的主表列:', selectedColumns);
+//     console.log('固定的详情列:', exportColumnsConfig.detailColumns);
+//
+//     // 获取字段显示名称的映射
+//     var selectedColumnNames = {};
+//     exportColumnsConfig.allMainColumns.forEach(col => {
+//         if (selectedColumns.includes(col.key)) {
+//             selectedColumnNames[col.key] = col.name;
+//         }
+//     });
+//     console.log('字段名称映射:', selectedColumnNames);
+//
+//     // 获取当前搜索条件
+//     var searchParams = getSearchParams();
+//
+//     // 调用后端接口获取全部数据
+//     $ajax({
+//         type: 'post',
+//         url: '/dzd/daochuexcel',
+//         contentType: 'application/json',
+//         data: JSON.stringify({
+//             pageNum: 1,
+//             pageSize: 99999999,
+//             // 传递搜索条件
+//             khmc: searchParams.khmc || '',
+//             ddh: searchParams.htbh || '',
+//             startDate: searchParams.startDate || '',
+//             endDate: searchParams.endDate || ''
+//         }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         swal.close();
+//
+//         console.log('=== 导出接口响应 ===');
+//         console.log('响应码:', res.code);
+//         console.log('响应数据:', res.data);
+//
+//         if (res.code === 200 && res.data) {
+//             // 根据返回的数据结构处理数据并导出
+//             processExportData(res.data, selectedColumns, selectedColumnNames, fileName);
+//         } else {
+//             console.error('导出失败:', res.message);
+//             swal('导出失败', res.message || '数据获取失败', 'error');
+//         }
+//     });
+// }
 function exportToExcel(fileName) {
     // 显示导出进度
     swal({
@@ -2606,6 +2697,11 @@ function exportToExcel(fileName) {
             // 传递搜索条件
             khmc: searchParams.khmc || '',
             ddh: searchParams.htbh || '',
+            fzr: searchParams.fzr || '',
+            startDate: searchParams.startDate || '',
+            endDate: searchParams.endDate || '',
+            // 添加开票状态过滤条件，只导出未开票的数据
+            sfkp: '未开票', // 添加这个参数，后端可以过滤
             startDate: searchParams.startDate || '',
             endDate: searchParams.endDate || ''
         }),
@@ -2620,13 +2716,14 @@ function exportToExcel(fileName) {
         if (res.code === 200 && res.data) {
             // 根据返回的数据结构处理数据并导出
             processExportData(res.data, selectedColumns, selectedColumnNames, fileName);
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！");
         } else {
             console.error('导出失败:', res.message);
             swal('导出失败', res.message || '数据获取失败', 'error');
         }
     });
 }
-
 // 处理导出数据
 function processExportData(apiData, selectedColumns, columnMapping, fileName) {
     try {

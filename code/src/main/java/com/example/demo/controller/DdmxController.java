@@ -112,6 +112,19 @@ public class DdmxController {
         }
 
         Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+//        if (!authResult.isSuccess()) {
+//            // 从 Session 中获取 D 值（管理员名称）
+//            String fuzeren = (String) session.getAttribute("D");
+//            if (fuzeren == null || fuzeren.trim().isEmpty()) {
+//                return Result.error("为获取身份信息，请重新登录");
+//            }
+//
+//            Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPageY(page, queryWrapper,fuzeren);
+//            return Result.success(result);
+//        }
+//
+//        // 执行查询 - 通过Service调用
+//        Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(page, queryWrapper);
         if (!authResult.isSuccess()) {
             // 从 Session 中获取 D 值（管理员名称）
             String fuzeren = (String) session.getAttribute("D");
@@ -119,12 +132,19 @@ public class DdmxController {
                 return Result.error("为获取身份信息，请重新登录");
             }
 
-            Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPageY(page, queryWrapper,fuzeren);
+            // 注意：需要为 selectDistinctByDdhPageY 也添加排序参数支持
+            Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPageY(
+                    page, queryWrapper, fuzeren,
+                    pageRequest.getSortField(), pageRequest.getSortOrder()
+            );
             return Result.success(result);
         }
 
-        // 执行查询 - 通过Service调用
-        Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(page, queryWrapper);
+        // 执行查询 - 通过Service调用（传入排序参数）
+        Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(
+                page, queryWrapper,
+                pageRequest.getSortField(), pageRequest.getSortOrder()
+        );
 
         // 在查询结果后，手动进行排序
         if (result != null && result.getRecords() != null &&
@@ -142,6 +162,111 @@ public class DdmxController {
 
         return Result.success(result);
     }
+
+//    public Result<Page<Map<String, Object>>> distinctPage(HttpSession session,@RequestBody PageRequest pageRequest) {
+//        // 创建分页对象
+//        Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+//
+//        // 构建查询条件
+//        QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
+//
+//        // 添加查询条件
+//        if (StringUtils.isNotBlank(pageRequest.getDdh())) {
+//            queryWrapper.like("ddh", pageRequest.getDdh());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
+//            queryWrapper.like("khmc", pageRequest.getKhmc());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getFzr())) {
+//            queryWrapper.like("fzr", pageRequest.getFzr());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getBm())) {
+//            queryWrapper.like("bm", pageRequest.getBm());
+//        }
+//        if (pageRequest.getStartDate() != null || pageRequest.getEndDate() != null) {
+//            String startDate = convertToSlashFormat(pageRequest.getStartDate());
+//            String endDate = convertToSlashFormat(pageRequest.getEndDate());
+//
+//            if (startDate != null && endDate != null) {
+//                // 使用apply方法处理日期查询
+//                queryWrapper.apply(
+//                        "ISDATE(ddrq) = 1 AND " +
+//                                "CONVERT(DATE, ddrq) " +
+//                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+//                        startDate, endDate
+//                );
+//            }
+//        }
+//        // 新增：yingfu日期筛选
+//        if (StringUtils.isNotBlank(pageRequest.getYingfuStartDate()) ||
+//                StringUtils.isNotBlank(pageRequest.getYingfuEndDate())) {
+//            String yingfuStart = convertToSlashFormat(pageRequest.getYingfuStartDate());
+//            String yingfuEnd = convertToSlashFormat(pageRequest.getYingfuEndDate());
+//
+//            if (yingfuStart != null && yingfuEnd != null) {
+//                queryWrapper.apply(
+//                        "ISDATE(yingfu) = 1 AND " +
+//                                "CONVERT(DATE, yingfu) " +
+//                                "BETWEEN CONVERT(DATE, {0}) AND CONVERT(DATE, {1})",
+//                        yingfuStart, yingfuEnd
+//                );
+//            } else if (yingfuStart != null) {
+//                queryWrapper.apply(
+//                        "ISDATE(yingfu) = 1 AND " +
+//                                "CONVERT(DATE, yingfu) >= CONVERT(DATE, {0})",
+//                        yingfuStart
+//                );
+//            } else if (yingfuEnd != null) {
+//                queryWrapper.apply(
+//                        "ISDATE(yingfu) = 1 AND " +
+//                                "CONVERT(DATE, yingfu) <= CONVERT(DATE, {0})",
+//                        yingfuEnd
+//                );
+//            }
+//        }
+//
+//        // 新增：未付金额为0的筛选（yfsj - yifu = 0）
+//        if (Boolean.TRUE.equals(pageRequest.getWeifuZero())) {
+//            // 使用TRY_CAST处理可能的非数字值
+//            queryWrapper.apply("yfsj != yifu");
+//        }
+//
+//        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+//        if (!authResult3.isSuccess()) {
+//            return Result.error("权限不足");
+//        }
+//
+//        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+//        if (!authResult.isSuccess()) {
+//            // 从 Session 中获取 D 值（管理员名称）
+//            String fuzeren = (String) session.getAttribute("D");
+//            if (fuzeren == null || fuzeren.trim().isEmpty()) {
+//                return Result.error("为获取身份信息，请重新登录");
+//            }
+//
+//            Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPageY(page, queryWrapper,fuzeren);
+//            return Result.success(result);
+//        }
+//
+//        // 执行查询 - 通过Service调用
+//        Page<Map<String, Object>> result = ddmxService.selectDistinctByDdhPage(page, queryWrapper);
+//
+//        // 在查询结果后，手动进行排序
+//        if (result != null && result.getRecords() != null &&
+//                StringUtils.isNotBlank(pageRequest.getSortField())) {
+//
+//            List<Map<String, Object>> sortedList = manualSort(
+//                    result.getRecords(),
+//                    pageRequest.getSortField(),
+//                    pageRequest.getSortOrder()
+//            );
+//
+//            // 更新分页结果
+//            result.setRecords(sortedList);
+//        }
+//
+//        return Result.success(result);
+//    }
 
     // 手动排序方法
     private List<Map<String, Object>> manualSort(List<Map<String, Object>> list, String sortField, String sortOrder) {
@@ -335,7 +460,7 @@ public class DdmxController {
      */
     @PostMapping("/updateByDdh")
     public Result updateByDdh(HttpSession session,@RequestBody Map<String, Object> updateParams) {
-        Result<?> authResult = AuthUtil.checkAdminAuth(session);
+        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
         if (!authResult.isSuccess()) {
             return Result.error(authResult.getCode(), authResult.getMessage());
         }

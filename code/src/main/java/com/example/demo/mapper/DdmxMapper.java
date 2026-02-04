@@ -16,7 +16,41 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
 
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
+            "    SELECT ROW_NUMBER() OVER ( " +
+            "        <choose>" +
+            "            <when test='sortField != null and sortOrder != null and sortField != \"\"'>" +
+            "                <choose>" +
+            "                    <!-- SQL Server 2008 日期字段处理 -->" +
+            "                    <when test='sortField == \"ddrq\" or sortField == \"kpsj\" or sortField == \"yingfu\" or sortField == \"fhsj\" or sortField == \"yfsj\"'>" +
+            "                        ORDER BY " +
+            "                        CASE " +
+            "                            WHEN ISDATE(${sortField}) = 1 THEN CONVERT(DATETIME, ${sortField}) " +
+            "                            ELSE NULL " +
+            "                        END ${sortOrder}" +
+            "                    </when>" +
+            "                    <!-- 数字字段处理 -->" +
+            "                    <when test='sortField == \"yifu\" or sortField == \"wf\" or sortField == \"zk\"'>" +
+            "                        ORDER BY " +
+            "                        CASE " +
+            "                            WHEN ISNUMERIC(${sortField}) = 1 THEN " +
+            "                                CASE " +
+            "                                    WHEN ${sortField} LIKE '%.%' THEN CONVERT(DECIMAL(18,2), ${sortField}) " +
+            "                                    ELSE CONVERT(INT, ${sortField}) " +
+            "                                END " +
+            "                            ELSE 0 " +
+            "                        END ${sortOrder}" +
+            "                    </when>" +
+            "                    <!-- 其他文本字段处理 -->" +
+            "                    <otherwise>" +
+            "                        ORDER BY ${sortField} ${sortOrder}" +
+            "                    </otherwise>" +
+            "                </choose>" +
+            "            </when>" +
+            "            <otherwise>" +
+            "                ORDER BY ddh ASC, ddrq ASC" +
+            "            </otherwise>" +
+            "        </choose>" +
+            "    ) as rn, " +
             "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name, " +
             "           CASE " +
             "               WHEN ISNULL(fahuozhuangtai, '') = '' THEN '全部未发货' " +
@@ -40,7 +74,9 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
             "</script>")
     List<Map<String, Object>> selectDistinctByDdhForPage(@Param("start") long start,
                                                          @Param("end") long end,
-                                                         @Param("ew") Wrapper<Map<String, Object>> wrapper);
+                                                         @Param("ew") Wrapper<Map<String, Object>> wrapper,
+                                                         @Param("sortField") String sortField,
+                                                         @Param("sortOrder") String sortOrder);
 
     @Select("<script>" +
             "SELECT * FROM (" +
@@ -77,7 +113,46 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
      */
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY ddh ASC, ddrq ASC) as rn, " +
+            "    SELECT ROW_NUMBER() OVER ( " +
+            "        <choose>" +
+            "            <when test='sortField != null and sortOrder != null'>" +
+            "                <choose>" +
+            "                    <!-- SQL Server 2008 日期字段处理 -->" +
+            "                    <when test='sortField == \"ddrq\" or sortField == \"kpsj\" or sortField == \"yingfu\" or sortField == \"fhsj\" or sortField == \"yfsj\"'>" +
+            "                        ORDER BY " +
+            "                        CASE " +
+            "                            WHEN ISDATE(${sortField}) = 1 THEN CONVERT(DATETIME, ${sortField}) " +
+            "                            ELSE NULL " +
+            "                        END ${sortOrder}" +
+            "                    </when>" +
+            "                    <!-- 数字字段处理 -->" +
+            "                    <when test='sortField == \"yifu\" or sortField == \"wf\" or sortField == \"zk\"'>" +
+            "                        ORDER BY " +
+            "                        CASE " +
+            "                            WHEN ISNUMERIC(${sortField}) = 1 THEN " +
+            "                                CASE " +
+            "                                    WHEN ${sortField} LIKE '%.%' THEN CONVERT(DECIMAL(18,2), ${sortField}) " +
+            "                                    ELSE CONVERT(INT, ${sortField}) " +
+            "                                END " +
+            "                            ELSE 0 " +
+            "                        END ${sortOrder}" +
+            "                    </when>" +
+            "                    <!-- 其他文本字段处理 -->" +
+            "                    <otherwise>" +
+            "                        ORDER BY " +
+            "                        CASE " +
+            "                            WHEN ${sortField} IS NULL THEN 1 " +
+            "                            ELSE 0 " +
+            "                        END, " +
+            "                        ${sortField} ${sortOrder}" +
+            "                    </otherwise>" +
+            "                </choose>" +
+            "            </when>" +
+            "            <otherwise>" +
+            "                ORDER BY ddh ASC, ddrq ASC" +
+            "            </otherwise>" +
+            "        </choose>" +
+            "    ) as rn, " +
             "           ddrq, ddh, khjc, ggxh, fzr, bm, lxr, lxdh, tcd, khmc, kpsj, yingfu, yifu, wf, sfkp, scgd, bz, wldh, yfsj, zk, fhsj, pdf_file_name, " +
             "           CASE " +
             "               WHEN ISNULL(fahuozhuangtai, '') = '' THEN '全部未发货' " +
@@ -105,7 +180,10 @@ public interface DdmxMapper extends BaseMapper<Ddmx> {
     List<Map<String, Object>> selectDistinctByDdhForPageY(@Param("start") long start,
                                                           @Param("end") long end,
                                                           @Param("ew") Wrapper<Map<String, Object>> wrapper,
-                                                          @Param("fuzeren") String fuzeren);
+                                                          @Param("fuzeren") String fuzeren,
+                                                          @Param("sortField") String sortField,
+                                                          @Param("sortOrder") String sortOrder);
+
 
     @Select("<script>" +
             "SELECT * FROM (" +

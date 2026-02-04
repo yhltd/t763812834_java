@@ -36,4 +36,6 @@ public interface KhxxService extends IService<Khxx> {
 
     List<Map<String, Object>> getYaoQiu();
 
+    List<Map<String, Object>> getKeHuXX();
+
 }

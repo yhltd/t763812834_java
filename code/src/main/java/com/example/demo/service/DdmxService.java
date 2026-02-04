@@ -25,11 +25,15 @@ public interface DdmxService extends IService<Ddmx> {
 
 
     Page<Map<String, Object>> selectDistinctByDdhPage(Page<Map<String, Object>> page,
-                                                      @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper);
+                                                      @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,
+                                                      String sortField,
+                                                      String sortOrder);
 
     Page<Map<String, Object>> selectDistinctByDdhPageY(Page<Map<String, Object>> page,
-                                                      @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,String fuzeren);
-
+                                                       @Param(Constants.WRAPPER) Wrapper<Map<String, Object>> queryWrapper,
+                                                       String fuzeren,
+                                                       String sortField,
+                                                       String sortOrder);
     /**
      * 根据订单号获取详细信息
      */

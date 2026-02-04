@@ -17,7 +17,7 @@ public interface DzdjlMapper extends BaseMapper<Dzd> {
 
     @Select("<script>" +
             "SELECT * FROM (" +
-            "    SELECT ROW_NUMBER() OVER (ORDER BY khmc ASC, MAX(ddrq) DESC) as rn, " +
+            "    SELECT ROW_NUMBER() OVER (ORDER BY duizhangriqi DESC, khmc ASC) as rn, " +
             "           MAX(ddrq) as ddrq, " +
             "           khmc, " +
             "           MAX(fzr) as fzr, " +

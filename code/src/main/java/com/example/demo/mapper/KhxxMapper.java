@@ -107,6 +107,9 @@ public interface KhxxMapper extends BaseMapper<Khxx> {
 
     @Select("SELECT khmc, yq FROM kehuxinxi")
     List<Map<String, Object>> getYaoQiu();
+
+    @Select("SELECT * FROM kehuxinxi")
+    List<Map<String, Object>> getKeHuXX();
 }
 
 

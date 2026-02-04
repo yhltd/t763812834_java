@@ -20,4 +20,5 @@ public class PageRequest {
     private String sortField;
     private String sortOrder;
     private String duizhangdanhao;
+    private String sfkp;
 }

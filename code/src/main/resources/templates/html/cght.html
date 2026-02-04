@@ -1075,7 +1075,7 @@
             }
         });
     }
-
+//-----开始替换分隔符-----
     // 获取所有产品名称（逗号分隔）
     function getProductNames() {
         const productNames = [];
@@ -1084,7 +1084,7 @@
                 productNames.push(input.value.trim());
             }
         });
-        return productNames.join(',');
+        return productNames.join('|||');
     }
 
     // 获取所有产品型号（逗号分隔）
@@ -1095,7 +1095,7 @@
                 productModels.push(input.value.trim());
             }
         });
-        return productModels.join(',');
+        return productModels.join('|||');
     }
 
     // 获取所有订购数量（逗号分隔）
@@ -1106,7 +1106,7 @@
                 quantities.push(input.value.trim());
             }
         });
-        return quantities.join(',');
+        return quantities.join('|||');
     }
 
     // 获取所有含税单价（逗号分隔）
@@ -1117,7 +1117,7 @@
                 prices.push(input.value.trim());
             }
         });
-        return prices.join(',');
+        return prices.join('|||');
     }
     // 获取所有单行总价（逗号分隔）
     function getLineTotals() {
@@ -1132,7 +1132,8 @@
                 lineTotals.push('0.00');
             }
         });
-        return lineTotals.join(',');
+        return lineTotals.join('|||');
+
     }
     // 计算合计总金额
     function calculateTotalAmount() {
@@ -1153,7 +1154,7 @@
                 remarks.push(input.value.trim());
             }
         });
-        return remarks.join(',');
+        return remarks.join('|||');
     }
 
     // 验证保存数据

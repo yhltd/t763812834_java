@@ -516,11 +516,11 @@ function generateDetailForm(data) {
 
     if (data && data.pp && data.cpxh && data.sl && data.dj) {
         // 分割字符串为数组
-        var ppArray = data.pp.split(',');
-        var cpxhArray = data.cpxh.split(',');
-        var slArray = data.sl.split(',');
-        var djArray = data.dj.split(',');
-        var bzArray = data.bz ? data.bz.split(',') : [];
+        var ppArray = data.pp.split('|||');
+        var cpxhArray = data.cpxh.split('|||');
+        var slArray = data.sl.split('|||');
+        var djArray = data.dj.split('|||');
+        var bzArray = data.bz ? data.bz.split('|||') : [];
 
         // 确保所有数组长度一致
         var maxLength = Math.max(ppArray.length, cpxhArray.length, slArray.length, djArray.length);
@@ -1100,11 +1100,11 @@ function generateExcel(data) {
             console.log('dj:', data.dj);
             console.log('bz:', data.bz);
 
-            const ppArray = data.pp.split(',');
-            const cpxhArray = data.cpxh.split(',');
-            const slArray = data.sl.split(',');
-            const djArray = data.dj.split(',');
-            const bzArray = data.bz ? data.bz.split(',') : [];
+            const ppArray = data.pp.split('|||');
+            const cpxhArray = data.cpxh.split('|||');
+            const slArray = data.sl.split('|||');
+            const djArray = data.dj.split('|||');
+            const bzArray = data.bz ? data.bz.split('|||') : [];
 
             const maxLength = Math.max(
                 ppArray.length,

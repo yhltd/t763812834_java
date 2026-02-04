@@ -138,14 +138,18 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
 
     @Override
     public Page<Map<String, Object>> selectDistinctByDdhPage(Page<Map<String, Object>> page,
-                                                             Wrapper<Map<String, Object>> queryWrapper) {
+                                                             Wrapper<Map<String, Object>> queryWrapper,
+                                                             String sortField,
+                                                             String sortOrder) {
 
         // 计算分页参数
         long start = (page.getCurrent() - 1) * page.getSize();
         long end = page.getSize();
 
-        // 查询数据
-        List<Map<String, Object>> records = ddmxMapper.selectDistinctByDdhForPage(start, end, queryWrapper);
+        // 查询数据（传入排序参数）
+        List<Map<String, Object>> records = ddmxMapper.selectDistinctByDdhForPage(
+                start, end, queryWrapper, sortField, sortOrder
+        );
 
         // 查询总数
         Long total = ddmxMapper.selectDistinctCount(queryWrapper);
@@ -171,17 +175,26 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
 
     @Override
     public Page<Map<String, Object>> selectDistinctByDdhPageY(Page<Map<String, Object>> page,
-                                                              Wrapper<Map<String, Object>> queryWrapper,String fuzeren) {
+                                                              Wrapper<Map<String, Object>> queryWrapper,
+                                                              String fuzeren,
+                                                              String sortField,
+                                                              String sortOrder) {
+
+        // 验证和映射排序字段
+        String validatedSortField = validateAndMapSortField(sortField);
+        String validatedSortOrder = validateSortOrder(sortOrder);
 
         // 计算分页参数
         long start = (page.getCurrent() - 1) * page.getSize();
         long end = page.getSize();
 
-        // 查询数据
-        List<Map<String, Object>> records = ddmxMapper.selectDistinctByDdhForPageY(start, end, queryWrapper,fuzeren);
+        // 查询数据（传入排序参数）
+        List<Map<String, Object>> records = ddmxMapper.selectDistinctByDdhForPageY(
+                start, end, queryWrapper, fuzeren, validatedSortField, validatedSortOrder
+        );
 
         // 查询总数
-        Long total = ddmxMapper.selectDistinctCountY(queryWrapper,fuzeren);
+        Long total = ddmxMapper.selectDistinctCountY(queryWrapper, fuzeren);
 
         // 为每条记录添加PDF文件访问URL
         records = records.stream().map(record -> {
@@ -200,6 +213,52 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
         page.setTotal(total);
 
         return page;
+    }
+
+    private String validateAndMapSortField(String field) {
+        if (field == null || field.trim().isEmpty()) {
+            return "ddh";
+        }
+
+        // 字段白名单映射（支持更多字段）
+        Map<String, String> fieldMap = new HashMap<>();
+        fieldMap.put("ddrq", "ddrq");
+        fieldMap.put("ddh", "ddh");
+        fieldMap.put("fzr", "fzr");
+        fieldMap.put("bm", "bm");
+        fieldMap.put("lxr", "lxr");
+        fieldMap.put("lxdh", "lxdh");
+        fieldMap.put("khmc", "khmc");
+        fieldMap.put("kpsj", "kpsj");
+        fieldMap.put("yingfu", "yingfu");
+        fieldMap.put("yfsj", "yfsj");
+        fieldMap.put("yifu", "yifu");
+        fieldMap.put("weifu", "wf");
+        fieldMap.put("wf", "wf");
+        fieldMap.put("sfkp", "sfkp");
+        fieldMap.put("fahuozhuangtai", "fahuozhuangtai");
+        fieldMap.put("wldh", "wldh");
+        fieldMap.put("zk", "zk");
+        fieldMap.put("fhsj", "fhsj");
+        fieldMap.put("khjc", "khjc");
+        fieldMap.put("ggxh", "ggxh");
+        fieldMap.put("tcd", "tcd");
+        fieldMap.put("scgd", "scgd");
+        fieldMap.put("bz", "bz");
+        fieldMap.put("pdf_file_name", "pdf_file_name");
+
+        // 返回映射的字段名或原字段名
+        return fieldMap.getOrDefault(field, field);
+    }
+
+    private String validateSortOrder(String order) {
+        if (order == null) {
+            return "ASC";
+        }
+        if ("asc".equalsIgnoreCase(order) || "desc".equalsIgnoreCase(order)) {
+            return order.toUpperCase();
+        }
+        return "ASC";
     }
 
     @Override

@@ -706,11 +706,11 @@ function getDetailForExport(item, selectedColumns, columnMapping) {
         var exportRows = [];
 
         // 解析产品信息
-        var productNames = item.pp ? item.pp.split(',') : [];
-        var productModels = item.cpxh ? item.cpxh.split(',') : [];
-        var quantities = item.sl ? item.sl.split(',') : [];
-        var prices = item.dj ? item.dj.split(',') : [];
-        var remarks = item.bz ? item.bz.split(',') : [];
+        var productNames = item.pp ? item.pp.split('|||') : [];
+        var productModels = item.cpxh ? item.cpxh.split('|||') : [];
+        var quantities = item.sl ? item.sl.split('|||') : [];
+        var prices = item.dj ? item.dj.split('|||') : [];
+        var remarks = item.bz ? item.bz.split('|||') : [];
 
         // 计算产品数量
         var productCount = Math.max(
@@ -1048,11 +1048,11 @@ function generateDetailForm(data) {
 
     if (data && data.pp && data.cpxh && data.sl && data.dj) {
         // 分割字符串为数组
-        var ppArray = data.pp.split(',');
-        var cpxhArray = data.cpxh.split(',');
-        var slArray = data.sl.split(',');
-        var djArray = data.dj.split(',');
-        var bzArray = data.bz ? data.bz.split(',') : [];
+        var ppArray = data.pp.split('|||');
+        var cpxhArray = data.cpxh.split('|||');
+        var slArray = data.sl.split('|||');
+        var djArray = data.dj.split('|||');
+        var bzArray = data.bz ? data.bz.split('|||') : [];
 
         // 确保所有数组长度一致
         var maxLength = Math.max(ppArray.length, cpxhArray.length, slArray.length, djArray.length);

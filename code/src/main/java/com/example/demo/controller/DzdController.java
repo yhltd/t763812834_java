@@ -73,7 +73,7 @@ public class DzdController {
             queryWrapper.like("khmc", pageRequest.getKhmc());
         }
         if (StringUtils.isNotBlank(pageRequest.getFzr())) {
-            queryWrapper.eq("fzr", pageRequest.getFzr());
+            queryWrapper.like("fzr", pageRequest.getFzr());
         }
         if (StringUtils.isNotBlank(pageRequest.getBm())) {
             queryWrapper.eq("bm", pageRequest.getBm());
@@ -106,73 +106,156 @@ public class DzdController {
         return Result.success(result);
     }
 
-    @PostMapping("/daochuexcel")
-    public Result<Page<Map<String, Object>>> daochu(HttpSession session,@RequestBody PageRequest pageRequest) {
+//    @PostMapping("/daochuexcel")
+//    public Result<Page<Map<String, Object>>> daochu(HttpSession session,@RequestBody PageRequest pageRequest) {
+//
+//        if (pageRequest != null) {
+//            // 转换空字符串为null
+//            if (pageRequest.getStartDate() != null && pageRequest.getStartDate().trim().isEmpty()) {
+//                pageRequest.setStartDate(null);
+//            }
+//            if (pageRequest.getEndDate() != null && pageRequest.getEndDate().trim().isEmpty()) {
+//                pageRequest.setEndDate(null);
+//            }
+//            if (StringUtils.isNotBlank(pageRequest.getSfkp())) {
+//                // 支持多种状态：如只导出"未开票"
+//                queryWrapper.eq("sfkp", pageRequest.getSfkp());
+//            } else {
+//                // 如果没有指定开票状态，默认只导出未开票数据
+//                queryWrapper.eq("sfkp", "未开票");
+//            }
+//            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
+//                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
+//            }
+//            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
+//                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
+//            }
+//        }
+//
+//        // 创建分页对象
+//        Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+//
+//        // 构建查询条件
+//        QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
+//
+//        // 添加查询条件
+//        if (StringUtils.isNotBlank(pageRequest.getDdh())) {
+//            queryWrapper.like("ddh", pageRequest.getDdh());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
+//            queryWrapper.like("khmc", pageRequest.getKhmc());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getFzr())) {
+//            queryWrapper.eq("fzr", pageRequest.getFzr());
+//        }
+//        if (StringUtils.isNotBlank(pageRequest.getBm())) {
+//            queryWrapper.eq("bm", pageRequest.getBm());
+//        }
+//        if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
+//            queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+//        }
+//
+//        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+//        if (!authResult3.isSuccess()) {
+//                return Result.error("权限不足");
+//        }
+//
+//        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+//        if (!authResult.isSuccess()) {
+//            String fuzeren = (String) session.getAttribute("D");
+//            if (fuzeren == null || fuzeren.trim().isEmpty()) {
+//                return Result.error("为获取身份信息，请重新登录");
+//            }
+//
+//            Page<Map<String, Object>> result = dzdService.daochuexcely(page, queryWrapper,fuzeren);
+//
+//            return Result.success(result);
+//        }
+//
+//        // 执行查询 - 通过Service调用
+//        Page<Map<String, Object>> result = dzdService.daochuexcel(page, queryWrapper);
+//
+//        logDetailedResult(result);
+//        return Result.success(result);
+//    }
+@PostMapping("/daochuexcel")
+public Result<Page<Map<String, Object>>> daochu(HttpSession session, @RequestBody PageRequest pageRequest) {
 
-        if (pageRequest != null) {
-            // 转换空字符串为null
-            if (pageRequest.getStartDate() != null && pageRequest.getStartDate().trim().isEmpty()) {
-                pageRequest.setStartDate(null);
-            }
-            if (pageRequest.getEndDate() != null && pageRequest.getEndDate().trim().isEmpty()) {
-                pageRequest.setEndDate(null);
-            }
-
-            if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
-                pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
-            }
-            if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
-                pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
-            }
+    if (pageRequest != null) {
+        // 转换空字符串为null
+        if (pageRequest.getStartDate() != null && pageRequest.getStartDate().trim().isEmpty()) {
+            pageRequest.setStartDate(null);
+        }
+        if (pageRequest.getEndDate() != null && pageRequest.getEndDate().trim().isEmpty()) {
+            pageRequest.setEndDate(null);
         }
 
-        // 创建分页对象
-        Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
-
-        // 构建查询条件
-        QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
-
-        // 添加查询条件
-        if (StringUtils.isNotBlank(pageRequest.getDdh())) {
-            queryWrapper.like("ddh", pageRequest.getDdh());
+        if (StringUtils.isNotBlank(pageRequest.getStartDate())) {
+            pageRequest.setStartDate(formatAndNormalizeDate(pageRequest.getStartDate()));
         }
-        if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
-            queryWrapper.like("khmc", pageRequest.getKhmc());
+        if (StringUtils.isNotBlank(pageRequest.getEndDate())) {
+            pageRequest.setEndDate(formatAndNormalizeDate(pageRequest.getEndDate()));
         }
-        if (StringUtils.isNotBlank(pageRequest.getFzr())) {
-            queryWrapper.eq("fzr", pageRequest.getFzr());
-        }
-        if (StringUtils.isNotBlank(pageRequest.getBm())) {
-            queryWrapper.eq("bm", pageRequest.getBm());
-        }
-        if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
-            queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+    }
+
+    // 创建分页对象
+    Page<Map<String, Object>> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+
+    // 构建查询条件 - 将queryWrapper的定义移到最外层
+    QueryWrapper<Map<String, Object>> queryWrapper = new QueryWrapper<>();
+
+    // 添加查询条件
+    if (StringUtils.isNotBlank(pageRequest.getDdh())) {
+        queryWrapper.like("ddh", pageRequest.getDdh());
+    }
+    if (StringUtils.isNotBlank(pageRequest.getKhmc())) {
+        queryWrapper.like("khmc", pageRequest.getKhmc());
+    }
+    if (StringUtils.isNotBlank(pageRequest.getFzr())) {
+        queryWrapper.like("fzr", pageRequest.getFzr());
+    }
+    if (StringUtils.isNotBlank(pageRequest.getBm())) {
+        queryWrapper.eq("bm", pageRequest.getBm());
+    }
+
+    // === 新增：开票状态过滤 ===
+    if (StringUtils.isNotBlank(pageRequest.getSfkp())) {
+        // 支持多种状态：如只导出"未开票"
+        queryWrapper.eq("sfkp", pageRequest.getSfkp());
+    } else {
+        // 如果没有指定开票状态，默认只导出未开票数据
+        queryWrapper.eq("sfkp", "未开票");
+    }
+    // === 结束新增 ===
+
+    if (pageRequest.getStartDate() != null && pageRequest.getEndDate() != null) {
+        queryWrapper.between("ddrq", pageRequest.getStartDate(), pageRequest.getEndDate());
+    }
+
+    Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+    if (!authResult3.isSuccess()) {
+        return Result.error("权限不足");
+    }
+
+    Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+    if (!authResult.isSuccess()) {
+        String fuzeren = (String) session.getAttribute("D");
+        if (fuzeren == null || fuzeren.trim().isEmpty()) {
+            return Result.error("未获取身份信息，请重新登录");
         }
 
-        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
-        if (!authResult3.isSuccess()) {
-                return Result.error("权限不足");
-        }
+        // 使用已经定义的queryWrapper变量
+        Page<Map<String, Object>> result = dzdService.daochuexcely(page, queryWrapper, fuzeren);
 
-        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
-        if (!authResult.isSuccess()) {
-            String fuzeren = (String) session.getAttribute("D");
-            if (fuzeren == null || fuzeren.trim().isEmpty()) {
-                return Result.error("为获取身份信息，请重新登录");
-            }
-
-            Page<Map<String, Object>> result = dzdService.daochuexcely(page, queryWrapper,fuzeren);
-
-            return Result.success(result);
-        }
-
-        // 执行查询 - 通过Service调用
-        Page<Map<String, Object>> result = dzdService.daochuexcel(page, queryWrapper);
-
-        logDetailedResult(result);
         return Result.success(result);
     }
 
+    // 执行查询 - 通过Service调用
+    Page<Map<String, Object>> result = dzdService.daochuexcel(page, queryWrapper);
+
+    logDetailedResult(result);
+    return Result.success(result);
+}
 
     private String formatAndNormalizeDate(String dateStr) {
         if (StringUtils.isBlank(dateStr)) {

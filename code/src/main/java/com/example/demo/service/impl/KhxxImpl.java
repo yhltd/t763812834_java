@@ -169,4 +169,15 @@ public class KhxxImpl extends ServiceImpl<KhxxMapper, Khxx> implements KhxxServi
         }
     }
 
+    @Override
+    public List<Map<String, Object>> getKeHuXX() {
+        try {
+            return baseMapper.getKeHuXX();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Service层查询异常: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
 }

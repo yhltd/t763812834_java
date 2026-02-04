@@ -73,7 +73,7 @@ public class DzdjlController {
             queryWrapper.like("khmc", pageRequest.getKhmc());
         }
         if (StringUtils.isNotBlank(pageRequest.getFzr())) {
-            queryWrapper.eq("fzr", pageRequest.getFzr());
+            queryWrapper.like("fzr", pageRequest.getFzr());
         }
         if (StringUtils.isNotBlank(pageRequest.getBm())) {
             queryWrapper.eq("bm", pageRequest.getBm());
@@ -105,7 +105,26 @@ public class DzdjlController {
         logDetailedResult(result);
         return Result.success(result);
     }
+    //------------新0128获取期初金额的接口
+    @PostMapping("/getOpeningAmount")
+    public Result<Double> getOpeningAmount(@RequestBody Map<String, Object> params) {
+        try {
+            String khmc = (String) params.get("khmc");
 
+            if (StringUtils.isBlank(khmc)) {
+                return Result.error("客户名称不能为空");
+            }
+
+            // 查询该客户所有已开票但未支付的对账单的未付金额总和
+            Double openingAmount = dzdService.getOpeningAmountByKhmc(khmc);
+
+            return Result.success(openingAmount);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取期初金额失败: " + e.getMessage());
+        }
+    }
+    //----------------------0128
     @PostMapping("/daochuexcel")
     public Result<Page<Map<String, Object>>> daochu(HttpSession session,@RequestBody PageRequest pageRequest) {
 
@@ -140,7 +159,7 @@ public class DzdjlController {
             queryWrapper.like("khmc", pageRequest.getKhmc());
         }
         if (StringUtils.isNotBlank(pageRequest.getFzr())) {
-            queryWrapper.eq("fzr", pageRequest.getFzr());
+            queryWrapper.like("fzr", pageRequest.getFzr());
         }
         if (StringUtils.isNotBlank(pageRequest.getDuizhangdanhao())) {
             queryWrapper.eq("duizhangdanhao", pageRequest.getDuizhangdanhao());

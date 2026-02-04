@@ -201,6 +201,63 @@ public class DzdjlImpl extends ServiceImpl<DzdjlMapper, Dzd> implements DzdjlSer
 
         return baseMapper.update(updateEntity, queryWrapper);
     }
+    // ==================== 新增：获取期初金额方法 ====================
+    @Override
+    public Double getOpeningAmountByKhmc(String khmc) {
+        try {
+            if (khmc == null || khmc.trim().isEmpty()) {
+                System.out.println("客户名称为空，返回默认期初金额0.0");
+                return 0.0;
+            }
 
+            // 查询该客户所有已开票但未完全支付的对账单
+            QueryWrapper<Dzd> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("khmc", khmc.trim())  // 客户名称，去掉空格
+                    .eq("sfkp", "已开票")      // 已开票状态
+                    .gt("wf", 0);             // 未付金额大于0（表示还有未支付的金额）
+
+            List<Dzd> records = this.list(queryWrapper);
+
+            if (records == null || records.isEmpty()) {
+                System.out.println("客户[" + khmc + "]没有已开票未付的记录，期初金额为0.0");
+                return 0.0;
+            }
+
+            Double totalOpeningAmount = 0.0;
+            for (Dzd record : records) {
+                // 累加每个对账单的未付金额
+                if (record.getWf() != null) {
+                    try {
+                        // 将未付金额转换为Double
+                        String wfStr = record.getWf().toString().trim();
+                        if (!wfStr.isEmpty()) {
+                            Double wfValue = Double.parseDouble(wfStr);
+                            totalOpeningAmount += wfValue;
+                            System.out.println("累加记录ID[" + record.getId() + "]的未付金额: " + wfValue);
+                        }
+                    } catch (NumberFormatException e) {
+                        // 如果格式错误，忽略该记录
+                        System.err.println("未付金额格式错误，记录ID: " + record.getId() +
+                                ", 未付金额: " + record.getWf() +
+                                ", 错误: " + e.getMessage());
+                    }
+                }
+            }
+
+            // 保留两位小数
+            totalOpeningAmount = Math.round(totalOpeningAmount * 100.0) / 100.0;
+
+            System.out.println("客户[" + khmc + "]的期初金额（已开票未付）总计: " + totalOpeningAmount);
+            System.out.println("涉及记录数: " + records.size());
+
+            return totalOpeningAmount;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("获取期初金额失败，客户: " + khmc + ", 错误: " + e.getMessage());
+            return 0.0;
+        }
+    }
+    // ==================== 新增方法结束 ====================
 }
 

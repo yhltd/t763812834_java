@@ -54,5 +54,10 @@ public interface DzdjlService extends IService<Dzd> {
     boolean updatePdfFileNameByDdh(String duizhangdanhao, String dzscwj);
 
     int updateByDdh(Map<String, Object> updateParams);
-
+    /**
+     * 新增：获取客户的期初金额（已开票未付金额）
+     * @param khmc 客户名称
+     * @return 期初金额
+     */
+    Double getOpeningAmountByKhmc(String khmc);
 }

@@ -1697,8 +1697,12 @@
         <div class="summary">
             <table class="summary-table">
                 <tr>
-                    <td>总计:</td>
-                    <td id="previewTotal">0.00 元</td>
+                    <td>本页合计:</td>
+                    <td id="previewPageTotal">0.00 元</td>
+                </tr>
+                <tr>
+                    <td>全部合计:</td>
+                    <td id="previewAllTotal">0.00 元</td>
                 </tr>
             </table>
         </div>
@@ -2115,7 +2119,8 @@
             });
 
             // 更新总计
-            document.getElementById('previewTotal').textContent = total.toFixed(2) + ' 元';
+            document.getElementById('previewPageTotal').textContent = total.toFixed(2) + ' 元';
+            document.getElementById('previewAllTotal').textContent = total.toFixed(2) + ' 元';
 
             // 计算并更新页码信息
             updatePageInfo();
@@ -2396,7 +2401,8 @@
             });
 
             // 更新总计
-            document.getElementById('previewTotal').textContent = total.toFixed(2) + ' 元';
+            document.getElementById('previewPageTotal').textContent = total.toFixed(2) + ' 元';
+            document.getElementById('previewAllTotal').textContent = total.toFixed(2) + ' 元';
 
             // 计算并更新页码信息
             updatePageInfo();
@@ -2556,8 +2562,7 @@
 
             // 构建完整的HTML - 所有页面都有完整内容
             pageContainer.innerHTML = `
-    <div class="print-page-content">
-        <!-- 页头 -->
+     <div class="print-page-content">
         <div class="print-page-header">
             <div class="company-logo">
                 <img src="../img/khlogo.png" alt="公司logo">
@@ -2611,8 +2616,12 @@
         <div class="print-page-summary">
             <table class="print-summary-table">
                 <tr>
-                    <td>总计:</td>
+                    <td>本页合计:</td>
                     <td>${page.pageTotal || 0} 元</td>
+                </tr>
+                <tr>
+                    <td>全部合计:</td>
+                    <td>${page.allTotalAmount || page.contractData?.totalAmount || 0} 元</td>
                 </tr>
             </table>
         </div>
@@ -2637,7 +2646,6 @@
             <p style="font-size: 14px;"><strong>六、</strong>本合同一式二份，双方各执一份，未尽事宜双方友好协商。如发生争议，双方协商解决，若协商不成，由甲方注册地法院解决争议。</p>
         </div>
 
-        <!-- 签名区域 -->
         <div class="print-signature-area">
             <!-- 供货方签名 -->
             <div class="print-supplier-signature" style="position: relative;">
@@ -3193,11 +3201,13 @@
             const itemsPerPage = 10; // 固定每页10行
             const totalItems = contractData.items.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+            const allTotalAmount = contractData.totalAmount;
 
             console.log('分页参数:', {
                 itemsPerPage: itemsPerPage,
                 totalItems: totalItems,
-                totalPages: totalPages
+                totalPages: totalPages,
+                allTotalAmount: allTotalAmount
             });
 
             // 生成每一页
@@ -3242,6 +3252,7 @@
                     totalPages: totalPages,
                     items: displayItems, // 总是10行
                     pageTotal: pageTotal.toFixed(2),
+                    allTotalAmount: allTotalAmount,
                     contractData: contractData,
                     isFirstPage: isFirstPage,
                     showTerms: isFirstPage || (totalPages === 1) // 只有第一页或单页显示条款
@@ -5073,7 +5084,7 @@
         const phoneTd = document.querySelector('.footer-right .signature-table tr:nth-child(6) td:last-child');
         return phoneTd ? phoneTd.textContent.trim() : '';
     }
-
+//--------------------------------开始替换分隔符--------------------------------------
     // 获取所有产品名称（逗号分隔）
     function getProductNames() {
         const productNames = [];
@@ -5082,7 +5093,7 @@
             // 如果没有值，用空格占位
             productNames.push(value || '');
         });
-        return productNames.join(',');
+        return productNames.join('|||');
     }
 
         // 获取所有货期（用空格占位）
@@ -5092,7 +5103,7 @@
                 const value = input.value ? input.value.trim() : '';
                 HuoQiNames.push(value || '');
             });
-            return HuoQiNames.join(',');
+            return HuoQiNames.join('|||');
         }
 
         // 获取收货地址
@@ -5129,7 +5140,7 @@
             const value = input.value ? input.value.trim() : '';
             productModels.push(value || '');
         });
-        return productModels.join(',');
+        return productModels.join('|||');
     }
 
     // 获取所有订购数量（逗号分隔）
@@ -5140,7 +5151,7 @@
                 quantities.push(input.value.trim());
             }
         });
-        return quantities.join(',');
+        return quantities.join('|||');
     }
 
     // 获取所有含税单价（逗号分隔）
@@ -5151,7 +5162,7 @@
                 prices.push(input.value.trim());
             }
         });
-        return prices.join(',');
+        return prices.join('|||');
     }
 
     // 计算合计总金额
@@ -5172,7 +5183,7 @@
             const value = input.value ? input.value.trim() : '';
             remarks.push(value || '');
         });
-        return remarks.join(',');
+        return remarks.join('|||');
     }
 
     // 验证保存数据
@@ -5461,12 +5472,12 @@
             itemsContainer.innerHTML = '';
 
             // 解析产品数据
-            const productNames = data.pp ? data.pp.split(',') : [];
-            const productModels = data.cpxh ? data.cpxh.split(',') : [];
-            const quantities = data.sl ? data.sl.split(',') : [];
-            const prices = data.dj ? data.dj.split(',') : [];
-            const remarks = data.bz ? data.bz.split(',') : [];
-            const huoqi = data.hq ? data.hq.split(',') : [];
+            const productNames = data.pp ? data.pp.split('|||') : [];
+            const productModels = data.cpxh ? data.cpxh.split('|||') : [];
+            const quantities = data.sl ? data.sl.split('|||') : [];
+            const prices = data.dj ? data.dj.split('|||') : [];
+            const remarks = data.bz ? data.bz.split('|||') : [];
+            const huoqi = data.hq ? data.hq.split('|||') : [];
 
             // 创建产品行
             const maxLength = Math.max(
@@ -5879,12 +5890,12 @@
         itemsContainer.innerHTML = '';
 
         // 解析产品数据
-        const productNames = data.pp ? data.pp.split(',') : [];
-        const productModels = data.cpxh ? data.cpxh.split(',') : [];
-        const quantities = data.sl ? data.sl.split(',') : [];
-        const prices = data.dj ? data.dj.split(',') : [];
-        const remarks = data.bz ? data.bz.split(',') : [];
-        const huoqi = data.hq ? data.hq.split(',') : [];
+        const productNames = data.pp ? data.pp.split('|||') : [];
+        const productModels = data.cpxh ? data.cpxh.split('|||') : [];
+        const quantities = data.sl ? data.sl.split('|||') : [];
+        const prices = data.dj ? data.dj.split('|||') : [];
+        const remarks = data.bz ? data.bz.split('|||') : [];
+        const huoqi = data.hq ? data.hq.split('|||') : [];
 
         // 添加产品行
         const maxLength = Math.max(

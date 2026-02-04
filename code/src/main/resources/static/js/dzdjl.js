@@ -8,6 +8,11 @@ var currentId = '';
 // 清空选择状态
 var selectedDdhs = []; // 存储选择的订单号
 var selectedRows = [];
+var supplierInfo = {}; // 存储供货方信息
+
+// 在全局变量部分添加客户信息存储
+var customerInvoiceInfoList = []; // 存储客户开票信息列表
+var customerInvoiceInfoMap = {}; // 以khmc为key的客户开票信息映射
 
 
 // 新增：存储客户要求数据
@@ -42,7 +47,9 @@ $(document).ready(function() {
     initDetailModalEvents();
 
     // 首先获取客户要求数据
+    getghf();
     yaoqiu();
+    KeHuXX();
 
     // 设置定时检查，确保客户要求数据加载完成
     setTimeout(function() {
@@ -53,9 +60,14 @@ $(document).ready(function() {
     }, 1000);
 
     // 添加导出按钮
+    // $('#export-btn').off('click').on('click', function() {
+    //     showExportModal();
+    // });
+
     $('#export-btn').off('click').on('click', function() {
-        showExportModal();
+        generateInvoiceExcel();
     });
+
 
     // 初始化导出配置
     initExportConfig();
@@ -207,10 +219,55 @@ function initToolbarEvents() {
         // 调用撤回对账功能
         withdrawDzd(selectedRow);
     });
+    //-----------新0128
+    $('#export-dzd-excel-btn').off('click').on('click', function() {
+        console.log('导出对账单（EXCEL格式）按钮点击');
 
+        var selectedRow = getSelectedRow();
+        if (!selectedRow) {
+            swal('请选择一条订单记录进行导出');
+            return;
+        }
+
+        // 检查是否只选择了一条记录
+        if (selectedDdhs.length !== 1) {
+            swal('请只选择一条订单记录进行导出');
+            return;
+        }
+//-----------
+        // 调用导出对账单函数
+        exportDzdToExcel(selectedRow);
+    });
     // 导出按钮已经在ready函数中绑定
 }
 
+// function printDzd(rowData) {
+//     if (!rowData || !rowData.ddh) {
+//         swal('无法获取订单信息');
+//         return;
+//     }
+//
+//     // 首先更新对账状态为当前时间
+//     updateDzztStatus(rowData.ddh, getCurrentDate(), function(success) {
+//         if (success) {
+//             // 更新成功后获取详细信息并打印
+//             getDetailDataForPrint(rowData.ddh, function(detailData) {
+//                 if (detailData && detailData.length > 0) {
+//                     // 确保有联系人信息，如果没有则从详情数据中获取
+//                     if (!rowData.lxr && detailData[0]) {
+//                         rowData.lxr = detailData[0].lxr || '';
+//                     }
+//                     generatePrintContent(rowData, detailData);
+//                     // 注意：这里不需要再调用刷新，因为updateDzztStatus中已经调用了
+//                 } else {
+//                     swal('无法获取订单详细信息');
+//                 }
+//             });
+//         } else {
+//             swal('更新对账状态失败，无法打印');
+//         }
+//     });
+// }
 function printDzd(rowData) {
     if (!rowData || !rowData.ddh) {
         swal('无法获取订单信息');
@@ -221,7 +278,8 @@ function printDzd(rowData) {
     updateDzztStatus(rowData.ddh, getCurrentDate(), function(success) {
         if (success) {
             // 更新成功后获取详细信息并打印
-            getDetailDataForPrint(rowData.ddh, function(detailData) {
+            // 注意：这里传递的参数应该是 duizhangdanhao 而不是 ddh
+            getDetailDataForPrint(rowData.duizhangdanhao || rowData.ddh, function(detailData) {
                 if (detailData && detailData.length > 0) {
                     // 确保有联系人信息，如果没有则从详情数据中获取
                     if (!rowData.lxr && detailData[0]) {
@@ -238,7 +296,6 @@ function printDzd(rowData) {
         }
     });
 }
-
 // 撤回对账功能
 function withdrawDzd(rowData) {
     if (!rowData || !rowData.duizhangdanhao) {
@@ -523,25 +580,56 @@ function calculateTotal(detailData) {
 }
 
 // 获取详细信息用于打印
+// function getDetailDataForPrint(ddh, callback) {
+//     $ajax({
+//         type: 'post',
+//         url: '/dzdjl/getDetailByDdh',
+//         contentType: 'application/json',
+//         data: JSON.stringify({ duizhangdanhao: duizhangdanhao }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         if (res.code === 200) {
+//             callback(res.data);
+//         } else if(res.code == 403){
+//             swal("权限不足，无法访问此功能！")
+//         }else {
+//             console.error("获取详情失败:", res.message);
+//             callback(null);
+//         }
+//     });
+// }
 function getDetailDataForPrint(ddh, callback) {
+    // 使用局部变量，避免参数名问题
+    var duizhangdanhao = ddh;
+
+    console.log('getDetailDataForPrint 调用，参数:', duizhangdanhao);
+
+    if (!duizhangdanhao) {
+        console.log('对账单号为空');
+        callback([]);
+        return;
+    }
+
     $ajax({
         type: 'post',
         url: '/dzdjl/getDetailByDdh',
         contentType: 'application/json',
-        data: JSON.stringify({ ddh: ddh }),
+        data: JSON.stringify({
+            duizhangdanhao: duizhangdanhao
+        }),
         dataType: 'json'
     }, false, '', function (res) {
         if (res.code === 200) {
             callback(res.data);
         } else if(res.code == 403){
-            swal("权限不足，无法访问此功能！")
-        }else {
+            swal("权限不足，无法访问此功能！");
+            callback([]);
+        } else {
             console.error("获取详情失败:", res.message);
-            callback(null);
+            callback([]);
         }
     });
 }
-
 function resetSearchAndRefresh() {
     // 重置搜索条件
     $('#ddh').val('');
@@ -1467,7 +1555,34 @@ function getSelectedRow() {
     return rowData;
 }
 
-// 添加行点击事件
+// // 添加行点击事件
+// function addRowClickEvent() {
+//     $('#ddmxTable tbody tr').off('click').on('click', function(e) {
+//         // 如果点击的是复选框、按钮或按钮内的元素，不执行行选中逻辑
+//         if ($(e.target).is('input[type="checkbox"]') ||
+//             $(e.target).closest('input[type="checkbox"]').length ||
+//             $(e.target).is('.file-action-btn, .detail-btn, .view-scan-btn') ||
+//             $(e.target).closest('.file-action-btn, .detail-btn, .view-scan-btn').length) {
+//             return;
+//         }
+//
+//         var $row = $(this);
+//         var $checkbox = $row.find('.row-checkbox');
+//         var isChecked = !$checkbox.prop('checked');
+//
+//         // 先清除其他行的选中状态
+//         $('#ddmxTable tbody tr').removeClass('selected-row');
+//
+//         // 添加当前行的选中状态
+//         $row.addClass('selected-row');
+//
+//         // 切换复选框状态
+//         $checkbox.prop('checked', isChecked).trigger('change');
+//
+//         console.log('行被点击，添加 selected-row 类，对账单号:', $row.find('td:eq(3)').text().trim());
+//     });
+// }
+//新--0128
 function addRowClickEvent() {
     $('#ddmxTable tbody tr').off('click').on('click', function(e) {
         // 如果点击的是复选框、按钮或按钮内的元素，不执行行选中逻辑
@@ -1479,22 +1594,44 @@ function addRowClickEvent() {
         }
 
         var $row = $(this);
-        var $checkbox = $row.find('.row-checkbox');
-        var isChecked = !$checkbox.prop('checked');
+        var $checkbox = $row.find('input[type="checkbox"]');
+        var ddh = $row.find('td:eq(3)').text().trim(); // 获取对账单号
 
-        // 先清除其他行的选中状态
-        $('#ddmxTable tbody tr').removeClass('selected-row');
+        console.log('行点击事件，对账单号:', ddh);
 
-        // 添加当前行的选中状态
-        $row.addClass('selected-row');
+        // 切换当前行的选中状态
+        var isChecked = $checkbox.prop('checked');
 
-        // 切换复选框状态
-        $checkbox.prop('checked', isChecked).trigger('change');
+        if (isChecked) {
+            // 如果已经选中，则取消选中
+            $row.removeClass('selected-row');
+            $checkbox.prop('checked', false);
 
-        console.log('行被点击，添加 selected-row 类，对账单号:', $row.find('td:eq(3)').text().trim());
+            // 从数组中移除
+            var index = selectedDdhs.indexOf(ddh);
+            if (index > -1) {
+                selectedDdhs.splice(index, 1);
+            }
+        } else {
+            // 如果未选中，则选中
+            $row.addClass('selected-row');
+            $checkbox.prop('checked', true);
+
+            // 添加到数组（如果不在数组中）
+            if (selectedDdhs.indexOf(ddh) === -1) {
+                selectedDdhs.push(ddh);
+            }
+        }
+
+        // 更新全选复选框状态
+        updateSelectAllCheckboxState();
+
+        // 更新按钮状态（根据你的业务逻辑）
+        updateInvoiceButtonState();
+
+        console.log('行被点击，当前选中:', selectedDdhs);
     });
 }
-
 // 更新分页控件
 function updatePagination() {
     $('#paginationContainer').remove();
@@ -2600,7 +2737,324 @@ function exportToExcel(fileName) {
         }
     });
 }
+// 新增：导出对账单到Excel（按对账单模板格式）- 销售对账记录版本 0128
+// function exportDzdToExcel(rowData) {
+//     if (!rowData || !rowData.duizhangdanhao) {
+//         swal('无法获取要导出的对账单信息');
+//         return;
+//     }
+//
+//     // 获取详细信息
+//     getDetailDataForPrint(rowData.duizhangdanhao, function(detailData) {
+//         if (!detailData || detailData.length === 0) {
+//             swal('无法获取订单详细信息');
+//             return;
+//         }
+//
+//         try {
+//             // 计算期初金额（系统中已开票未付金额）
+//             // 注意：这里的期初金额是系统中的"已开票未付金额"
+//             // 根据您的需求，期初金额应该是系统中该客户的已开票但未支付的金额
+//             var openingAmount = parseFloat(rowData.wf) || 0; // 使用未付金额作为期初金额
+//
+//             var currentDate = new Date();
+//             var currentMonth = currentDate.getMonth() + 1;
+//             var currentYear = currentDate.getFullYear();
+//             var currentDay = String(currentDate.getDate()).padStart(2, '0');
+//
+//             // 计算本期金额（明细中的总价汇总）
+//             var currentPeriodAmount = calculateTotal(detailData);
+//
+//             // 计算欠款总额 = 期初金额 + 本期金额
+//             var totalDebt = (parseFloat(openingAmount) + parseFloat(currentPeriodAmount)).toFixed(2);
+//
+//             // 准备Excel数据（按照对账单模板格式）
+//             var excelData = [
+//                 // 第1行：标题
+//                 ['昆山翰元星传动科技有限公司' + currentMonth + '月对账单'],
+//                 // 第2行：空行
+//                 ['', '', '', '', '', '', '', '', ''],
+//                 // 第3行：客户名称（A列标签，B列值）
+//                 ['客户名称：', rowData.khmc || '', '', '', '', '', '', '', ''],
+//                 // 第4行：联系人（A列标签，B列值）
+//                 ['联系人：', rowData.lxr || '', '', '', '', '', '', '', ''],
+//                 // 第5行：期初金额（系统中已开票未付金额）
+//                 ['期初金额：', '¥' + openingAmount.toFixed(2), '', '', '', '', '', '', ''],
+//                 // 第6行：空行
+//                 ['', '', '', '', '', '', '', '', ''],
+//                 // 第7行：表头（A-I列）
+//                 ['序号', '产品名称', '规格型号', '单位', '单价', '数量', '总价', '发货时间', '订单号']
+//             ];
+//
+//             // 添加明细数据（从第8行开始）
+//             detailData.forEach(function(item, index) {
+//                 // 注意：detailData中可能包含多个订单号的记录，我们只显示当前订单号的记录
+//                 if (item.ddh && item.ddh === rowData.ddh) {
+//                     excelData.push([
+//                         index + 1,
+//                         item.pm || '',
+//                         item.ggxh || '',
+//                         item.dw || '',
+//                         item.dj || '',
+//                         item.sl || '',
+//                         parseFloat(item.zj || 0).toFixed(2),
+//                         item.fhsj || '',
+//                         item.ddh || ''
+//                     ]);
+//                 } else {
+//                     // 如果detailData中的ddh与当前对账单号不匹配，使用对账单号
+//                     excelData.push([
+//                         index + 1,
+//                         item.pm || '',
+//                         item.ggxh || '',
+//                         item.dw || '',
+//                         item.dj || '',
+//                         item.sl || '',
+//                         parseFloat(item.zj || 0).toFixed(2),
+//                         item.fhsj || '',
+//                         rowData.duizhangdanhao || ''
+//                     ]);
+//                 }
+//             });
+//
+//             // 明细数据后的空行
+//             excelData.push(['', '', '', '', '', '', '', '', '']);
+//
+//             // 本期金额行
+//             excelData.push(['本期金额：', '¥' + currentPeriodAmount, '', '', '', '', '', '', '']);
+//
+//             // 欠款总额行
+//             excelData.push(['欠款总额：', '¥' + totalDebt, '', '', '', '', '', '', '']);
+//
+//             // 空行（两行）
+//             excelData.push(['', '', '', '', '', '', '', '', '']);
+//             excelData.push(['', '', '', '', '', '', '', '', '']);
+//
+//             // 签字盖章行
+//             excelData.push(['贵公司确认（签字、盖章）：', '昆山翰元星传动科技有限公司', '', '', '', '', '', '', '']);
+//
+//             // 日期行
+//             excelData.push(['日期：', '日期：' + currentYear + '/' + currentMonth + '/' + currentDay, '', '', '', '', '', '', '']);
+//
+//             // 生成文件名
+//             var fileName = '对账单_' + (rowData.khmc || '客户') +
+//                 '_' + (rowData.duizhangdanhao || '对账单号') +
+//                 '_' + currentYear +
+//                 String(currentMonth).padStart(2, '0') +
+//                 currentDay + '.xlsx';
+//
+//             // 创建并导出Excel
+//             createDzdExcelWithTemplate(excelData, fileName, detailData.length);
+//
+//         } catch (error) {
+//             console.error('导出对账单失败:', error);
+//             swal('导出失败', '生成对账单Excel文件时发生错误：' + error.message, 'error');
+//         }
+//     });
+// }
+// 新增：导出对账单到Excel（按对账单模板格式）- 修正版
+function exportDzdToExcel(rowData) {
+    if (!rowData || !rowData.duizhangdanhao) {
+        swal('无法获取要导出的对账单信息');
+        return;
+    }
 
+    // 显示导出进度
+    swal({
+        title: '正在导出...',
+        text: '正在获取详情数据并生成对账单Excel...',
+        icon: 'info',
+        buttons: false,
+        closeOnClickOutside: false,
+        closeOnEsc: false
+    });
+
+    // 获取详细信息
+    getDetailDataForPrint(rowData.duizhangdanhao, function(detailData) {
+        swal.close();
+
+        if (!detailData || detailData.length === 0) {
+            swal('无法获取订单详细信息');
+            return;
+        }
+
+        try {
+            // 计算期初金额
+            var openingAmount = parseFloat(rowData.wf) || 0;
+
+            var currentDate = new Date();
+            var currentMonth = currentDate.getMonth() + 1;
+            var currentYear = currentDate.getFullYear();
+            var currentDay = String(currentDate.getDate()).padStart(2, '0');
+
+            // 计算本期金额（明细中的总价汇总）
+            var currentPeriodAmount = calculateTotal(detailData);
+
+            // 计算欠款总额 = 期初金额 + 本期金额
+            var totalDebt = (parseFloat(openingAmount) + parseFloat(currentPeriodAmount)).toFixed(2);
+
+            // 准备Excel数据（按照对账单模板格式）
+            var excelData = [
+                // 第1行：标题
+                ['昆山翰元星传动科技有限公司' + currentMonth + '月对账单'],
+                // 第2行：空行
+                ['', '', '', '', '', '', '', '', ''],
+                // 第3行：客户名称（A列标签，B列值）
+                ['客户名称：', rowData.khmc || '', '', '', '', '', '', '', ''],
+                // 第4行：联系人（A列标签，B列值）
+                ['联系人：', rowData.lxr || '', '', '', '', '', '', '', ''],
+                // 第5行：期初金额（系统中已开票未付金额）
+                ['期初金额：', '¥' + openingAmount.toFixed(2), '', '', '', '', '', '', ''],
+                // 第6行：空行
+                ['', '', '', '', '', '', '', '', ''],
+                // 第7行：表头（A-I列）
+                ['序号', '产品名称', '规格型号', '单位', '单价', '数量', '总价', '发货时间', '订单号']
+            ];
+
+            // 调试信息
+            console.log('=== 对账单导出调试信息 ===');
+            console.log('主表订单号 (rowData.ddh):', rowData.ddh);
+            console.log('详情数据条数:', detailData.length);
+
+            // 添加明细数据（从第8行开始）
+            detailData.forEach(function(item, index) {
+                console.log(`详情数据第${index+1}条:`, {
+                    '详情表订单号 (detail.ddh)': item.ddh,
+                    '品名': item.pm,
+                    '规格型号': item.ggxh,
+                    '单价': item.dj,
+                    '数量': item.sl,
+                    '总价': item.zj
+                });
+
+                // 关键修复：使用详情表中的订单号
+                var detailDdh = item.ddh || '';
+
+                excelData.push([
+                    index + 1,
+                    item.pm || '',
+                    item.ggxh || '',
+                    item.dw || '',
+                    item.dj || '',
+                    item.sl || '',
+                    parseFloat(item.zj || 0).toFixed(2),
+                    item.fhsj || '',
+                    detailDdh  // 使用详情表中的订单号
+                ]);
+            });
+
+            // 明细数据后的空行
+            excelData.push(['', '', '', '', '', '', '', '', '']);
+
+            // 本期金额行
+            excelData.push(['本期金额：', '¥' + currentPeriodAmount, '', '', '', '', '', '', '']);
+
+            // 欠款总额行
+            excelData.push(['欠款总额：', '¥' + totalDebt, '', '', '', '', '', '', '']);
+
+            // 空行（两行）
+            excelData.push(['', '', '', '', '', '', '', '', '']);
+            excelData.push(['', '', '', '', '', '', '', '', '']);
+
+            // 签字盖章行
+            excelData.push(['贵公司确认（签字、盖章）：', '昆山翰元星传动科技有限公司', '', '', '', '', '', '', '']);
+
+            // 日期行
+            excelData.push(['日期：', currentYear + '/' + currentMonth + '/' + currentDay, '', '', '', '', '', '', '']);
+
+            // 生成文件名
+            var fileName = '对账单_' + (rowData.khmc || '客户') +
+                '_' + (rowData.duizhangdanhao || '对账单号') +
+                '_' + currentYear +
+                String(currentMonth).padStart(2, '0') +
+                currentDay + '.xlsx';
+
+            console.log('最终导出的Excel数据:', excelData);
+
+            // 创建并导出Excel
+            createDzdExcelWithTemplate(excelData, fileName, detailData.length);
+
+        } catch (error) {
+            console.error('导出对账单失败:', error);
+            swal('导出失败', '生成对账单Excel文件时发生错误：' + error.message, 'error');
+        }
+    });
+}
+// 新增：创建对账单Excel模板
+function createDzdExcelWithTemplate(data, fileName, detailRowsCount) {
+    try {
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 设置列宽（按照对账单模板格式）
+        ws['!cols'] = [
+            { wch: 10 },   // A列：序号
+            { wch: 20 },   // B列：产品名称
+            { wch: 25 },   // C列：规格型号
+            { wch: 8 },    // D列：单位
+            { wch: 10 },   // E列：单价
+            { wch: 8 },    // F列：数量
+            { wch: 12 },   // G列：总价
+            { wch: 15 },   // H列：发货时间
+            { wch: 20 }    // I列：订单号
+        ];
+
+        // 设置行高：第一行40，其他行20
+        var rowHeights = [];
+        for (var i = 0; i < data.length; i++) {
+            if (i === 0) {
+                rowHeights[i] = { hpx: 40 };  // 标题行高40
+            } else {
+                rowHeights[i] = { hpx: 20 };  // 其他行高20
+            }
+        }
+        ws['!rows'] = rowHeights;
+
+        // 设置单元格合并
+        ws['!merges'] = [
+            // 标题行合并（A1:I1）
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, '对账单');
+        XLSX.writeFile(wb, fileName);
+
+        swal('导出成功', '对账单Excel文件已生成并开始下载', 'success');
+
+    } catch (error) {
+        console.error('Excel创建失败:', error);
+        swal('导出失败', error.message, 'error');
+    }
+}
+
+// 新增：从服务器获取期初金额（已开票未付金额）
+function getOpeningAmount(khmc, callback) {
+    if (!khmc) {
+        callback(0);
+        return;
+    }
+
+    // 调用后端接口获取该客户的已开票未付金额
+    $ajax({
+        type: 'post',
+        url: '/dzdjl/getOpeningAmount',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            khmc: khmc
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            var openingAmount = parseFloat(res.data) || 0;
+            console.log('获取到期初金额（已开票未付）:', openingAmount, '客户:', khmc);
+            callback(openingAmount);
+        } else {
+            console.error('获取期初金额失败:', res.message);
+            callback(0); // 如果失败，默认返回0
+        }
+    });
+}
+//------------------------------------0128
 // 处理导出数据
 function processExportData(apiData, selectedColumns, columnMapping, fileName) {
     try {
@@ -2900,15 +3354,49 @@ function bindCheckboxEvents() {
         console.log('全选操作，当前选中订单号:', selectedDdhs);
     });
 
-    // 单个复选框选择
+    // // 单个复选框选择
+    // $('.row-checkbox').off('change').on('change', function(e) {
+    //     e.stopPropagation(); // 阻止事件冒泡
+    //
+    //     var $checkbox = $(this);
+    //     var isChecked = $checkbox.prop('checked');
+    //     var ddh = $checkbox.data('ddh'); // 改为获取订单号
+    //     var $row = $checkbox.closest('tr');
+    //     var rowData = getRowData($row);
+    //
+    //     console.log('复选框选择 - 订单号:', ddh, '状态:', isChecked);
+    //
+    //     if (isChecked) {
+    //         // 添加到选中列表
+    //         if (ddh && !selectedDdhs.includes(ddh)) {
+    //             selectedDdhs.push(ddh);
+    //             selectedRows.push(rowData);
+    //             $row.addClass('selected-row'); // 添加选中样式
+    //         }
+    //     } else {
+    //         // 从选中列表移除
+    //         var index = selectedDdhs.indexOf(ddh);
+    //         if (index > -1) {
+    //             selectedDdhs.splice(index, 1);
+    //             selectedRows.splice(index, 1);
+    //             $row.removeClass('selected-row'); // 移除选中样式
+    //         }
+    //     }
+    //
+    //     // 更新全选复选框状态
+    //     updateSelectAllCheckboxState();
+    //     updateInvoiceButtonState();
+    //
+    //     console.log('单个选择，当前选中订单号:', selectedDdhs);
+    // });
+    // 单个复选框选择 - 修复取消选择逻辑
     $('.row-checkbox').off('change').on('change', function(e) {
-        e.stopPropagation(); // 阻止事件冒泡
+        e.stopPropagation();
 
         var $checkbox = $(this);
         var isChecked = $checkbox.prop('checked');
-        var ddh = $checkbox.data('ddh'); // 改为获取订单号
+        var ddh = $checkbox.data('ddh');
         var $row = $checkbox.closest('tr');
-        var rowData = getRowData($row);
 
         console.log('复选框选择 - 订单号:', ddh, '状态:', isChecked);
 
@@ -2916,16 +3404,20 @@ function bindCheckboxEvents() {
             // 添加到选中列表
             if (ddh && !selectedDdhs.includes(ddh)) {
                 selectedDdhs.push(ddh);
-                selectedRows.push(rowData);
-                $row.addClass('selected-row'); // 添加选中样式
+                $row.addClass('selected-row');
             }
         } else {
-            // 从选中列表移除
+            // 关键修复：确保从数组中移除
             var index = selectedDdhs.indexOf(ddh);
             if (index > -1) {
+                // 正确删除元素
                 selectedDdhs.splice(index, 1);
-                selectedRows.splice(index, 1);
-                $row.removeClass('selected-row'); // 移除选中样式
+                $row.removeClass('selected-row');
+
+                // 同时从 selectedRows 中移除
+                selectedRows = selectedRows.filter(function(row) {
+                    return row.ddh !== ddh;
+                });
             }
         }
 
@@ -2933,7 +3425,8 @@ function bindCheckboxEvents() {
         updateSelectAllCheckboxState();
         updateInvoiceButtonState();
 
-        console.log('单个选择，当前选中订单号:', selectedDdhs);
+        console.log('当前选中订单号:', selectedDdhs);
+        console.log('选中数量:', selectedDdhs.length);
     });
 }
 
@@ -3162,5 +3655,533 @@ function getCustomerRequirement(customerName) {
 
     return found ? found.yq : '';
 }
+
+function generateInvoiceExcel() {
+    console.log('开始生成开票文档Excel...');
+
+    // 获取选中的行
+    var selectedRow = getSelectedRow();
+
+    if (!selectedRow || !selectedRow.duizhangdanhao) {
+        swal({
+            title: '未选择订单',
+            text: '请先在表格中选中一行订单，然后再生成开票文档',
+            icon: 'warning',
+            buttons: {
+                confirm: '确定'
+            }
+        });
+        return;
+    }
+
+    var ddh = selectedRow.duizhangdanhao;
+    console.log('为订单生成开票文档Excel:', ddh);
+
+    // 显示加载中
+    swal({
+        title: '正在生成开票文档...',
+        text: '正在获取订单详细信息，请稍候...',
+        icon: 'info',
+        buttons: false,
+        closeOnClickOutside: false,
+        closeOnEsc: false
+    });
+
+    // 直接调用接口获取详细信息
+    $ajax({
+        type: 'post',
+        url: '/dzdjl/getDetailByDdh',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            duizhangdanhao: ddh  // 使用正确的字段名
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        swal.close();
+        if (res.code === 200) {
+            console.log('获取到的详细信息:', res.data);
+            // 获取客户开票信息
+            var customerInvoiceInfo = getCustomerInvoiceInfo(selectedRow.khmc);
+
+            // 生成Excel
+            generateInvoiceExcelFile(selectedRow, res.data, customerInvoiceInfo);
+        } else if(res.code == 403) {
+            swal("权限不足，无法访问此功能！");
+        } else {
+            console.error("获取详情失败:", res.message);
+            swal('生成失败', '无法获取订单详细信息: ' + (res.message || '未知错误'), 'error');
+        }
+    });
+}
+// 根据客户名称获取客户开票信息
+function getCustomerInvoiceInfo(customerName) {
+    if (!customerName) {
+        console.log("客户名称为空，返回默认开票信息");
+        return getDefaultInvoiceInfo();
+    }
+
+    console.log("查找客户开票信息，客户名称:", customerName);
+    console.log("客户开票信息映射:", customerInvoiceInfoMap);
+
+    // 先尝试从转换后的对象中查找（精确匹配）
+    var invoiceInfo = customerInvoiceInfoMap[customerName.trim()];
+
+    if (invoiceInfo) {
+        console.log("找到精确匹配的客户开票信息:", invoiceInfo);
+        return invoiceInfo;
+    }
+
+    // 如果精确匹配没找到，尝试模糊匹配
+    var foundKey = Object.keys(customerInvoiceInfoMap).find(function(key) {
+        return customerName.trim().includes(key) || key.includes(customerName.trim());
+    });
+
+    if (foundKey) {
+        console.log("找到模糊匹配的客户开票信息，匹配键:", foundKey);
+        return customerInvoiceInfoMap[foundKey];
+    }
+
+    // 如果都没找到，返回默认信息
+    console.log("未找到匹配的客户开票信息，使用默认信息");
+    return getDefaultInvoiceInfo();
+}
+
+// 获取默认开票信息
+function getDefaultInvoiceInfo() {
+    return {
+        companyName: '',
+        taxNumber: '',
+        address: '',
+        phone: '',
+        bank: '',
+        account: ''
+    };
+}
+
+// 生成开票文档Excel文件
+function generateInvoiceExcelFile(rowData, detailData, customerInfo) {
+    try {
+        // 检查是否加载了SheetJS库
+        if (typeof XLSX === 'undefined') {
+            loadSheetJS().then(function() {
+                createInvoiceExcelFile(rowData, detailData, customerInfo);
+                swal.close();
+            }).catch(function(error) {
+                swal.close();
+                console.error('加载SheetJS库失败:', error);
+                swal('导出失败', '请检查网络连接或联系管理员', 'error');
+            });
+        } else {
+            createInvoiceExcelFile(rowData, detailData, customerInfo);
+            swal.close();
+        }
+    } catch (error) {
+        swal.close();
+        console.error('Excel导出失败:', error);
+        swal('导出失败', '生成Excel文件时发生错误', 'error');
+    }
+}
+
+// 创建开票文档Excel文件
+function createInvoiceExcelFile(rowData, detailData, customerInfo) {
+    // 创建工作簿
+    var wb = XLSX.utils.book_new();
+
+    // 计算合计金额
+    var totalAmount = 0;
+    detailData.forEach(function(item) {
+        // 使用zj字段作为金额，如果不存在则计算
+        var amount = 0;
+        if (item.zj && item.zj !== '') {
+            amount = parseFloat(item.zj) || 0;
+        } else if (item.dj && item.sl) {
+            // 如果zj不存在，尝试用dj * sl计算
+            var price = parseFloat(item.dj) || 0;
+            var quantity = parseFloat(item.sl) || 0;
+            amount = price * quantity;
+        }
+        totalAmount += amount;
+    });
+
+    var currentDate = new Date();
+    var year = currentDate.getFullYear();
+    var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    var day = String(currentDate.getDate()).padStart(2, '0');
+    var formattedDate = year + '年' + month + '月' + day + '日';
+
+    // 创建工作表数据 - 完全按照图片样式
+    var wsData = [];
+
+    wsData.push([]);
+    var companyName = supplierInfo.fullName || "昆山翰元星传动科技有限公司（电子票）";
+    wsData.push([companyName, '', '', '', '', '','', '对账单号:',rowData.duizhangdanhao || '']);
+
+    wsData.push(['序号', '品名', '规格', '单位', '数量', '单价', '金额', '发票类型', '订单编号']);
+
+    // 数据行
+    detailData.forEach(function(item, index) {
+        var itemAmount = 0;
+        var itemPrice = parseFloat(item.dj) || 0;
+        var itemQuantity = parseFloat(item.sl) || 0;
+
+        // 优先使用zj字段
+        if (item.zj && item.zj !== '') {
+            itemAmount = parseFloat(item.zj) || 0;
+        } else {
+            // 如果没有zj，计算金额
+            itemAmount = itemPrice * itemQuantity;
+        }
+
+        wsData.push([
+            index + 1,
+            item.pm || '',
+            item.ggxh || '',
+            item.dw || '',
+            item.sl || '',
+            item.dj || '',
+            itemAmount.toFixed(2),
+            '专票',
+            item.ddh || ''
+        ]);
+    });
+
+    // 注意：这里有一个错误，totalAmount.toFixed(2)应该是变量，不是字符串
+    wsData.push(['', '', '', '', '', '合计:', totalAmount.toFixed(2), '', '']);
+
+    // 客户开票信息行
+    wsData.push(['客户开票资料', '',`单位名称：${customerInfo.companyName}`,'' ,'', '', `税号：${customerInfo.taxNumber}`, '',  '']);
+    wsData.push(['', '',`单位地址：${customerInfo.address}`,'' , '', '', `电话：${customerInfo.phone}`, '',  '']);
+    wsData.push(['', '',`银行：${customerInfo.bank}`,'' , '', '', `账号：${customerInfo.account}`,'' ,  '']);
+    wsData.push(['备注：', '', '', '', '', '', '', '', '']);
+
+    // 创建工作表
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // 设置列宽（按照图片样式调整）
+    var colWidths = [
+        { wch: 5 },   // 序号
+        { wch: 12 },  // 品名
+        { wch: 20 },  // 规格
+        { wch: 8 },   // 单位
+        { wch: 8 },   // 数量
+        { wch: 10 },  // 单价
+        { wch: 10 },  // 金额
+        { wch: 10 },  // 发票类型
+        { wch: 20 }   // 订单编号
+    ];
+
+    // 处理合并单元格
+    var merges = [];
+
+    // 合并第1行（公司名称行）A1到G1
+    merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 6 } });
+
+    // 合并对账单号 H1到I1
+    // merges.push({ s: { r: 1, c: 7 }, e: { r: 1, c: 8 } });
+
+    // 数据行数计算
+    var dataRowCount = detailData.length;
+    var tableStartRow = 2; // 表格从第2行开始（0-based index）
+
+    // 合并合计行（合计标签和金额）
+    var totalRowIndex = tableStartRow + dataRowCount + 1;
+    // merges.push({ s: { r: totalRowIndex, c: 5 }, e: { r: totalRowIndex, c: 6 } }); // 合并F和G列
+
+    // 合并客户开票资料行
+    var customerRowIndex = totalRowIndex + 1;
+
+    // 合并客户开票资料标题（A列到B列，跨越3行）
+    merges.push({ s: { r: customerRowIndex, c: 0 }, e: { r: customerRowIndex + 2, c: 1 } });
+
+    // 合并第1行客户信息
+    merges.push({ s: { r: customerRowIndex, c: 2 }, e: { r: customerRowIndex, c: 5 } }); // 单位名称
+    merges.push({ s: { r: customerRowIndex, c: 6 }, e: { r: customerRowIndex, c: 8 } }); // 税号
+
+    // 合并第2行客户信息
+    var addressRowIndex = customerRowIndex + 1;
+    merges.push({ s: { r: addressRowIndex, c: 2 }, e: { r: addressRowIndex, c: 5 } }); // 单位地址
+    merges.push({ s: { r: addressRowIndex, c: 6 }, e: { r: addressRowIndex, c: 8 } }); // 电话
+
+    // 合并第3行客户信息
+    var bankRowIndex = customerRowIndex + 2;
+    merges.push({ s: { r: bankRowIndex, c: 2 }, e: { r: bankRowIndex, c: 5 } }); // 银行
+    merges.push({ s: { r: bankRowIndex, c: 6 }, e: { r: bankRowIndex, c: 8 } }); // 账号
+
+    // 合并备注行
+    var remarkRowIndex = customerRowIndex + 3;
+    merges.push({ s: { r: remarkRowIndex, c: 0 }, e: { r: remarkRowIndex, c: 8 } }); // 合并整行
+
+    ws['!merges'] = merges;
+
+    // === 设置样式 ===
+    var range = XLSX.utils.decode_range(ws['!ref']);
+
+    // 1. 为所有单元格设置基础样式（居中、边框）
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            var cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[cellAddress]) continue;
+
+            if (!ws[cellAddress].s) ws[cellAddress].s = {};
+
+            // 设置边框
+            ws[cellAddress].s.border = {
+                top: { style: 'thin', color: { rgb: '000000' } },
+                bottom: { style: 'thin', color: { rgb: '000000' } },
+                left: { style: 'thin', color: { rgb: '000000' } },
+                right: { style: 'thin', color: { rgb: '000000' } }
+            };
+
+            // 设置居中对齐（默认）
+            if (!ws[cellAddress].s.alignment) {
+                ws[cellAddress].s.alignment = {
+                    horizontal: 'center',
+                    vertical: 'center',
+                    wrapText: true
+                };
+            }
+        }
+    }
+
+    // 2. 特殊单元格样式设置
+    // 公司名称样式（居中、加粗、大字号）
+    var companyCell = XLSX.utils.encode_cell({ r: 1, c: 0 });
+    if (!ws[companyCell]) ws[companyCell] = {};
+    if (!ws[companyCell].s) ws[companyCell].s = {};
+    Object.assign(ws[companyCell].s, {
+        alignment: { horizontal: 'center', vertical: 'center' },
+        font: { bold: true, sz: 16 },
+        border: {
+            top: { style: 'medium', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'medium', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+        }
+    });
+
+    // 对账单号样式（右对齐、加粗）
+    var dzdhCell = XLSX.utils.encode_cell({ r: 1, c: 7 });
+    if (!ws[dzdhCell]) ws[dzdhCell] = {};
+    if (!ws[dzdhCell].s) ws[dzdhCell].s = {};
+    Object.assign(ws[dzdhCell].s, {
+        alignment: { horizontal: 'right', vertical: 'center' },
+        font: { bold: true },
+        border: {
+            top: { style: 'medium', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'medium', color: { rgb: '000000' } }
+        }
+    });
+
+    // 表头样式（加粗、居中、背景色）- 第2行
+    for (var col = 0; col < 9; col++) {
+        var headerCell = XLSX.utils.encode_cell({ r: 2, c: col });
+        if (!ws[headerCell]) ws[headerCell] = {};
+        if (!ws[headerCell].s) ws[headerCell].s = {};
+        Object.assign(ws[headerCell].s, {
+            alignment: { horizontal: 'center', vertical: 'center' },
+            font: { bold: true },
+            fill: { fgColor: { rgb: "D9EAD3" } }, // 浅绿色背景
+            border: {
+                top: { style: 'medium', color: { rgb: '000000' } },
+                bottom: { style: 'medium', color: { rgb: '000000' } },
+                left: { style: 'thin', color: { rgb: '000000' } },
+                right: { style: 'thin', color: { rgb: '000000' } }
+            }
+        });
+    }
+
+    // 数据区域样式
+    for (let R = 3; R <= 2 + dataRowCount; R++) {
+        for (let C = 0; C < 9; C++) {
+            var dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[dataCell]) continue;
+            if (!ws[dataCell].s) ws[dataCell].s = {};
+
+            // 金额列右对齐
+            if (C === 6) { // 金额列（G列）
+                ws[dataCell].s.alignment = { horizontal: 'right', vertical: 'center' };
+            }
+            // 数量列居中对齐
+            else if (C === 4) { // 数量列（E列）
+                ws[dataCell].s.alignment = { horizontal: 'center', vertical: 'center' };
+            }
+        }
+    }
+
+    // 合计行样式
+    var totalCell = XLSX.utils.encode_cell({ r: totalRowIndex, c: 5 });
+    if (!ws[totalCell]) ws[totalCell] = {};
+    if (!ws[totalCell].s) ws[totalCell].s = {};
+    Object.assign(ws[totalCell].s, {
+        alignment: { horizontal: 'center', vertical: 'center' },
+        font: { bold: true, sz: 12 },
+        border: {
+            top: { style: 'medium', color: { rgb: '000000' } },
+            bottom: { style: 'medium', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+        }
+    });
+
+    // 客户开票资料标题样式（加粗、垂直居中）
+    var customerTitleCell = XLSX.utils.encode_cell({ r: customerRowIndex, c: 0 });
+    if (!ws[customerTitleCell]) ws[customerTitleCell] = {};
+    if (!ws[customerTitleCell].s) ws[customerTitleCell].s = {};
+    Object.assign(ws[customerTitleCell].s, {
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        font: { bold: true },
+        fill: { fgColor: { rgb: "E8F4FD" } }
+    });
+
+    // 客户信息行样式
+    for (let i = 0; i < 3; i++) {
+        var infoRow = customerRowIndex + i;
+        for (let C = 2; C < 9; C++) {
+            var infoCell = XLSX.utils.encode_cell({ r: infoRow, c: C });
+            if (ws[infoCell]) {
+                if (!ws[infoCell].s) ws[infoCell].s = {};
+                ws[infoCell].s.alignment = { horizontal: 'left', vertical: 'center' };
+            }
+        }
+    }
+
+    // 备注样式
+    var remarkCell = XLSX.utils.encode_cell({ r: remarkRowIndex, c: 0 });
+    if (!ws[remarkCell]) ws[remarkCell] = {};
+    if (!ws[remarkCell].s) ws[remarkCell].s = {};
+    Object.assign(ws[remarkCell].s, {
+        alignment: { horizontal: 'left', vertical: 'center' },
+        font: { italic: true },
+        border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'medium', color: { rgb: '000000' } },
+            left: { style: 'medium', color: { rgb: '000000' } },
+            right: { style: 'medium', color: { rgb: '000000' } }
+        }
+    });
+
+    // 设置列宽
+    ws['!cols'] = colWidths;
+
+    // 将工作表添加到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '开票文档');
+
+    // 生成文件名
+    var fileName = `开票文档_${rowData.duizhangdanhao || rowData.ddh || '未命名'}_${year}${month}${day}.xlsx`;
+
+    // 导出Excel文件
+    XLSX.writeFile(wb, fileName);
+
+    swal('导出成功', `开票文档 ${fileName} 已生成并开始下载`, 'success');
+}
+
+// 动态加载SheetJS库（如果未加载）
+function loadSheetJS() {
+    return new Promise(function(resolve, reject) {
+        if (typeof XLSX !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function getghf() {
+    $.ajax({
+        type: 'post',
+        url: '/hetong/ghf',
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                console.log("返回的供货方信息", res);
+
+                // 使用返回的数据更新页面元素
+                if (res.data && res.data.length > 0) {
+                    // 1. 提取第一条有效的ghf数据
+                    const validSupplier = res.data[0];
+
+                    if (validSupplier && validSupplier.ghf) {
+                        // 2. 保存供应商信息到全局变量
+                        supplierInfo.ghf = validSupplier.ghf;
+                        supplierInfo.fullName = validSupplier.ghf + "（电子票）";
+
+                        console.log("保存供应商信息:", supplierInfo);
+
+                        // 3. 更新公司名称
+                        updateCompanyName(validSupplier.ghf);
+                    } else {
+                        console.warn("没有找到有效的供货方数据");
+                        // 设置默认值
+                        supplierInfo.ghf = "昆山翰元星传动科技有限公司";
+                        supplierInfo.fullName = "昆山翰元星传动科技有限公司（电子票）";
+                    }
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX请求失败:", error);
+            // 设置默认值
+            supplierInfo.ghf = "昆山翰元星传动科技有限公司";
+            supplierInfo.fullName = "昆山翰元星传动科技有限公司（电子票）";
+        }
+    });
+}
+
+function KeHuXX() {
+    console.log("开始获取客户信息数据");
+
+    $ajax({
+        type: 'post',
+        url: '/kehu/getkehuxx',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200) {
+            console.log("成功获取客户信息数据:", res.data);
+
+            // 清空之前的数据
+            customerInvoiceInfoList = res.data || [];
+            customerInvoiceInfoMap = {};
+
+            // 将数据转换为以khmc为key的对象，方便快速查找
+            if (customerInvoiceInfoList && customerInvoiceInfoList.length > 0) {
+                customerInvoiceInfoList.forEach(function(item) {
+                    if (item.khmc) {
+                        // 构建客户开票信息对象
+                        var invoiceInfo = {
+                            companyName: item.khmc || '',      // 单位名称
+                            taxNumber: item.sh || '',           // 税号
+                            address: item.dz || '',            // 地址
+                            phone: item.lxdh1 || '',           // 联系电话
+                            bank: item.khh || '',              // 银行
+                            account: item.zh || ''             // 账号
+                        };
+
+                        // 保存到映射表
+                        customerInvoiceInfoMap[item.khmc.trim()] = invoiceInfo;
+                    }
+                });
+            }
+
+            console.log("客户开票信息数据已保存，共", customerInvoiceInfoList.length, "条记录");
+            console.log("转换后的客户开票信息映射:", customerInvoiceInfoMap);
+
+        } else if(res.code == 403){
+            swal("权限不足，无法访问此功能！");
+        } else {
+            console.error("获取客户信息失败:", res.message);
+        }
+    });
+}
+
 
 
