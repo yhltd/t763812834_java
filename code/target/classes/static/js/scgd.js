@@ -233,6 +233,52 @@ function getCurrentKeyword() {
     return $('#gsm').val() || '';
 }
 
+// // 获取数据列表
+// function getList(page, size, searchParams) {
+//     currentPage = page || currentPage;
+//     pageSize = size || pageSize;
+//     searchParams = searchParams || {};
+//
+//     showLoading();
+//
+//     $ajax({
+//         type: 'post',
+//         url: '/shengchan/list',
+//         contentType: 'application/json',
+//         data: JSON.stringify({
+//             pageNum: currentPage,
+//             pageSize: pageSize,
+//             khcm: searchParams.khcm || '',
+//             lxr: searchParams.lxr || '',
+//             fzr: searchParams.fzr || '',
+//             kpzt: searchParams.kpzt || '',
+//             startDate: searchParams.startDate || '',
+//             endDate: searchParams.endDate || ''
+//         }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         hideLoading();
+//         if (res.success) {
+//             console.log("返回的客户信息", res);
+//             fillTable(res.data.list);
+//             totalCount = res.data.total;
+//             totalPages = res.data.pages;
+//             updatePagination();
+//         } else {
+//             console.error("查询失败:", res.message);
+//
+//             // 处理权限错误
+//             if (res.code === 401) {
+//                 swal("登录已过期，请重新登录");
+//                 window.location.href = "/login.html";
+//             } else if (res.code === 403) {
+//                 swal("权限不足，无法访问此功能");
+//             } else {
+//                 swal("查询失败: " + res.message);
+//             }
+//         }
+//     });
+// }
 // 获取数据列表
 function getList(page, size, searchParams) {
     currentPage = page || currentPage;
@@ -264,6 +310,9 @@ function getList(page, size, searchParams) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
+
+            // 新增：获取筛选后的全部数据统计
+            getFilteredStatistics(searchParams);
         } else {
             console.error("查询失败:", res.message);
 
@@ -279,7 +328,6 @@ function getList(page, size, searchParams) {
         }
     });
 }
-
 // 显示加载中
 function showLoading() {
     $('#khzlTable').html('<tr><td colspan="10" style="text-align: center; padding: 20px;">加载中...</td></tr>');
@@ -297,6 +345,98 @@ function searchKhxx() {
     getList(currentPage, pageSize, searchParams);
 }
 
+// // 填充表格
+// function fillTable(data) {
+//     $('#khzlTable').empty();
+//
+//     var tableHeader = `
+//         <thead>
+//             <tr>
+//                 <th width="280">客户名称</th>
+//                 <th width="120">联系人</th>
+//                 <th width="120">联系电话</th>
+//                 <th width="120">订单日期</th>
+//                 <th width="120">合计金额</th>
+//                 <th width="120">负责人</th>
+//                 <th width="150">合同编号</th>
+//                 <th width="80">状态</th>
+//                 <th width="120">购方要求</th>
+//                 <th width="80">开票状态</th>
+//
+//                 <th width="90">操作</th>
+//             </tr>
+//         </thead>
+//     `;
+//
+//     var tableBody = '<tbody>';
+//
+//     // 初始化统计变量
+//     var totalAmount = 0;
+//     var uninvoicedCount = 0;
+//     var invoicedCount = 0;
+//     var noInvoiceCount = 0;
+//
+//     if (data && data.length > 0) {
+//         data.forEach(function(item, index) {
+//             // 计算统计信息
+//             var amount = parseFloat(item.hj) || 0;
+//             totalAmount += amount;
+//
+//             var invoiceStatus = item.kpzt || '';
+//             switch(invoiceStatus) {
+//                 case '未开票':
+//                     uninvoicedCount++;
+//                     break;
+//                 case '已开票':
+//                     invoicedCount++;
+//                     break;
+//                 case '不开票':
+//                     noInvoiceCount++;
+//                     break;
+//             }
+//
+//             tableBody += `
+//                 <tr data-id="${item.id}">
+//                     <td>${item.khcm || ''}</td>
+//                     <td>${item.lxr || ''}</td>
+//                     <td>${item.lxdh || ''}</td>
+//                     <td>${item.ddrq || ''}</td>
+//                     <td>${item.hj || ''}</td>
+//                     <td>${item.fzr || ''}</td>
+//                     <td>${item.htbh || ''}</td>
+//                     <td>${item.zt || ''}</td>
+//                     <td>${item.yq || ''}</td>
+//                     <td>${item.kpzt || ''}</td>
+//
+//                     <td>
+//                         <button class="btn btn-sm btn-info detail-btn"
+//                                 data-id="${item.id}"
+//                                 data-htbh="${item.htbh || ''}">
+//                             <i class="bi bi-eye"></i> 详情
+//                         </button>
+//                     </td>
+//                 </tr>
+//             `;
+//         });
+//
+//         // 更新统计显示
+//         updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount);
+//         $('#statisticsContainer').show();
+//     } else {
+//         tableBody += `
+//             <tr>
+//                 <td colspan="12" style="text-align: center; color: #999;">暂无客户数据</td>
+//             </tr>
+//         `;
+//         // 没有数据时隐藏统计区域
+//         $('#statisticsContainer').hide();
+//     }
+//
+//     tableBody += '</tbody>';
+//     $('#khzlTable').html(tableHeader + tableBody);
+//     addRowClickEvent();
+//     bindDetailButtonEvents();
+// }
 // 填充表格
 function fillTable(data) {
     $('#khzlTable').empty();
@@ -314,7 +454,6 @@ function fillTable(data) {
                 <th width="80">状态</th>
                 <th width="120">购方要求</th>
                 <th width="80">开票状态</th>
-          
                 <th width="90">操作</th>
             </tr>
         </thead>
@@ -322,31 +461,9 @@ function fillTable(data) {
 
     var tableBody = '<tbody>';
 
-    // 初始化统计变量
-    var totalAmount = 0;
-    var uninvoicedCount = 0;
-    var invoicedCount = 0;
-    var noInvoiceCount = 0;
-
     if (data && data.length > 0) {
         data.forEach(function(item, index) {
-            // 计算统计信息
-            var amount = parseFloat(item.hj) || 0;
-            totalAmount += amount;
-
-            var invoiceStatus = item.kpzt || '';
-            switch(invoiceStatus) {
-                case '未开票':
-                    uninvoicedCount++;
-                    break;
-                case '已开票':
-                    invoicedCount++;
-                    break;
-                case '不开票':
-                    noInvoiceCount++;
-                    break;
-            }
-
+            // 这里不再进行统计计算，只渲染表格数据
             tableBody += `
                 <tr data-id="${item.id}">
                     <td>${item.khcm || ''}</td>
@@ -359,7 +476,6 @@ function fillTable(data) {
                     <td>${item.zt || ''}</td>
                     <td>${item.yq || ''}</td>
                     <td>${item.kpzt || ''}</td>
-                
                     <td>
                         <button class="btn btn-sm btn-info detail-btn" 
                                 data-id="${item.id}" 
@@ -371,8 +487,8 @@ function fillTable(data) {
             `;
         });
 
-        // 更新统计显示
-        updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount);
+        // 统计显示已经由 calculateTotalStatistics 函数处理
+        // 这里不再更新统计
         $('#statisticsContainer').show();
     } else {
         tableBody += `
@@ -380,8 +496,9 @@ function fillTable(data) {
                 <td colspan="12" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
-        // 没有数据时隐藏统计区域
-        $('#statisticsContainer').hide();
+        // 没有数据时显示0值
+        updateStatistics(0, 0, 0, 0);
+        $('#statisticsContainer').show(); // 即使没有数据也显示统计区域
     }
 
     tableBody += '</tbody>';
@@ -389,7 +506,6 @@ function fillTable(data) {
     addRowClickEvent();
     bindDetailButtonEvents();
 }
-
 // 新增：更新统计显示函数
 function updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount) {
     $('#totalAmount').text(totalAmount.toFixed(2));
@@ -1217,3 +1333,68 @@ function hideLoading() {
 }
 
 //---------导出excel结束-------------------
+
+// 获取筛选后的统计信息
+function getFilteredStatistics(searchParams) {
+    // 发送一个获取全部数据（不分页）的请求来统计
+    $ajax({
+        type: 'post',
+        url: '/shengchan/list',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1, // 第一页
+            pageSize: 999999, // 很大的数字，获取所有数据
+            khcm: searchParams.khcm || '',
+            lxr: searchParams.lxr || '',
+            fzr: searchParams.fzr || '',
+            kpzt: searchParams.kpzt || '',
+            startDate: searchParams.startDate || '',
+            endDate: searchParams.endDate || ''
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.success && res.data && res.data.list) {
+            // 计算全部筛选数据的统计
+            calculateTotalStatistics(res.data.list);
+        } else {
+            // 如果失败，使用当前页数据统计
+            console.log('获取全部数据失败，使用当前页统计');
+        }
+    });
+}
+
+// 计算全部数据的统计
+function calculateTotalStatistics(dataList) {
+    // 初始化统计变量
+    var totalAmount = 0;
+    var uninvoicedCount = 0;
+    var invoicedCount = 0;
+    var noInvoiceCount = 0;
+
+    if (dataList && dataList.length > 0) {
+        dataList.forEach(function(item) {
+            // 计算统计信息
+            var amount = parseFloat(item.hj) || 0;
+            totalAmount += amount;
+
+            var invoiceStatus = item.kpzt || '';
+            switch(invoiceStatus) {
+                case '未开票':
+                    uninvoicedCount++;
+                    break;
+                case '已开票':
+                    invoicedCount++;
+                    break;
+                case '不开票':
+                    noInvoiceCount++;
+                    break;
+                default:
+                    // 如果开票状态为空或其他值，计入未开票
+                    uninvoicedCount++;
+            }
+        });
+    }
+
+    // 更新统计显示
+    updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount);
+}

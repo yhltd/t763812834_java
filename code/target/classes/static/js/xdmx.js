@@ -694,6 +694,49 @@ function getSearchParams() {
 }
 
 // 获取数据列表
+// function getList(page, size, searchParams) {
+//     currentPage = page || currentPage;
+//     pageSize = size || pageSize;
+//     searchParams = searchParams || {};
+//
+//     showLoading();
+//
+//     $ajax({
+//         type: 'post',
+//         url: '/xiadan/list',
+//         contentType: 'application/json',
+//         data: JSON.stringify({
+//             pageNum: currentPage,
+//             pageSize: pageSize,
+//             khcm: searchParams.khcm || '',
+//             lxr: searchParams.lxr || '',
+//             fzr: searchParams.fzr || '',
+//             kpzt: searchParams.kpzt || '',
+//             startDate: searchParams.startDate || '',
+//             endDate: searchParams.endDate || ''
+//         }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         hideLoading();
+//         if (res.success) {
+//             console.log("返回的客户信息", res);
+//             fillTable(res.data.list);
+//             totalCount = res.data.total;
+//             totalPages = res.data.pages;
+//             updatePagination();
+//         } else {
+//             console.error("查询失败:", res.message);
+//             if (res.code === 401) {
+//                 swal("登录已过期，请重新登录");
+//                 window.location.href = "/login.html";
+//             } else if (res.code === 403) {
+//                 swal("权限不足，无法访问此功能");
+//             } else {
+//                 swal("查询失败: " + res.message);
+//             }
+//         }
+//     });
+// }
 function getList(page, size, searchParams) {
     currentPage = page || currentPage;
     pageSize = size || pageSize;
@@ -724,6 +767,9 @@ function getList(page, size, searchParams) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
+
+            // 新增：获取筛选后的全部数据统计
+            getFilteredStatistics(searchParams);
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
@@ -737,7 +783,6 @@ function getList(page, size, searchParams) {
         }
     });
 }
-
 // 显示加载中
 function showLoading() {
     $('#khzlTable').html('<tr><td colspan="11" style="text-align: center; padding: 20px;">加载中...</td></tr>');
@@ -761,17 +806,117 @@ function searchKhxx() {
 }
 
 // 填充表格
+// function fillTable(data) {
+//     $('#khzlTable').empty();
+//
+//     // 清空并重新填充部门映射表
+//     departmentMap = {};
+//
+//     // 重置统计变量（使用全局变量）
+//     window.totalAmount = 0;
+//     window.uninvoicedCount = 0;
+//     window.invoicedCount = 0;
+//     window.noInvoiceCount = 0;
+//
+//     var tableHeader = `
+//         <thead>
+//             <tr>
+//                 <th width="280">客户名称</th>
+//                 <th width="120">联系人</th>
+//                 <th width="120">联系电话</th>
+//                 <th width="120">订单日期</th>
+//                 <th width="120">合计金额</th>
+//                 <th width="120">负责人</th>
+//                 <th width="150">合同编号</th>
+//                 <th width="120">购方要求</th>
+//                 <th width="80">开票状态</th>
+//                 <th width="150">操作</th> <!-- 增加宽度 -->
+//             </tr>
+//         </thead>
+//     `;
+//
+//     var tableBody = '<tbody>';
+//
+//     if (data && data.length > 0) {
+//         data.forEach(function(item, index) {
+//             // 保存部门信息到映射表
+//             if (item.id && item.bm) {
+//                 departmentMap[item.id] = item.bm;
+//             }
+//
+//             // 计算统计信息 - 使用全局变量
+//             var amount = parseFloat(item.hj) || 0;
+//             window.totalAmount += amount;
+//
+//             var invoiceStatus = item.kpzt || '';
+//             switch(invoiceStatus) {
+//                 case '未开票':
+//                     window.uninvoicedCount++;
+//                     break;
+//                 case '已开票':
+//                     window.invoicedCount++;
+//                     break;
+//                 case '不开票':
+//                     window.noInvoiceCount++;
+//                     break;
+//                 default:
+//                     // 如果开票状态为空或其他值，计入未开票
+//                     window.uninvoicedCount++;
+//                     break;
+//             }
+//
+//             tableBody += `
+//                 <tr data-id="${item.id}">
+//                     <td>${item.khcm || ''}</td>
+//                     <td>${item.lxr || ''}</td>
+//                     <td>${item.lxdh || ''}</td>
+//                     <td>${item.ddrq || ''}</td>
+//                     <td>${formatNumber(item.hj)}</td>
+//                     <td>${item.fzr || ''}</td>
+//                     <td>${item.htbh || ''}</td>
+//                     <td>${item.yq || ''}</td>
+//                     <td>${item.kpzt || ''}</td>
+//                     <td>
+//                         <button class="btn btn-sm btn-info detail-btn"
+//                                 data-id="${item.id}"
+//                                 data-htbh="${item.htbh || ''}">
+//                             <i class="bi bi-eye"></i> 详情
+//                         </button>
+//
+//                     </td>
+//                 </tr>
+//             `;
+//         });
+//
+//         // 更新统计显示
+//         updateStatistics(window.totalAmount, window.uninvoicedCount, window.invoicedCount, window.noInvoiceCount);
+//         $('#statisticsContainer').show();
+//     } else {
+//         tableBody += `
+//             <tr>
+//                 <td colspan="11" style="text-align: center; color: #999;">暂无客户数据</td>
+//             </tr>
+//         `;
+//         // 没有数据时重置统计显示
+//         updateStatistics(0, 0, 0, 0);
+//         $('#statisticsContainer').show(); // 即使没有数据也显示统计区域，但显示0值
+//     }
+//
+//     tableBody += '</tbody>';
+//     $('#khzlTable').html(tableHeader + tableBody);
+//     addRowClickEvent();
+//     bindDetailButtonEvents();
+//     bindDeleteButtonEvents(); // 绑定删除按钮事件
+// }
+// 填充表格
 function fillTable(data) {
     $('#khzlTable').empty();
 
     // 清空并重新填充部门映射表
     departmentMap = {};
 
-    // 重置统计变量（使用全局变量）
-    window.totalAmount = 0;
-    window.uninvoicedCount = 0;
-    window.invoicedCount = 0;
-    window.noInvoiceCount = 0;
+    // 移除这里的统计计算逻辑，保持表格填充功能
+    // 统计现在由 calculateTotalStatistics 函数处理
 
     var tableHeader = `
         <thead>
@@ -785,7 +930,7 @@ function fillTable(data) {
                 <th width="150">合同编号</th>
                 <th width="120">购方要求</th>
                 <th width="80">开票状态</th>
-                <th width="150">操作</th> <!-- 增加宽度 -->
+                <th width="150">操作</th>
             </tr>
         </thead>
     `;
@@ -797,27 +942,6 @@ function fillTable(data) {
             // 保存部门信息到映射表
             if (item.id && item.bm) {
                 departmentMap[item.id] = item.bm;
-            }
-
-            // 计算统计信息 - 使用全局变量
-            var amount = parseFloat(item.hj) || 0;
-            window.totalAmount += amount;
-
-            var invoiceStatus = item.kpzt || '';
-            switch(invoiceStatus) {
-                case '未开票':
-                    window.uninvoicedCount++;
-                    break;
-                case '已开票':
-                    window.invoicedCount++;
-                    break;
-                case '不开票':
-                    window.noInvoiceCount++;
-                    break;
-                default:
-                    // 如果开票状态为空或其他值，计入未开票
-                    window.uninvoicedCount++;
-                    break;
             }
 
             tableBody += `
@@ -837,33 +961,28 @@ function fillTable(data) {
                                 data-htbh="${item.htbh || ''}">
                             <i class="bi bi-eye"></i> 详情
                         </button>
-
                     </td>
                 </tr>
             `;
         });
 
-        // 更新统计显示
-        updateStatistics(window.totalAmount, window.uninvoicedCount, window.invoicedCount, window.noInvoiceCount);
-        $('#statisticsContainer').show();
+        // 统计显示已经由 calculateTotalStatistics 函数处理
+        // 这里不再更新统计
     } else {
         tableBody += `
             <tr>
                 <td colspan="11" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
-        // 没有数据时重置统计显示
+        // 没有数据时重置统计显示为0
         updateStatistics(0, 0, 0, 0);
-        $('#statisticsContainer').show(); // 即使没有数据也显示统计区域，但显示0值
     }
 
     tableBody += '</tbody>';
     $('#khzlTable').html(tableHeader + tableBody);
     addRowClickEvent();
     bindDetailButtonEvents();
-    bindDeleteButtonEvents(); // 绑定删除按钮事件
 }
-
 // 添加格式化数字的函数
 function formatNumber(value) {
     if (!value) return '0.00';
@@ -2937,4 +3056,67 @@ function updateSortIcons() {
         var icon = currentSortOrder === 'asc' ? '↑' : '↓';
         $('#sort-' + currentSortField).html(icon);
     }
+}
+
+// 获取筛选后的统计信息
+function getFilteredStatistics(searchParams) {
+    // 发送一个获取全部数据（不分页）的请求来统计
+    $ajax({
+        type: 'post',
+        url: '/xiadan/list',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1, // 第一页
+            pageSize: 999999, // 很大的数字，获取所有数据
+            khcm: searchParams.khcm || '',
+            lxr: searchParams.lxr || '',
+            fzr: searchParams.fzr || '',
+            kpzt: searchParams.kpzt || '',
+            startDate: searchParams.startDate || '',
+            endDate: searchParams.endDate || ''
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.success && res.data && res.data.list) {
+            // 计算全部筛选数据的统计
+            calculateTotalStatistics(res.data.list);
+        } else {
+            // 如果失败，使用当前页数据统计
+            console.log('获取全部数据失败，使用当前页统计');
+        }
+    });
+}
+
+// 计算全部数据的统计
+function calculateTotalStatistics(dataList) {
+    var totalAmount = 0;
+    var uninvoicedCount = 0;
+    var invoicedCount = 0;
+    var noInvoiceCount = 0;
+
+    dataList.forEach(function(item) {
+        // 计算合计金额
+        var amount = parseFloat(item.hj) || 0;
+        totalAmount += amount;
+
+        // 统计开票状态
+        var invoiceStatus = item.kpzt || '';
+        switch(invoiceStatus) {
+            case '未开票':
+                uninvoicedCount++;
+                break;
+            case '已开票':
+                invoicedCount++;
+                break;
+            case '不开票':
+                noInvoiceCount++;
+                break;
+            default:
+                uninvoicedCount++;
+                break;
+        }
+    });
+
+    // 更新统计显示
+    updateStatistics(totalAmount, uninvoicedCount, invoicedCount, noInvoiceCount);
 }

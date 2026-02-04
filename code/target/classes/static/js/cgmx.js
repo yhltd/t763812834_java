@@ -123,6 +123,47 @@ function getCurrentKeyword() {
     return $('#gsm').val() || '';
 }
 
+// // 获取数据列表
+// function getList(page, size, keyword) {
+//     currentPage = page || currentPage;
+//     pageSize = size || pageSize;
+//     keyword = keyword || "";
+//
+//     showLoading();
+//
+//     $ajax({
+//         type: 'post',
+//         url: '/cgmx/list',
+//         contentType: 'application/json',
+//         data: JSON.stringify({
+//             pageNum: currentPage,
+//             pageSize: pageSize,
+//             keyword: keyword
+//         }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         hideLoading();
+//         if (res.success) {
+//             console.log("返回的客户信息", res);
+//             fillTable(res.data.list);
+//             totalCount = res.data.total;
+//             totalPages = res.data.pages;
+//             updatePagination();
+//         } else {
+//             console.error("查询失败:", res.message);
+//
+//             // 处理权限错误
+//             if (res.code === 401) {
+//                 swal("登录已过期，请重新登录");
+//                 window.location.href = "/login.html";
+//             } else if (res.code === 403) {
+//                 swal("权限不足，无法访问此功能");
+//             } else {
+//                 swal("查询失败: " + res.message);
+//             }
+//         }
+//     });
+// }
 // 获取数据列表
 function getList(page, size, keyword) {
     currentPage = page || currentPage;
@@ -149,6 +190,9 @@ function getList(page, size, keyword) {
             totalCount = res.data.total;
             totalPages = res.data.pages;
             updatePagination();
+
+            // 新增：获取筛选后的全部数据统计
+            getFilteredStatistics(keyword);
         } else {
             console.error("查询失败:", res.message);
 
@@ -164,7 +208,6 @@ function getList(page, size, keyword) {
         }
     });
 }
-
 // 显示加载中
 function showLoading() {
     $('#cgmxTable').html('<tr><td colspan="10" style="text-align: center; padding: 20px;">加载中...</td></tr>');
@@ -175,57 +218,169 @@ function hideLoading() {
     // 加载完成后的处理
 }
 
-// 搜索功能
+// // 搜索功能
+// function searchKhxx() {
+//     var keyword = $('#gsm').val() || '';
+//     currentPage = 1;
+//
+//     console.log('搜索关键词:', keyword);
+//
+//     if (keyword) {
+//         // 如果有搜索条件，调用查询接口
+//         $ajax({
+//             type: 'post',
+//             url: '/cgmx/queryList',
+//             contentType: 'application/json',
+//             data: JSON.stringify({
+//                 keyword: keyword,
+//                 pageNum: currentPage,
+//                 pageSize: pageSize
+//             }),
+//             dataType: 'json'
+//         }, false, '查询中...', function (res) {
+//             console.log('查询响应:', res);
+//             if (res.success) {
+//                 fillTable(res.data.list || res.data);
+//                 totalCount = res.data.total || (res.data.list ? res.data.list.length : 0);
+//                 totalPages = res.data.pages || 1;
+//                 updatePagination();
+//                 showNotification("查询成功，找到 " + totalCount + " 条记录", "success");
+//             } else {
+//                 // 如果查询接口不存在，回退到前端过滤
+//                 console.log('查询接口失败，尝试前端过滤');
+//                 fallbackSearch(keyword);
+//             }
+//         }, function(error) {
+//             console.error('查询失败:', error);
+//             // 查询失败时回退到前端过滤
+//             fallbackSearch(keyword);
+//         });
+//     } else {
+//         // 如果没有搜索条件，获取所有数据
+//         getList(currentPage, pageSize, '');
+//     }
+// }
 function searchKhxx() {
     var keyword = $('#gsm').val() || '';
     currentPage = 1;
 
-    console.log('搜索关键词:', keyword);
+    showLoading();
 
-    if (keyword) {
-        // 如果有搜索条件，调用查询接口
-        $ajax({
-            type: 'post',
-            url: '/cgmx/queryList',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                keyword: keyword,
-                pageNum: currentPage,
-                pageSize: pageSize
-            }),
-            dataType: 'json'
-        }, false, '查询中...', function (res) {
-            console.log('查询响应:', res);
-            if (res.success) {
-                fillTable(res.data.list || res.data);
-                totalCount = res.data.total || (res.data.list ? res.data.list.length : 0);
-                totalPages = res.data.pages || 1;
-                updatePagination();
-                showNotification("查询成功，找到 " + totalCount + " 条记录", "success");
-            } else {
-                // 如果查询接口不存在，回退到前端过滤
-                console.log('查询接口失败，尝试前端过滤');
-                fallbackSearch(keyword);
-            }
-        }, function(error) {
-            console.error('查询失败:', error);
-            // 查询失败时回退到前端过滤
+    $ajax({
+        type: 'post',
+        url: '/cgmx/queryList',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            keyword: keyword,
+            pageNum: currentPage,
+            pageSize: pageSize
+        }),
+        dataType: 'json'
+    }, false, '查询中...', function (res) {
+        hideLoading();
+        if (res.success) {
+            console.log('搜索响应:', res);
+            fillTable(res.data.list || res.data);
+            totalCount = res.data.total || (res.data.list ? res.data.list.length : 0);
+            totalPages = res.data.pages || 1;
+            updatePagination();
+
+            // 重要：搜索后也要调用统计
+            getFilteredStatistics(keyword);
+        } else {
+            // 如果查询接口失败，回退到前端过滤
             fallbackSearch(keyword);
-        });
-    } else {
-        // 如果没有搜索条件，获取所有数据
-        getList(currentPage, pageSize, '');
-    }
+        }
+    }, function(error) {
+        console.error('查询失败:', error);
+        fallbackSearch(keyword);
+    });
 }
-
+// // 填充表格
+// function fillTable(data) {
+//     $('#cgmxTable').empty();
+//
+//     // 重置统计变量
+//     totalHjAmount = 0;
+//     totalQkjeAmount = 0;
+//     totalYfjeAmount = 0;
+//
+//     var tableHeader = `
+//         <thead>
+//             <tr>
+//                 <th width="280">乙方公司</th>
+//                 <th width="120">订单日期</th>
+//                 <th width="120">合计金额</th>
+//                 <th width="150">合同编号</th>
+//                 <th width="150">开票日期</th>
+//                 <th width="150">欠款金额</th>
+//                 <th width="150">已付金额</th>
+//                 <th width="200">备注</th>
+//                 <th width="90">操作</th>
+//             </tr>
+//         </thead>
+//     `;
+//
+//     var tableBody = '<tbody>';
+//
+//     if (data && data.length > 0) {
+//         data.forEach(function(item, index) {
+//             // 获取并转换金额值
+//             var hjAmount = parseFloat(item.hj) || 0;
+//             var qkjeAmount = parseFloat(item.qkje) || 0;
+//             var yfjeAmount = parseFloat(item.yfje) || 0;
+//
+//             // 累计统计值
+//             totalHjAmount += hjAmount;
+//             totalQkjeAmount += qkjeAmount;
+//             totalYfjeAmount += yfjeAmount;
+//
+//             tableBody += `
+//                 <tr data-id="${item.id}">
+//                     <td>${item.khcm || ''}</td>
+//                     <td>${item.ddrq || ''}</td>
+//                     <td>${formatAmount(item.hj)}</td>
+//                     <td>${item.htbh || ''}</td>
+//                     <td>${item.kprq || ''}</td>
+//                     <td>${formatAmount(item.qkje)}</td>
+//                     <td>${formatAmount(item.yfje)}</td>
+//                     <td>${item.zbz || ''}</td>
+//                     <td>
+//                         <button class="btn btn-sm btn-info detail-btn"
+//                                 data-id="${item.id}"
+//                                 data-htbh="${item.htbh || ''}"> <!-- 确保传递 htbh -->
+//                             <i class="bi bi-eye"></i> 详情
+//                         </button>
+//                     </td>
+//                 </tr>
+//             `;
+//         });
+//
+//         // 更新统计显示
+//         updateStatistics();
+//         $('#statisticsContainer').show();
+//     } else {
+//         tableBody += `
+//             <tr>
+//                 <td colspan="10" style="text-align: center; color: #999;">暂无客户数据</td>
+//             </tr>
+//         `;
+//         // 没有数据时也显示统计区域，但值为0
+//         updateStatistics();
+//         $('#statisticsContainer').show();
+//     }
+//
+//     tableBody += '</tbody>';
+//     $('#cgmxTable').html(tableHeader + tableBody);
+//     addRowClickEvent();
+//     bindDetailButtonEvents();
+// }
 // 填充表格
 function fillTable(data) {
     $('#cgmxTable').empty();
 
-    // 重置统计变量
-    totalHjAmount = 0;
-    totalQkjeAmount = 0;
-    totalYfjeAmount = 0;
+    // 移除这里的统计计算逻辑
+    // 统计现在由 calculateTotalStatistics 函数处理
 
     var tableHeader = `
         <thead>
@@ -247,16 +402,7 @@ function fillTable(data) {
 
     if (data && data.length > 0) {
         data.forEach(function(item, index) {
-            // 获取并转换金额值
-            var hjAmount = parseFloat(item.hj) || 0;
-            var qkjeAmount = parseFloat(item.qkje) || 0;
-            var yfjeAmount = parseFloat(item.yfje) || 0;
-
-            // 累计统计值
-            totalHjAmount += hjAmount;
-            totalQkjeAmount += qkjeAmount;
-            totalYfjeAmount += yfjeAmount;
-
+            // 这里不再进行统计计算，只渲染表格数据
             tableBody += `
                 <tr data-id="${item.id}">
                     <td>${item.khcm || ''}</td>
@@ -278,8 +424,8 @@ function fillTable(data) {
             `;
         });
 
-        // 更新统计显示
-        updateStatistics();
+        // 统计显示已经由 calculateTotalStatistics 函数处理
+        // 这里不再更新统计
         $('#statisticsContainer').show();
     } else {
         tableBody += `
@@ -287,7 +433,7 @@ function fillTable(data) {
                 <td colspan="10" style="text-align: center; color: #999;">暂无客户数据</td>
             </tr>
         `;
-        // 没有数据时也显示统计区域，但值为0
+        // 没有数据时显示0值
         updateStatistics();
         $('#statisticsContainer').show();
     }
@@ -297,7 +443,6 @@ function fillTable(data) {
     addRowClickEvent();
     bindDetailButtonEvents();
 }
-
 // 添加格式化金额的函数
 function formatAmount(value) {
     if (!value || value === '') return '0.00';
@@ -1501,4 +1646,51 @@ function addTableStyles() {
             }
         `)
         .appendTo('head');
+}
+
+// 获取筛选后的统计信息
+function getFilteredStatistics(keyword) {
+    // 发送一个获取全部数据（不分页）的请求来统计
+    $ajax({
+        type: 'post',
+        url: '/cgmx/list',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1, // 第一页
+            pageSize: 999999, // 很大的数字，获取所有数据
+            keyword: keyword || ''
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.success && res.data && res.data.list) {
+            // 计算全部筛选数据的统计
+            calculateTotalStatistics(res.data.list);
+        } else {
+            // 如果失败，使用当前页数据统计
+            console.log('获取全部数据失败，使用当前页统计');
+        }
+    });
+}
+
+// 计算全部数据的统计
+function calculateTotalStatistics(dataList) {
+    // 重置统计变量
+    totalHjAmount = 0;
+    totalQkjeAmount = 0;
+    totalYfjeAmount = 0;
+
+    dataList.forEach(function(item) {
+        // 获取并转换金额值
+        var hjAmount = parseFloat(item.hj) || 0;
+        var qkjeAmount = parseFloat(item.qkje) || 0;
+        var yfjeAmount = parseFloat(item.yfje) || 0;
+
+        // 累计统计值
+        totalHjAmount += hjAmount;
+        totalQkjeAmount += qkjeAmount;
+        totalYfjeAmount += yfjeAmount;
+    });
+
+    // 更新统计显示
+    updateStatistics();
 }

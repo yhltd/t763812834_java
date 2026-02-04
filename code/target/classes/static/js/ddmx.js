@@ -322,6 +322,57 @@ function getCurrentKeyword() {
     return $('#ddh').val() || '';
 }
 
+// // 获取数据列表
+// function getList(page, size, searchParams) {
+//     currentPage = page || currentPage;
+//     pageSize = size || pageSize;
+//     searchParams = searchParams || {};
+//
+//     showLoading();
+//
+//     // 调用订单明细接口
+//     $ajax({
+//         type: 'post',
+//         url: '/ddmx/distinctPage',
+//         contentType: 'application/json',
+//         data: JSON.stringify({
+//             pageNum: currentPage,
+//             pageSize: pageSize,
+//             ddh: searchParams.ddh || '',    // 订单号（后端需要但前端没有，传空）
+//             khmc: searchParams.khmc || '',  // 客户名称
+//             fzr: searchParams.fzr || '',    // 负责人
+//             bm: searchParams.bm || '',      // 部门（后端需要但前端没有，传空）
+//             startDate: searchParams.startDate || '',
+//             endDate: searchParams.endDate || '',
+//             yingfuStartDate: searchParams.yingfuStartDate || '',  // 新增
+//             yingfuEndDate: searchParams.yingfuEndDate || '',      // 新增
+//             weifuZero: searchParams.weifuZero || false,         // 新增
+//             sortField: sortField,           // 添加排序字段
+//             sortOrder: sortOrder            // 添加排序方向
+//         }),
+//         dataType: 'json'
+//     }, false, '', function (res) {
+//         hideLoading();
+//         if (res.code === 200) {
+//             console.log("返回的订单明细信息", res);
+//             fillTable(res.data.records);
+//             totalCount = res.data.total;
+//             totalPages = res.data.pages;
+//             updatePagination();
+//             updateSortIcons();
+//         } else {
+//             console.error("查询失败:", res.message);
+//             if (res.code === 401) {
+//                 swal("登录已过期，请重新登录");
+//                 window.location.href = "/login.html";
+//             } else if (res.code === 403) {
+//                 swal("权限不足，无法访问此功能");
+//             } else {
+//                 swal("查询失败: " + (res.message || '未知错误'));
+//             }
+//         }
+//     });
+// }
 // 获取数据列表
 function getList(page, size, searchParams) {
     currentPage = page || currentPage;
@@ -360,6 +411,9 @@ function getList(page, size, searchParams) {
             totalPages = res.data.pages;
             updatePagination();
             updateSortIcons();
+
+            // 新增：获取筛选后的全部数据统计
+            getFilteredStatistics(searchParams);
         } else {
             console.error("查询失败:", res.message);
             if (res.code === 401) {
@@ -373,7 +427,6 @@ function getList(page, size, searchParams) {
         }
     });
 }
-
 // 添加更新排序图标的函数
 function updateSortIcons() {
     $('.sortable').each(function() {
@@ -464,6 +517,208 @@ function updateField(ddh, fieldName, fieldValue, callback) {
 }
 
 // 填充表格 - 渲染订单明细字段
+// function fillTable(data) {
+//     console.log("返回数据", data);
+//     $('#ddmxTable').empty();
+//
+//     // 重新绑定所有事件
+//     bindTableEvents();
+//
+//     // 重置统计变量
+//     totalYingfuAmount = 0;
+//     totalYifuAmount = 0;
+//     totalWeifuAmount = 0;
+//     totalOrderCount = 0;
+//
+//     var tableHeader = `
+//     <thead>
+//        <tr style="color: #eb6464; font-size: 10px">
+//             <th>双击表格内特殊颜色单元格进行输入</th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//             <th></th>
+//         </tr>
+//         <tr>
+//             <th class="sortable" data-field="ddrq">订单日期 ${getSortIcon('ddrq')}</th>
+//             <th class="sortable" data-field="ddh">订单号 ${getSortIcon('ddh')}</th>
+//             <th class="sortable" data-field="fzr">负责人 ${getSortIcon('fzr')}</th>
+//             <th class="sortable" data-field="bm">部门 ${getSortIcon('bm')}</th>
+//             <th class="sortable" data-field="lxr">联系人 ${getSortIcon('lxr')}</th>
+//             <th class="sortable" data-field="lxdh">联系电话 ${getSortIcon('lxdh')}</th>
+//             <th class="sortable" data-field="khmc">客户名称 ${getSortIcon('khmc')}</th>
+//             <th class="sortable" data-field="kpsj">开票时间 ${getSortIcon('kpsj')}</th>
+//             <th class="sortable" data-field="yingfu">付款时间 ${getSortIcon('yingfu')}</th>
+//             <th class="sortable" data-field="yfsj">应付金额 ${getSortIcon('yfsj')}</th>
+//             <th class="sortable" data-field="yifu">已付 ${getSortIcon('yifu')}</th>
+//             <th class="sortable" data-field="weifu">未付 ${getSortIcon('weifu')}</th>
+//             <th class="sortable" data-field="sfkp">开票状态 ${getSortIcon('sfkp')}</th>
+//             <th class="sortable" data-field="fahuozhuangtai">发货状态 ${getSortIcon('fahuozhuangtai')}</th>
+//             <th class="sortable" data-field="wldh">物流单号 ${getSortIcon('wldh')}</th>
+//             <th class="sortable" data-field="zk">注释 ${getSortIcon('zk')}</th>
+//             <th>操作</th>
+//             <th>PDF文件</th>
+//         </tr>
+//     </thead>
+// `;
+//
+//     var tableBody = '<tbody>';
+//
+//     if (data && data.length > 0) {
+//         data.forEach(function(item, index) {
+//             // 计算应付金额和未付金额
+//             var yingfu = calculateYingfu(item.yfsj, item.zk);
+//             var weifu = calculateWeifu(yingfu, item.yifu);
+//
+//             // 检查三个条件
+//             var isWeifuZero = parseFloat(weifu) === 0 || weifu === '0.00' || weifu === '0';
+//             var isSfkpInvoiced = item.sfkp === '已开票' || item.sfkp === '不开票';
+//             var isFahuozhuangtaiAllShipped = item.fahuozhuangtai === '全部已发货' || item.fahuozhuangtai === '全部发货';
+//
+//             // 判断是否满足所有条件
+//             var isSpecialRow = isWeifuZero && isSfkpInvoiced && isFahuozhuangtaiAllShipped;
+//
+//             // 为符合条件的行添加特殊类名
+//             var specialClass = isSpecialRow ? 'special-completed-row' : '';
+//
+//             // 累计统计值
+//             totalYingfuAmount += parseFloat(yingfu) || 0;
+//             totalYifuAmount += parseFloat(item.yifu) || 0;
+//             totalWeifuAmount += parseFloat(weifu) || 0;
+//             totalOrderCount++;
+//
+//             // 判断是否有PDF文件
+//             var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
+//
+//             // 获取文件扩展名，用于显示不同的图标
+//             var fileExt = '';
+//             var fileIcon = '';
+//             if (hasPdf) {
+//                 fileExt = item.pdf_file_name.split('.').pop().toLowerCase();
+//                 switch(fileExt) {
+//                     case 'pdf':
+//                         fileIcon = 'bi-file-earmark-pdf';
+//                         break;
+//                     case 'jpg':
+//                     case 'jpeg':
+//                     case 'png':
+//                     case 'gif':
+//                         fileIcon = 'bi-file-earmark-image';
+//                         break;
+//                     case 'doc':
+//                     case 'docx':
+//                         fileIcon = 'bi-file-earmark-word';
+//                         break;
+//                     case 'xls':
+//                     case 'xlsx':
+//                         fileIcon = 'bi-file-earmark-excel';
+//                         break;
+//                     default:
+//                         fileIcon = 'bi-file-earmark';
+//                 }
+//             }
+//
+//             tableBody += `
+//     <tr data-id="${item.id || index}" data-ddh="${item.ddh || ''}" class="${specialClass}">
+//         <td>${item.ddrq || ''}</td>
+//         <td>${item.ddh || ''}</td>
+//         <td>${item.fzr || ''}</td>
+//         <td>${item.bm || ''}</td>
+//         <td>${item.lxr || ''}</td>
+//         <td>${item.lxdh || ''}</td>
+//         <td>${item.khmc || ''}</td>
+//         <td class="kpsj-cell">${item.kpsj || ''}</td>
+//         <td class="yfsj-cell">${item.yingfu || ''}</td>
+//         <td>${yingfu}</td>
+//         <td class="editable-yifu" data-field="yifu" data-ddh="${item.ddh || ''}">${item.yifu || ''}</td>
+//         <td>${weifu}</td>
+//         <td>${item.sfkp || ''}</td>
+//         <td>${item.fahuozhuangtai || ''}</td>
+//         <td class="editable-wldh" data-field="wldh" data-ddh="${item.ddh || ''}">${item.wldh || ''}</td>
+//         <td class="editable-zk" data-field="zk" data-ddh="${item.ddh || ''}">${item.zk || ''}</td>
+//         <td>
+//             <button class="btn btn-sm btn-info detail-btn"
+//                     data-ddh="${item.ddh || ''}">
+//                 <i class="bi bi-eye"></i> 详情
+//             </button>
+//             <button class="btn btn-sm btn-warning withdraw-btn"
+//                     data-ddh="${item.ddh || ''}"
+//                     style="margin-top: 2px;">
+//                 <i class="bi bi-arrow-counterclockwise"></i> 撤回
+//             </button>
+//         </td>
+//         <td class="pdf-upload-cell">
+//             <div class="pdf-btn-container">
+//                 ${hasPdf ? `
+//                     <!-- 有PDF文件时的按钮 - 垂直排列 -->
+//                     <div>
+//                         <button class="btn btn-sm btn-success view-file-btn"
+//                                 data-filepath="${item.pdf_file_name || ''}"
+//                                 data-filename="${item.ddh || ''}-10.${fileExt}"
+//                                 title="查看文件：${item.pdf_file_name || ''}">
+//                             <i class="bi ${fileIcon}"></i> 查看文件
+//                         </button>
+//                     </div>
+//
+//                 ` : `
+//                     <!-- 没有PDF文件时的按钮 -->
+//                     <div>
+//
+//                     </div>
+//                 `}
+//                 <input type="file" class="pdf-file-input" data-ddh="${item.ddh || ''}" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx" style="display: none;">
+//             </div>
+//         </td>
+//     </tr>
+// `;
+//         });
+//
+//         // 更新统计显示
+//         updateStatistics();
+//         $('#statisticsContainer').show();
+//     } else {
+//         tableBody += `
+//             <tr>
+//                 <td colspan="19" style="text-align: center; color: #999;">暂无订单数据</td>
+//             </tr>
+//         `;
+//         // 没有数据时显示0值
+//         updateStatistics();
+//         $('#statisticsContainer').show();
+//     }
+//
+//     tableBody += '</tbody>';
+//     $('#ddmxTable').html(tableHeader + tableBody);
+//     // 添加自动调整列宽的功能
+//     autoAdjustColumnWidths();
+//     addRowClickEvent();
+//     bindDetailButtonEvents();
+//     bindEditableEvents();
+//     bindWithdrawButtonEvents();
+//     bindViewFileEvents();      // 绑定查看文件事件（新增）
+//     bindSortEvents();
+//
+//     // 确保每次渲染后都调整列宽
+//     setTimeout(function() {
+//         autoAdjustColumnWidths();
+//         adjustTableColumns();
+//     }, 100);
+//     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
+// }
+// 填充表格 - 渲染订单明细字段
 function fillTable(data) {
     console.log("返回数据", data);
     $('#ddmxTable').empty();
@@ -471,11 +726,8 @@ function fillTable(data) {
     // 重新绑定所有事件
     bindTableEvents();
 
-    // 重置统计变量
-    totalYingfuAmount = 0;
-    totalYifuAmount = 0;
-    totalWeifuAmount = 0;
-    totalOrderCount = 0;
+    // 移除这里的统计计算逻辑
+    // 统计现在由 calculateTotalStatistics 函数处理
 
     var tableHeader = `
     <thead>
@@ -540,12 +792,6 @@ function fillTable(data) {
 
             // 为符合条件的行添加特殊类名
             var specialClass = isSpecialRow ? 'special-completed-row' : '';
-
-            // 累计统计值
-            totalYingfuAmount += parseFloat(yingfu) || 0;
-            totalYifuAmount += parseFloat(item.yifu) || 0;
-            totalWeifuAmount += parseFloat(weifu) || 0;
-            totalOrderCount++;
 
             // 判断是否有PDF文件
             var hasPdf = item.pdf_file_name && item.pdf_file_name !== '';
@@ -633,8 +879,8 @@ function fillTable(data) {
 `;
         });
 
-        // 更新统计显示
-        updateStatistics();
+        // 统计显示已经由 calculateTotalStatistics 函数处理
+        // 这里不再更新统计
         $('#statisticsContainer').show();
     } else {
         tableBody += `
@@ -665,7 +911,6 @@ function fillTable(data) {
     }, 100);
     console.log('表格渲染完成，数据条数:', data ? data.length : 0);
 }
-
 // 统一的事件绑定函数
 function bindTableEvents() {
     // 清理所有.ddmx命名空间的事件
@@ -4373,6 +4618,65 @@ function bindSortEvents() {
 
         handleSortClick(field);
     });
+}
+
+// 获取筛选后的统计信息
+function getFilteredStatistics(searchParams) {
+    // 发送一个获取全部数据（不分页）的请求来统计
+    $ajax({
+        type: 'post',
+        url: '/ddmx/distinctPage',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            pageNum: 1, // 第一页
+            pageSize: 999999, // 很大的数字，获取所有数据
+            ddh: searchParams.ddh || '',
+            khmc: searchParams.khmc || '',
+            fzr: searchParams.fzr || '',
+            bm: searchParams.bm || '',
+            startDate: searchParams.startDate || '',
+            endDate: searchParams.endDate || '',
+            yingfuStartDate: searchParams.yingfuStartDate || '',
+            yingfuEndDate: searchParams.yingfuEndDate || '',
+            weifuZero: searchParams.weifuZero || false,
+            sortField: sortField,
+            sortOrder: sortOrder
+        }),
+        dataType: 'json'
+    }, false, '', function (res) {
+        if (res.code === 200 && res.data && res.data.records) {
+            // 计算全部筛选数据的统计
+            calculateTotalStatistics(res.data.records);
+        } else {
+            // 如果失败，使用当前页数据统计
+            console.log('获取全部数据失败，使用当前页统计');
+        }
+    });
+}
+
+// 计算全部数据的统计
+function calculateTotalStatistics(dataList) {
+    // 重置统计变量
+    totalYingfuAmount = 0;
+    totalYifuAmount = 0;
+    totalWeifuAmount = 0;
+    totalOrderCount = 0;
+
+    dataList.forEach(function(item) {
+        // 计算应付金额和未付金额
+        var yingfu = calculateYingfu(item.yfsj, item.zk);
+        var yifu = parseFloat(item.yifu) || 0;
+        var weifu = calculateWeifu(yingfu, item.yifu);
+
+        // 累加统计值
+        totalYingfuAmount += parseFloat(yingfu) || 0;
+        totalYifuAmount += yifu;
+        totalWeifuAmount += parseFloat(weifu) || 0;
+        totalOrderCount++;
+    });
+
+    // 更新统计显示
+    updateStatistics();
 }
 
 
