@@ -1603,7 +1603,7 @@
                     <input type="text" class="form-control item-model" placeholder="产品型号">
                 </div>
                 <div class="form-group">
-                    <label>订购数量</label>
+                    <label>数量</label>
                     <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
                 </div>
                 <div class="form-group">
@@ -1681,7 +1681,7 @@
                 <th>序号</th>
                 <th>产品名称</th>
                 <th>产品型号</th>
-                <th>订购数量</th>
+                <th>数量</th>
                 <th>单价</th>
                 <th>合计</th>
                 <th>备注</th>
@@ -2553,8 +2553,8 @@
             <td>${item.quantity || ''}</td>
             <td>${item.price || ''}</td>
             <td>${item.amount || ''}</td>
-            <td>${item.remark || ''}</td>
-            <td>${item.delivery || ''}</td>
+            <td style="white-space: normal; word-wrap: break-word;">${item.remark || ''}</td>
+            <td style="white-space: normal; word-wrap: break-word;">${item.delivery || ''}</td>
             <td>${item.brand || ''}</td>
         </tr>
     `;
@@ -2599,11 +2599,11 @@
                     <th style="width: 5%">序号</th>
                     <th style="width: 10%">产品名称</th>
                     <th style="width: 20%">产品型号</th>
-                    <th style="width: 8%">订购数量</th>
+                    <th style="width: 8%">数量</th>
                     <th style="width: 10%">单价</th>
                     <th style="width: 10%">合计</th>
-                    <th style="width: 20%">备注</th>
-                    <th style="width: 10%">货期</th>
+                    <th >备注</th>
+                    <th style="width: 13%">货期</th>
                     <th style="width: 7%">品牌</th>
                 </tr>
             </thead>
@@ -5958,7 +5958,7 @@
         <input type="text" class="form-control item-model" placeholder="产品型号" value="${model || ''}">
     </div>
     <div class="form-group">
-        <label>订购数量</label>
+        <label>数量</label>
         <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="${quantity || '1'}">
     </div>
     <div class="form-group">
@@ -6910,7 +6910,7 @@
                 <input type="text" class="form-control item-model" placeholder="产品型号">
             </div>
             <div class="form-group">
-                <label>订购数量</label>
+                <label>数量</label>
                 <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
             </div>
             <div class="form-group">
@@ -6990,7 +6990,7 @@
                 <input type="text" class="form-control item-model" placeholder="产品型号" value="${productModel}">
             </div>
             <div class="form-group">
-                <label>订购数量</label>
+                <label>数量</label>
                 <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="${quantity}">
             </div>
             <div class="form-group">
@@ -7636,7 +7636,7 @@
         excelData.push([]);
 
         // 4. 货物明细表头
-        const headers = ['序号', '产品名称', '产品型号', '订购数量', '单价', '合计', '备注', '货期', '品牌'];
+        const headers = ['序号', '产品名称', '产品型号', '数量', '单价', '合计', '备注', '货期', '品牌'];
         excelData.push(headers);
 
         // 5. 货物明细数据

@@ -123,10 +123,11 @@
 
         .customer-info {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             padding: 10px 15px;
             border-bottom: 1px solid #ddd;
             font-size: 14px;
+            width: 100%;
         }
 
         .content {
@@ -528,14 +529,18 @@
     <div class="customer-info">
         <div>客户：<span id="customer-name">客户</span></div>
         <div>发货日期：<input id="fhrq" type="date" class="form-control" placeholder="发货日期" autocomplete="off"></div>
-        <div>合同编号：
+        <div style="display: flex;width: 300px;">
+            <div>
+            合同编号：
+            </div>
+            <div style="width: 75%;">
             <input type="text" id="contract-input" class="form-control"
                    placeholder="输入合同编号筛选"
                    list="contract-datalist"
                    autocomplete="off"
-                   style="width: 250px;"
+                   style="width: 100%; max-width: 500px; min-width: 200px;"
                    onchange="handleContractChange()">
-
+            </div>
             <datalist id="contract-datalist">
                 <!-- 这里会通过JS动态填充所有合同 -->
             </datalist>
