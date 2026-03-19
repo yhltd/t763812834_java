@@ -8,8 +8,6 @@ com\example\demo\util\DetailRequestDTO.class
 com\example\demo\util\AuthUtil4.class
 com\example\demo\service\KhxxService.class
 com\example\demo\service\DzdService.class
-com\example\demo\service\impl\LargeFileUploadService.class
-com\example\demo\service\impl\LargeFileUploadService$1.class
 com\example\demo\util\Qxgl.class
 com\example\demo\entity\Xdmx.class
 com\example\demo\service\impl\QxglImpl.class
@@ -72,7 +70,6 @@ com\example\demo\util\PageRequestDTO.class
 com\example\demo\controller\YgxxController.class
 com\example\demo\entity\Yjbb.class
 com\example\demo\service\impl\DzdjlImpl.class
-com\example\demo\service\impl\LargeFileUploadService$LargeFileResult.class
 com\example\demo\service\impl\CaigouImpl.class
 com\example\demo\entity\Power.class
 com\example\demo\service\impl\DzdImpl.class

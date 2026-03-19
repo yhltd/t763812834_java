@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.entity.Ddmx;
 import com.example.demo.service.DdmxService;
-import com.example.demo.service.impl.LargeFileUploadService;
+//import com.example.demo.service.impl.LargeFileUploadService;
 import com.example.demo.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,8 +28,8 @@ public class DdmxController {
     @Autowired
     private DdmxService ddmxService;
 
-    @Autowired
-    private LargeFileUploadService largeFileUploadService;
+//    @Autowired
+//    private LargeFileUploadService largeFileUploadService;
 
     @Value("${pdf.upload.path:/tmp/uploads/pdf/}")
     private String uploadPath;
@@ -732,63 +732,63 @@ public class DdmxController {
     /**
      * 专门处理大文件上传的接口
      */
-    @PostMapping("/uploadLargePdf")
-    public ResponseEntity<?> uploadLargePdf(HttpSession session,
-                                            @RequestParam("ddh") String ddh,
-                                            @RequestParam("pdfFile") MultipartFile pdfFile) {
-
-        // 权限检查
-        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
-        if (!authResult.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(createResponse(403, "权限不足"));
-        }
-        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
-        if (!authResult3.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(createResponse(403, "权限不足"));
-        }
-
-        try {
-            // 文件大小检查
-            if (pdfFile.getSize() > 100 * 1024 * 1024) { // 100MB限制
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createResponse(400, "文件大小不能超过100MB"));
-            }
-
-            long startTime = System.currentTimeMillis();
-
-            // 根据文件大小选择不同的处理方式
-            Map<String, Object> result;
-            if (pdfFile.getSize() > 10 * 1024 * 1024) { // 超过10MB使用大文件处理
-                double fileSizeMB = pdfFile.getSize() / (1024.0 * 1024.0);
-                result = largeFileUploadService.uploadLargePdf(ddh, pdfFile);
-            } else {
-                // 小文件使用原处理方式
-                result = ddmxService.uploadPdf(ddh, pdfFile);
-            }
-
-            long costTime = System.currentTimeMillis() - startTime;
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("message", "文件上传成功");
-            response.put("data", result);
-            response.put("totalCostTime", costTime + "ms");
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("code", 500);
-            errorResponse.put("message", "文件上传失败: " + e.getMessage());
-            errorResponse.put("timestamp", System.currentTimeMillis());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
-        }
-    }
+//    @PostMapping("/uploadLargePdf")
+//    public ResponseEntity<?> uploadLargePdf(HttpSession session,
+//                                            @RequestParam("ddh") String ddh,
+//                                            @RequestParam("pdfFile") MultipartFile pdfFile) {
+//
+//        // 权限检查
+//        Result<?> authResult = AuthUtil2.checkAdminAuth(session);
+//        if (!authResult.isSuccess()) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                    .body(createResponse(403, "权限不足"));
+//        }
+//        Result<?> authResult3 = AuthUtil3.checkAdminAuth(session);
+//        if (!authResult3.isSuccess()) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                    .body(createResponse(403, "权限不足"));
+//        }
+//
+//        try {
+//            // 文件大小检查
+//            if (pdfFile.getSize() > 100 * 1024 * 1024) { // 100MB限制
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                        .body(createResponse(400, "文件大小不能超过100MB"));
+//            }
+//
+//            long startTime = System.currentTimeMillis();
+//
+//            // 根据文件大小选择不同的处理方式
+//            Map<String, Object> result;
+//            if (pdfFile.getSize() > 10 * 1024 * 1024) { // 超过10MB使用大文件处理
+//                double fileSizeMB = pdfFile.getSize() / (1024.0 * 1024.0);
+//                result = largeFileUploadService.uploadLargePdf(ddh, pdfFile);
+//            } else {
+//                // 小文件使用原处理方式
+//                result = ddmxService.uploadPdf(ddh, pdfFile);
+//            }
+//
+//            long costTime = System.currentTimeMillis() - startTime;
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("code", 200);
+//            response.put("message", "文件上传成功");
+//            response.put("data", result);
+//            response.put("totalCostTime", costTime + "ms");
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("code", 500);
+//            errorResponse.put("message", "文件上传失败: " + e.getMessage());
+//            errorResponse.put("timestamp", System.currentTimeMillis());
+//
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(errorResponse);
+//        }
+//    }
 
     /**
      * 创建响应Map的辅助方法

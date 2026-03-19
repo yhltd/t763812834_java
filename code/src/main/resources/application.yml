@@ -1,3 +1,279 @@
+#server:
+#  port: 9095
+#
+## 优化服务器配置
+#tomcat:
+#  max-http-post-size: 100MB
+#  max-swallow-size: 100MB
+#  connection-timeout: 30000
+#  max-connections: 200
+#  threads:
+#    max: 200
+#    min-spare: 20
+#
+#spring:
+#  profiles:
+#    active: dev
+#
+#  # Redis配置（新增）
+#  spring:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      timeout: 2000ms  # 设置超时时间
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 0
+#        shutdown-timeout: 100ms
+#
+#  datasource:
+#    # 使用dynamic-datasource管理多个数据源
+#    dynamic:
+#      primary: druid  # 设置默认数据源为druid
+#      strict: false
+#      datasource:
+#        # 主数据源
+#        druid:
+#          url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
+#          username: sa
+#          password: Lyh07910_001
+#          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#          type: com.alibaba.druid.pool.DruidDataSource
+#          druid:
+#            initial-size: 10        # 增加到10
+#            min-idle: 10           # 增加到10
+#            max-active: 50         # 增加到50
+#            max-wait: 30000        # 增加到30秒
+#            time-between-eviction-runs-millis: 60000
+#            min-evictable-idle-time-millis: 300000
+#            test-while-idle: true
+#            test-on-borrow: true
+#            test-on-return: false
+#            validation-query: SELECT 1
+#            validation-query-timeout: 3000
+#            pool-prepared-statements: true
+#            max-pool-prepared-statement-per-connection-size: 20
+#            filters: stat,wall,slf4j
+#            connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+#            use-global-data-source-stat: true
+#
+#        # 第二个数据源
+#        softtime:
+#          url: jdbc:sqlserver://bds28428944.my3w.com;DatabaseName=bds28428944_db
+#          username: bds28428944
+#          password: 07910Lyh
+#          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#          type: com.alibaba.druid.pool.DruidDataSource
+#          druid:
+#            initial-size: 5
+#            min-idle: 5
+#            max-active: 20
+#            max-wait: 10000
+#            test-on-borrow: true
+#            validation-query: SELECT 1
+#
+#  servlet:
+#    multipart:
+#      max-file-size: 50MB          # 增加到50MB
+#      max-request-size: 50MB       # 增加到50MB
+#      enabled: true
+#      file-size-threshold: 1KB
+#      location: /tmp/uploads       # 临时上传目录
+#
+#  mvc:
+#    view:
+#      suffix: .html
+#    static-path-pattern: /**
+#
+#  web:
+#    resources:
+#      static-locations: file:${web.upload-path},classpath:/templates/,classpath:/static/
+#      cache:
+#        period: 3600               # 静态资源缓存1小时
+#        cachecontrol:
+#          max-age: 3600
+#
+#  thymeleaf:
+#    cache: false
+#
+#  # 异步处理配置（新增）
+#  task:
+#    execution:
+#      pool:
+#        core-size: 4
+#        max-size: 10
+#        queue-capacity: 100
+#        keep-alive: 60s
+#      thread-name-prefix: async-
+#    scheduling:
+#      pool:
+#        size: 5
+#      thread-name-prefix: scheduled-
+#
+## MyBatis Plus优化配置
+#mybatis-plus:
+#  configuration:
+#    map-underscore-to-camel-case: true
+#    # 生产环境建议关闭日志
+#    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    default-executor-type: REUSE      # 重用预编译语句
+#    cache-enabled: false               # 二级缓存
+#    lazy-loading-enabled: true         # 延迟加载
+#    aggressive-lazy-loading: false
+#    multiple-result-sets-enabled: true
+#    use-column-label: true
+#    use-generated-keys: true
+#    call-setters-on-nulls: true
+#    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+#  global-config:
+#    db-config:
+#      id-type: auto
+#      table-underline: true
+#      logic-delete-value: 1
+#      logic-not-delete-value: 0
+#    banner: false
+#
+## 文件上传路径配置
+#web:
+#  upload-path: ./upload/
+#  resources:
+#    static-locations: classpath:/static/,file:${pdf.upload.path}
+#
+## PDF文件处理优化配置（新增）
+#pdf:
+#  upload:
+#    path: /data/uploads/pdf/
+#    access:
+#      base-url: /pdf/
+#    # 压缩配置
+#    compress:
+#      enabled: true                    # 启用压缩
+#      threshold: 102400                # 100KB，超过此大小启用压缩
+#      type: hybrid                     # 混合压缩：gzip+snappy
+#    # 分片配置
+#    chunk:
+#      size: 524288                     # 512KB分片大小
+#      enabled: true                    # 启用分片存储
+#      max-chunks: 100                  # 最大分片数
+#    # 缓存配置
+#    cache:
+#      enabled: true                    # 启用缓存
+#      redis-ttl: 3600                  # Redis缓存1小时
+#      memory-max-size: 100             # 内存缓存最大文件数
+#      memory-soft-reference: true      # 使用软引用避免OOM
+#    # 性能优化
+#    performance:
+#      max-file-size: 52428800          # 50MB最大文件大小
+#      max-memory-usage: 104857600      # 100MB最大内存使用
+#      use-direct-memory: false         # 是否使用直接内存
+#      async-processing: true           # 异步处理
+#
+## 内存优化配置（新增）
+#memory:
+#  optimization:
+#    direct-memory:
+#      enabled: false
+#      max-size: 268435456              # 256MB直接内存
+#    heap-memory:
+#      warning-threshold: 0.8           # 堆内存使用80%警告
+#      gc-threshold: 0.7                # 堆内存使用70%触发GC建议
+#    cache:
+#      soft-reference:
+#        enabled: true
+#        cleanup-interval: 300          # 5分钟清理一次
+#      weak-reference:
+#        enabled: true
+#    file-processing:
+#      buffer-size: 8192                # 8KB缓冲区
+#      max-chunk-size: 1048576          # 1MB最大分块
+#      use-mmap: false                  # 是否使用内存映射
+#
+## 监控配置（新增）
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,info,metrics,prometheus
+#  endpoint:
+#    health:
+#      show-details: always
+#  metrics:
+#    export:
+#      prometheus:
+#        enabled: true
+#    tags:
+#      application: pdf-service
+#
+## 日志配置（新增）
+#logging:
+#  level:
+#    com.example.demo: INFO
+#    com.alibaba.druid: WARN
+#    org.springframework.web: INFO
+#    org.mybatis: DEBUG
+#  file:
+#    name: logs/application.log
+#    max-size: 10MB
+#    max-history: 30
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+#    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+#  logback:
+#    rollingpolicy:
+#      max-file-size: 10MB
+#      max-history: 30
+#
+## JVM监控配置（新增）
+#jvm:
+#  monitor:
+#    enabled: true
+#    interval: 60000                    # 60秒监控一次
+#    gc:
+#      log-enabled: true
+#      log-dir: logs/gc
+#    memory:
+#      dump-on-oom: true
+#      dump-path: logs/heapdump
+#
+## 数据库连接池监控（新增）
+#druid:
+#  # WebStatFilter配置
+#  web-stat-filter:
+#    enabled: true
+#    url-pattern: /*
+#    exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+#    session-stat-enable: true
+#    session-stat-max-count: 1000
+#  # StatViewServlet配置
+#  stat-view-servlet:
+#    enabled: true
+#    url-pattern: /druid/*
+#    reset-enable: false
+#    login-username: admin
+#    login-password: admin
+#    allow: 127.0.0.1
+#    deny:
+#  # 监控配置
+#  filter:
+#    stat:
+#      enabled: true
+#      log-slow-sql: true
+#      slow-sql-millis: 2000
+#      merge-sql: true
+#    wall:
+#      enabled: true
+#      config:
+#        drop-table-allow: false
+#    config:
+#      enabled: true
+#  # 连接池监控
+#  aop-patterns: com.example.demo.service.*
+
+
+#=========上面配置为验证过的好用配置，优化不占有过多缓存线程改为下面内容=====================
+
 server:
   port: 9095
 
@@ -15,26 +291,23 @@ spring:
   profiles:
     active: dev
 
-  # Redis配置（新增）
-  spring:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 2000ms  # 设置超时时间
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-        shutdown-timeout: 100ms
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+      shutdown-timeout: 100ms
 
   datasource:
-    # 使用dynamic-datasource管理多个数据源
     dynamic:
-      primary: druid  # 设置默认数据源为druid
+      primary: druid
       strict: false
       datasource:
-        # 主数据源
         druid:
           url: jdbc:sqlserver://yhocn.cn;DatabaseName=t763812834_20251118
           username: sa
@@ -42,10 +315,10 @@ spring:
           driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
-            initial-size: 10        # 增加到10
-            min-idle: 10           # 增加到10
-            max-active: 50         # 增加到50
-            max-wait: 30000        # 增加到30秒
+            initial-size: 10
+            min-idle: 10
+            max-active: 50
+            max-wait: 30000
             time-between-eviction-runs-millis: 60000
             min-evictable-idle-time-millis: 300000
             test-while-idle: true
@@ -59,7 +332,6 @@ spring:
             connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
             use-global-data-source-stat: true
 
-        # 第二个数据源
         softtime:
           url: jdbc:sqlserver://bds28428944.my3w.com;DatabaseName=bds28428944_db
           username: bds28428944
@@ -76,11 +348,11 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 50MB          # 增加到50MB
-      max-request-size: 50MB       # 增加到50MB
+      max-file-size: 50MB
+      max-request-size: 50MB
       enabled: true
       file-size-threshold: 1KB
-      location: /tmp/uploads       # 临时上传目录
+      location: /tmp/uploads
 
   mvc:
     view:
@@ -91,14 +363,13 @@ spring:
     resources:
       static-locations: file:${web.upload-path},classpath:/templates/,classpath:/static/
       cache:
-        period: 3600               # 静态资源缓存1小时
+        period: 3600
         cachecontrol:
           max-age: 3600
 
   thymeleaf:
     cache: false
 
-  # 异步处理配置（新增）
   task:
     execution:
       pool:
@@ -112,21 +383,23 @@ spring:
         size: 5
       thread-name-prefix: scheduled-
 
-# MyBatis Plus优化配置
+# ==================== 🚨 关键修改：MyBatis Plus 优化配置 ====================
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    # 生产环境建议关闭日志
-    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    default-executor-type: REUSE      # 重用预编译语句
-    cache-enabled: false               # 二级缓存
-    lazy-loading-enabled: true         # 延迟加载
+    local-cache-scope: STATEMENT      # 改为 STATEMENT，每次查询独立缓存
+    cache-enabled: false               # 关闭二级缓存
+    default-executor-type: REUSE      # 保留 REUSE，性能更好
+    lazy-loading-enabled: false        # 关闭延迟加载，减少代理对象
     aggressive-lazy-loading: false
     multiple-result-sets-enabled: true
     use-column-label: true
     use-generated-keys: true
     call-setters-on-nulls: true
+
+    # ✅ 修改4：日志使用 Slf4jImpl（您已经正确配置）
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
   global-config:
     db-config:
       id-type: auto
@@ -134,63 +407,60 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
     banner: false
+    enable-sql-runner: false
 
-# 文件上传路径配置
+# 文件上传路径配置（保持不变）
 web:
   upload-path: ./upload/
   resources:
     static-locations: classpath:/static/,file:${pdf.upload.path}
 
-# PDF文件处理优化配置（新增）
+# PDF配置（保持不变）
 pdf:
   upload:
     path: /data/uploads/pdf/
     access:
       base-url: /pdf/
-    # 压缩配置
     compress:
-      enabled: true                    # 启用压缩
-      threshold: 102400                # 100KB，超过此大小启用压缩
-      type: hybrid                     # 混合压缩：gzip+snappy
-    # 分片配置
+      enabled: true
+      threshold: 102400
+      type: hybrid
     chunk:
-      size: 524288                     # 512KB分片大小
-      enabled: true                    # 启用分片存储
-      max-chunks: 100                  # 最大分片数
-    # 缓存配置
+      size: 524288
+      enabled: true
+      max-chunks: 100
     cache:
-      enabled: true                    # 启用缓存
-      redis-ttl: 3600                  # Redis缓存1小时
-      memory-max-size: 100             # 内存缓存最大文件数
-      memory-soft-reference: true      # 使用软引用避免OOM
-    # 性能优化
+      enabled: true
+      redis-ttl: 3600
+      memory-max-size: 100
+      memory-soft-reference: true
     performance:
-      max-file-size: 52428800          # 50MB最大文件大小
-      max-memory-usage: 104857600      # 100MB最大内存使用
-      use-direct-memory: false         # 是否使用直接内存
-      async-processing: true           # 异步处理
+      max-file-size: 52428800
+      max-memory-usage: 104857600
+      use-direct-memory: false
+      async-processing: true
 
-# 内存优化配置（新增）
+# 内存优化配置（保持不变）
 memory:
   optimization:
     direct-memory:
       enabled: false
-      max-size: 268435456              # 256MB直接内存
+      max-size: 268435456
     heap-memory:
-      warning-threshold: 0.8           # 堆内存使用80%警告
-      gc-threshold: 0.7                # 堆内存使用70%触发GC建议
+      warning-threshold: 0.8
+      gc-threshold: 0.7
     cache:
       soft-reference:
         enabled: true
-        cleanup-interval: 300          # 5分钟清理一次
+        cleanup-interval: 300
       weak-reference:
         enabled: true
     file-processing:
-      buffer-size: 8192                # 8KB缓冲区
-      max-chunk-size: 1048576          # 1MB最大分块
-      use-mmap: false                  # 是否使用内存映射
+      buffer-size: 8192
+      max-chunk-size: 1048576
+      use-mmap: false
 
-# 监控配置（新增）
+# 监控配置（保持不变）
 management:
   endpoints:
     web:
@@ -206,13 +476,14 @@ management:
     tags:
       application: pdf-service
 
-# 日志配置（新增）
+# ==================== 🚨 日志配置优化 ====================
 logging:
   level:
     com.example.demo: INFO
     com.alibaba.druid: WARN
     org.springframework.web: INFO
-    org.mybatis: DEBUG
+    # ✅ 修改6：将 MyBatis 日志级别改为 ERROR，减少对象创建
+    org.mybatis: ERROR
   file:
     name: logs/application.log
     max-size: 10MB
@@ -225,11 +496,11 @@ logging:
       max-file-size: 10MB
       max-history: 30
 
-# JVM监控配置（新增）
+# JVM监控配置（保持不变）
 jvm:
   monitor:
     enabled: true
-    interval: 60000                    # 60秒监控一次
+    interval: 60000
     gc:
       log-enabled: true
       log-dir: logs/gc
@@ -237,16 +508,14 @@ jvm:
       dump-on-oom: true
       dump-path: logs/heapdump
 
-# 数据库连接池监控（新增）
+# Druid监控（保持不变）
 druid:
-  # WebStatFilter配置
   web-stat-filter:
     enabled: true
     url-pattern: /*
     exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
     session-stat-enable: true
     session-stat-max-count: 1000
-  # StatViewServlet配置
   stat-view-servlet:
     enabled: true
     url-pattern: /druid/*
@@ -255,7 +524,6 @@ druid:
     login-password: admin
     allow: 127.0.0.1
     deny:
-  # 监控配置
   filter:
     stat:
       enabled: true
@@ -268,5 +536,4 @@ druid:
         drop-table-allow: false
     config:
       enabled: true
-  # 连接池监控
   aop-patterns: com.example.demo.service.*
