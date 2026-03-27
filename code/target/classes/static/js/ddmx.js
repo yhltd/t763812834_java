@@ -136,6 +136,109 @@ $(document).ready(function() {
 
 });
 
+
+function checkTotalSpace() {
+    return new Promise((resolve, reject) => {
+
+        var path = "/t763812834_java_sharepic/";
+
+        // 先获取空间限制，再检查文件夹大小
+        getSpaceLimitFromLocal().then(function(limitKB) {
+
+            var folderRequest = $.ajax({
+                url: "https://yhocn.cn:9097/file/getFolderSize",
+                type: 'GET',
+                data: { path: path }
+            });
+
+            folderRequest.done(function(folderData) {
+                var folderSizeKB = 0;
+
+                // 检查文件夹请求结果
+                if (folderData.code === 200) {
+                    folderSizeKB = folderData.data.sizeBytes / 1024;
+                    console.log("文件夹大小:", folderSizeKB.toFixed(2), "KB");
+                } else if (folderData.code === 500 && folderData.msg === "文件夹不存在") {
+                    folderSizeKB = 0;
+                    console.log("文件夹不存在，大小设为 0 KB");
+                } else {
+                    console.warn("获取文件夹大小失败:", folderData.msg);
+                    folderSizeKB = 0;
+                }
+
+                // 总使用空间（KB）
+                var totalUsedKB = folderSizeKB;
+
+                // 计算使用率
+                var usagePercent = (totalUsedKB / limitKB) * 100;
+
+                var canUpload = true;
+                var message = "";
+
+                if (totalUsedKB >= limitKB * 1.1) {
+                    canUpload = false;
+                    message = "空间使用已超110%（" + usagePercent.toFixed(2) + "%），无法上传 请清理旧数据或联系服务商购买扩容 微信：yhocn-com！";
+                    alert(message);
+                    $("#upload-btn").prop("disabled", true);
+                } else if (totalUsedKB >= limitKB * 0.9) {
+                    message = "空间使用已超90%（" + usagePercent.toFixed(2) + "%），请注意清理或联系服务商购买扩容 微信：yhocn-com！";
+                    alert(message);
+                    $("#upload-btn").prop("disabled", false);
+                } else {
+                    $("#upload-btn").prop("disabled", false);
+                }
+
+                resolve({
+                    canUpload: canUpload,
+                    usagePercent: usagePercent,
+                    totalUsedKB: totalUsedKB,
+                    limitKB: limitKB
+                });
+
+            }).fail(function(err) {
+                console.error("获取文件夹大小失败:", err);
+                reject("请求失败");
+            });
+
+        }).catch(function(err) {
+            console.error("获取空间限制失败:", err);
+            reject("获取空间限制失败");
+        });
+    });
+}
+
+// 获取空间限制函数（返回Promise）
+function getSpaceLimitFromLocal() {
+    return new Promise(function(resolve, reject) {
+        // 从文本文件读取
+        $.ajax({
+            url: 'space_limit.txt',
+            type: 'GET',
+            dataType: 'text',
+            success: function(data) {
+                var limitGB = parseFloat(data.trim());
+                if (!isNaN(limitGB) && limitGB > 0) {
+                    var limitKB = limitGB * 1024 * 1024;
+                    localStorage.setItem('spaceLimit', limitKB);
+                    console.log('从文本文件加载空间限制:', limitGB, 'GB');
+                    resolve(limitKB);
+                } else {
+                    // 使用默认值 5GB
+                    var defaultLimitKB = 5 * 1024 * 1024;
+                    console.log('文本文件内容无效，使用默认值 5GB');
+                    resolve(defaultLimitKB);
+                }
+            },
+            error: function() {
+                // 使用默认值 5GB
+                var defaultLimitKB = 5 * 1024 * 1024;
+                console.log('无法加载空间限制文件，使用默认值 5GB');
+                resolve(defaultLimitKB);
+            }
+        });
+    });
+}
+
 function initDdmxPage() {
     console.log('初始化订单明细页面...');
 
@@ -3628,6 +3731,19 @@ $(function () {
             var originalName = file.name;
             var fileExtension = originalName.split('.').pop().toLowerCase();
 
+            // ========== 新增：文件大小检查（500MB限制） ==========
+            var maxSizeMB = 500;
+            var fileSizeMB = file.size / 1024 / 1024;
+            var maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+            console.log('文件大小:', fileSizeMB.toFixed(2), 'MB');
+
+            if (file.size > maxSizeBytes) {
+                alert("文件超过" + maxSizeMB + "MB限制！\n当前文件大小：" + fileSizeMB.toFixed(2) + "MB\n请重新选择文件。");
+                return;
+            }
+            // ========== 文件大小检查结束 ==========
+
             // 重要修改：使用手动输入的文件名来构建存储文件名
             // 格式：手动文件名.扩展名（而不是原来的 订单号-10.扩展名）
             var storedFileName = manualFileName;
@@ -3644,49 +3760,90 @@ $(function () {
             console.log('手动输入的文件名:', manualFileName);
             console.log('最终存储文件名:', storedFileName);
 
-            formData.append('file', file);
-            formData.append('initialPreview', '[]');
-            formData.append('initialPreviewConfig', '[]');
-            formData.append('initialPreviewThumbTags', '[]');
-            formData.append('file', storedFileName);  // 修改：使用手动文件名
-            formData.append('name', storedFileName);   // 修改：使用手动文件名
-            formData.append('path', '/t763812834_java_sharepic/');
-            formData.append('kongjian', '3');
-            formData.append('fileType', fileExtension);
-            formData.append('orderNumber', orderNumber);
+            // ========== 新增：空间检查 ==========
+            console.log('开始检查空间...');
 
-            // 添加原始文件名信息（可选，用于调试）
-            formData.append('originalFileName', originalName);
-            formData.append('customFileName', manualFileName);
+            var $submitBtn = $(this);
+            $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> 检查空间中...');
 
-            // 发送上传请求
-            $.ajax({
-                url: "https://yhocn.cn:9097/file/upload",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (res) {
-                    if (res.code === 200) {
-                        alert("上传成功！");
-                        $('#add-modal').modal('hide');
+            checkTotalSpace().then(function(spaceResult) {
+                console.log('空间检查结果:', spaceResult);
 
-                        // 重要修改：使用手动文件名构建的完整URL
-                        var fullUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + storedFileName;
-
-                        updatePdfFileName(orderNumber, fullUrl);
-
-                        clearForm();
-
-                    } else {
-                        alert("上传失败：" + res.msg);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('上传请求失败:', error);
-                    alert("上传失败！请检查网络连接。");
+                if (!spaceResult.canUpload) {
+                    $submitBtn.prop('disabled', false).html('上传');
+                    return;
                 }
+
+                console.log('空间充足，开始上传文件...');
+                console.log('当前空间使用率:', spaceResult.usagePercent.toFixed(2) + '%');
+
+                // 显示上传中状态
+                $submitBtn.html('<i class="bi bi-hourglass-split"></i> 上传中...');
+
+                // ========== 原有上传逻辑保持不变 ==========
+                formData.append('file', file);
+                formData.append('initialPreview', '[]');
+                formData.append('initialPreviewConfig', '[]');
+                formData.append('initialPreviewThumbTags', '[]');
+                formData.append('file', storedFileName);  // 修改：使用手动文件名
+                formData.append('name', storedFileName);   // 修改：使用手动文件名
+                formData.append('path', '/t763812834_java_sharepic/');
+                formData.append('kongjian', '3');
+                formData.append('fileType', fileExtension);
+                formData.append('orderNumber', orderNumber);
+                formData.append('fileSize', file.size.toString());  // 可选：传递文件大小
+
+                // 添加原始文件名信息（可选，用于调试）
+                formData.append('originalFileName', originalName);
+                formData.append('customFileName', manualFileName);
+
+                // 发送上传请求
+                $.ajax({
+                    url: "https://yhocn.cn:9097/file/upload",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    timeout: 600000,  // 新增：10分钟超时，支持大文件
+                    success: function (res) {
+                        $submitBtn.prop('disabled', false).html('上传');
+
+                        if (res.code === 200) {
+                            alert("上传成功！");
+                            $('#add-modal').modal('hide');
+
+                            // 重要修改：使用手动文件名构建的完整URL
+                            var fullUrl = "http://yhocn.cn:9088/t763812834_java_sharepic/" + storedFileName;
+
+                            updatePdfFileName(orderNumber, fullUrl);
+
+                            clearForm();
+
+                        } else {
+                            alert("上传失败：" + (res.msg || '未知错误'));
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $submitBtn.prop('disabled', false).html('上传');
+                        console.error('上传请求失败:', error);
+
+                        var errorMsg = "上传失败！";
+                        if (status === 'timeout') {
+                            errorMsg = "上传超时，文件可能过大或网络不稳定，请重试！";
+                        } else if (status === 'error') {
+                            errorMsg = "网络错误，请检查网络连接！";
+                        }
+                        alert(errorMsg);
+                    }
+                });
+
+            }).catch(function(error) {
+                console.error('空间检查失败:', error);
+                alert("空间检查失败：" + error + "\n请稍后重试或联系管理员");
+                $submitBtn.prop('disabled', false).html('上传');
             });
+            // ========== 空间检查结束 ==========
+
         } else {
             alert("请选择要上传的文件！");
         }
