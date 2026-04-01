@@ -1,6 +1,5 @@
-E:\yh_soft\t763812834_java\code\src\main\resources\templates\html
-文档路径
+文档路径：保存到和war包同路径下
 修改space_limit.txt文本
-里面值填数字（1,2,5）
+里面值填数字 5
 代表几个G 1就是1GB
-**只能填数字，修改后需要重启**
+**只能填数字，修改后不需要重启**

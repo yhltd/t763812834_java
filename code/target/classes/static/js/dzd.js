@@ -206,29 +206,27 @@ function checkTotalSpace() {
 // 获取空间限制函数（返回Promise）
 function getSpaceLimitFromLocal() {
     return new Promise(function(resolve, reject) {
-        // 从文本文件读取
+        // 从后端接口获取配置
         $.ajax({
-            url: 'space_limit.txt',
+            url: '/api/config/space-limit',
             type: 'GET',
-            dataType: 'text',
+            dataType: 'json',
             success: function(data) {
-                var limitGB = parseFloat(data.trim());
-                if (!isNaN(limitGB) && limitGB > 0) {
+                if (data.success) {
+                    var limitGB = parseFloat(data.limit);
                     var limitKB = limitGB * 1024 * 1024;
                     localStorage.setItem('spaceLimit', limitKB);
-                    console.log('从文本文件加载空间限制:', limitGB, 'GB');
+                    console.log('加载空间限制:', limitGB, 'GB');
                     resolve(limitKB);
                 } else {
-                    // 使用默认值 5GB
                     var defaultLimitKB = 5 * 1024 * 1024;
-                    console.log('文本文件内容无效，使用默认值 5GB');
+                    console.log('使用默认值 5GB');
                     resolve(defaultLimitKB);
                 }
             },
-            error: function() {
-                // 使用默认值 5GB
+            error: function(xhr, status, error) {
                 var defaultLimitKB = 5 * 1024 * 1024;
-                console.log('无法加载空间限制文件，使用默认值 5GB');
+                console.log('无法加载配置，使用默认值 5GB');
                 resolve(defaultLimitKB);
             }
         });
