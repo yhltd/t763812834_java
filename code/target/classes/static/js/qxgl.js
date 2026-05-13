@@ -1,4 +1,5 @@
 var idd;
+let timeInterval = null;
 
 function getList() {
     $('#name').val("");
@@ -392,7 +393,17 @@ $(function () {
 
     // 实时时间显示
     updateTime();
-    setInterval(updateTime, 1000);
+    if (!timeInterval) {
+        timeInterval = setInterval(updateTime, 1000);
+    }
+
+    // 页面卸载时清理计时器
+    $(window).on('unload', function() {
+        if (timeInterval) {
+            clearInterval(timeInterval);
+            timeInterval = null;
+        }
+    });
 
     // 绑定表格选择事件来更新统计信息
     $('#userTable').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {

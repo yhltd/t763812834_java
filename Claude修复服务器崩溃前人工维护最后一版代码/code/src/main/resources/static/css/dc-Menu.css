@@ -1,0 +1,79 @@
+.dc-icon{
+    transition: .1s;
+    font-size: 12px;
+    color: rgba(0,0,0,.65);
+}
+
+.dc-menu{
+    width: 100%;
+    min-height: 400px;
+    height: 100%;
+    overflow-y: scroll;
+}
+.dc-menu::-webkit-scrollbar{ /*滚动条整体样式*/
+    width: 6px;
+}
+.dc-menu::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #f2f2f2;
+}
+.dc-menu::-webkit-scrollbar-track {
+    background-color: #ffffff;
+}
+
+.dc-menu-item{
+    height: auto;
+}
+.dc-menu-link{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 2.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    color: rgba(0,0,0,.65);
+}
+.dc-menu-link:hover{
+    color: rgba(0,0,0,.85);
+}
+.dc-menu-link.is-active .dc-icon{
+    font-size: 12px;
+    color: rgba(0,0,0,.85);
+    transform: rotate(0);
+    transition: .3s;
+}
+.dc-menu-link:hover .dc-icon{
+    font-size: 12px;
+    color: rgba(0,0,0,.85);
+}
+.i-top{
+    transform: rotate(180deg);
+    transition: .3s;
+}
+
+.is-active{
+    font-weight: 600;
+}
+.dc-menu-ul{
+    padding: 0;
+    margin: 0;
+}
+.dc-menu-li{
+    height: 40px;
+    line-height: 40px;
+    list-style-type: none;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: .1s;
+    color: rgba(0,0,0,.65);
+    font-size: 90%;
+}
+.dc-menu-li:hover{
+    color: rgba(0,0,0,.85);
+}
+.dc-menu-li.is-active{
+    color: rgba(0,0,0,.85);
+}

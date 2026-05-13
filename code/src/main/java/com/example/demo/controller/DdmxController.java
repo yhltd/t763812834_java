@@ -8,6 +8,8 @@ import com.example.demo.service.DdmxService;
 import com.example.demo.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -656,7 +658,7 @@ public class DdmxController {
      * 优化下载PDF文件 - 支持断点续传
      */
     @PostMapping("/downloadPdf")
-    public ResponseEntity<byte[]> downloadPdf(HttpSession session,
+    public ResponseEntity<Resource> downloadPdf(HttpSession session,
                                               @RequestBody Map<String, String> params,
                                               @RequestHeader(value = "Range", required = false) String rangeHeader) {
 
@@ -671,9 +673,9 @@ public class DdmxController {
             System.out.println("文件下载完成，来源: " + source + ", 大小: " + pdfBytes.length);
 
             // 支持断点续传
-            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-                return handleRangeDownload(pdfBytes, fileName, rangeHeader);
-            }
+//            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+//                return handleRangeDownload(pdfBytes, fileName, rangeHeader);
+//            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
@@ -682,7 +684,7 @@ public class DdmxController {
             headers.add("Cache-Control", "private, max-age=3600");
             headers.add("X-File-Source", source);
 
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+            return new ResponseEntity<>(new ByteArrayResource(pdfBytes), headers, HttpStatus.OK);
 
         } catch (Exception e) {
             System.err.println("文件下载失败: " + e.getMessage());
@@ -806,7 +808,7 @@ public class DdmxController {
      * 优化查看PDF文件（在线预览）- 添加缓存控制
      */
     @RequestMapping(value = "/viewPdf", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<byte[]> viewPdf(HttpSession session,
+    public ResponseEntity<Resource> viewPdf(HttpSession session,
                                           @RequestParam("ddh") String ddh,
                                           @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch) {
 
@@ -831,7 +833,7 @@ public class DdmxController {
             headers.setCacheControl("public, max-age=3600");
             headers.add("X-File-Source", source);
 
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+            return new ResponseEntity<>(new ByteArrayResource(pdfBytes), headers, HttpStatus.OK);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

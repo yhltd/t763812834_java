@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import javax.annotation.PreDestroy;
 import java.util.zip.GZIPOutputStream;
 
 @Service
@@ -968,6 +969,19 @@ public class DdmxImpl extends ServiceImpl<DdmxMapper, Ddmx> implements DdmxServi
         return baseMapper.getpdffilename(ddh);
     }
 
-
-
+    @PreDestroy
+    public void shutdown() {
+        System.out.println("正在关闭 DdmxImpl 线程池...");
+        if (executorService != null) {
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 }

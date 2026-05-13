@@ -1,5 +1,6 @@
 var idd;
 let count = 1;
+let timeInterval = null;
 
 // 工具函数定义
 function checkForm(formId) {
@@ -321,7 +322,17 @@ $(function () {
     updateTime();
 
     // 设置定时更新时间
-    setInterval(updateTime, 1000);
+    if (!timeInterval) {
+        timeInterval = setInterval(updateTime, 1000);
+    }
+
+    // 页面卸载时清理计时器
+    $(window).on('unload', function() {
+        if (timeInterval) {
+            clearInterval(timeInterval);
+            timeInterval = null;
+        }
+    });
 
     // 绑定表格选择事件来更新统计信息
     $('#ygxxTable').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {

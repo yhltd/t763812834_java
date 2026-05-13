@@ -15,7 +15,7 @@ public class FileCacheService {
 
     private static final String CACHE_PREFIX = "pdf:cache:";
     private static final String META_PREFIX = "pdf:meta:";
-    private static final long CACHE_TTL = 3600; // 1小时
+    private static final long CACHE_TTL = 600; // 10分钟, 降低内存压力
 
     /**
      * 缓存PDF字节数据
