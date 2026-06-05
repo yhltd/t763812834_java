@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>订单明细</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap-table.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+    <script type="text/javascript" src="../js/xlsx.full.min.js"></script>
+
+    <!-- Bootstrap Fileinput CSS -->
+    <link href="../bootstrap-4.5.0-dist/css/fileinput.css" media="all" rel="stylesheet" type="text/css"/>
+
+    <!-- Bootstrap Fileinput JS -->
+    <script src="../bootstrap-4.5.0-dist/js/fileinput.js" type="text/javascript"></script>
+
+    <!-- Bootstrap Fileinput 中文语言包 -->
+    <script src="../bootstrap-4.5.0-dist/js/fileinput-lang/zh.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" href="../css/sweetalert.css">
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+
+    <link rel="stylesheet" href="../css/main.css">
+    <script type="text/javascript" src="../js/main.js"></script>
+    <script type="text/javascript" src="../js/ddmx.js"></script>
+</head>
+<style>
+    /* 详情模态框样式 */
+    #detailModal .card {
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+    }
+
+    #detailModal .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 0.75rem 1.25rem;
+    }
+
+    #detailModal .form-control-plaintext {
+        padding: 0.375rem 0;
+        margin-bottom: 0;
+        line-height: 1.5;
+        background-color: transparent;
+        border: solid transparent;
+        border-width: 1px 0;
+    }
+
+    /* 操作按钮样式 */
+    .detail-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+     .page-indicator {
+         cursor: pointer;
+         transition: all 0.3s ease;
+         padding: 8px 12px;
+         border-radius: 6px;
+         display: inline-block;
+     }
+
+    .page-indicator:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        transform: translateY(-1px);
+    }
+
+    .modal-body h6 {
+        color: #495057;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-body ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-body ul li {
+        margin-bottom: 0.3rem;
+    }
+
+    /* ==================== 移动端body padding调整（安全方案） ==================== */
+
+
+    /* 手机设备 (768px以下) */
+    @media screen and (max-width: 768px) {
+        .body-yangshi {
+            padding-top: 0px !important;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+
+    /* 小屏幕手机 (576px以下) */
+    @media screen and (max-width: 576px) {
+        .body-yangshi {
+            padding-top: 0px !important;
+            padding-left: 3px;
+            padding-right: 3px;
+        }
+    }
+
+    /* 超小屏幕手机 (360px以下) */
+    @media screen and (max-width: 360px) {
+        .body-yangshi {
+            padding-top: 0px !important;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    }
+
+    /* 简化版移动端下拉 */
+    @media screen and (max-width: 800px) {
+        .top-toolbar {
+            display: none;
+            padding: 15px !important;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .top-zujian.expanded .top-toolbar {
+            display: block !important;
+        }
+
+        .mobile-toggle {
+            display: block !important;
+            background: #4361ee;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 1px solid #3a0ca3;
+        }
+
+        .mobile-toggle i {
+            margin-right: 8px;
+        }
+    }
+    /* 电脑端：正常显示 */
+    .mobile-toggle {
+        display: none; /* 默认隐藏 */
+    }
+
+</style>
+
+<body  class=" body-yangshi" style="padding: 130px 10px 0 10px;">
+<div class="top-zujian">
+    <!-- 简化下拉按钮 -->
+    <div class="mobile-toggle" onclick="$('.top-toolbar').slideToggle(); $(this).find('i').toggleClass('bi-chevron-down bi-chevron-up');">
+        <i class="bi bi-chevron-down"></i> 展开搜索栏
+    </div>
+    <div class="time-bar">
+        <div class="time-display">
+            <i class="bi bi-calendar tubiao "></i>
+            <span class="time-text" id="current-date">2025年8月15日 星期五</span>
+            <i class="bi bi-clock tubiao "></i>
+            <span class="time-text" id="current-time">14:31:33</span>
+        </div>
+        <span style="margin-left: 50px;font-size: 20px">  您 好 <b><span
+                id="dlm" style="color:white "></span></b> , 欢 迎 您 登 录 !</span>
+        <div class="session-time">
+            <i class="bi bi-box-arrow-right tubiao" ></i>
+            <a href="../index.html"  data-src="退出" target="_top" class="dingbu">退出登录</a>
+        </div>
+    </div>
+    <div class="top-toolbar row">
+            <div class="col-md-2 mb-2">
+                <input id="ddh" type="text" class="form-control" placeholder="订单号" autocomplete="off">
+            </div>
+            <div class="col-md-2 mb-2">
+                <input id="khmc" type="text" class="form-control" placeholder="客户名称" autocomplete="off">
+            </div>
+            <div class="col-md-2 mb-2">
+                <input id="fzr" type="text" class="form-control" placeholder="负责人" autocomplete="off">
+            </div>
+<!--            <div class="col-md-2 mb-2">-->
+<!--                <input id="bm" type="text" class="form-control" placeholder="部门" autocomplete="off">-->
+<!--            </div>-->
+        <div class="col-md-2 mb-2">
+            <input id="startDate" type="date" class="form-control" placeholder="开始日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <input id="endDate" type="date" class="form-control" placeholder="结束日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <input id="yingfuStartDate" type="date" class="form-control" placeholder="付款开始日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <input id="yingfuEndDate" type="date" class="form-control" placeholder="付款结束日期">
+        </div>
+        <div class="col-md-2 mb-2">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="weifuZero">
+                <label class="form-check-label" for="weifuZero">未付金额不为0</label>
+            </div>
+        </div>
+        <div class="col-md-2 mb-2">
+            <button id="select-btn" class="btn btn-color" style="color: white">
+                <i class="bi bi-search icon"></i>
+                查询
+            </button>
+        </div>
+
+        <div class="btn-group mb-2" role="group" style="margin-left: 15px;" >
+            <button id="refresh-btn" class="btn btn-color" style="border-radius:5px;">
+                <i class="bi bi-arrow-clockwise icon"></i>
+                刷新
+            </button>
+            <span style="border-right: 20px solid white"></span>
+            <button id="export-btn" class="btn btn-color" style="border-radius: 5px;">
+                <i class="bi bi-plus-square icon"></i>
+                导出excel
+            </button>
+            <span style="border-right: 20px solid white"></span>
+            <button id="add-btn" class="btn btn-color" style="border-radius: 5px;">
+                <i class="bi bi-plus-square icon"></i>
+                上传文件
+            </button>
+<!--            <span style="border-right: 20px solid white"></span>-->
+<!--            <button id="delete-btn" class="btn btn-color-delete" style="border-radius: 5px;">-->
+<!--                <i class="bi bi-trash icon"></i>-->
+<!--                删除上传文件-->
+<!--            </button>-->
+            <span style="border-right: 20px solid white"></span>
+            <a class="btn btn-dangqian"  id="pageIndicator" style="color: white;padding-top: 8px;border-radius:5px;">当前页：订单明细</a>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="table-toolbar">
+
+</div>
+
+<!-- 在表格div之前添加统计区域 -->
+<div id="statisticsContainer" class="statistics-container mb-3" style="display: none;margin-top: 80px;">
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="row text-center align-items-center h-100">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>应付金额合计</h5>
+                        <h3 class="text-primary" id="totalYingfuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>已付金额合计</h5>
+                        <h3 class="text-success" id="totalYifuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>未付金额合计</h5>
+                        <h3 class="text-danger" id="totalWeifuAmount">0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <h5>订单数量</h5>
+                        <h3 class="text-secondary" id="totalOrderCount">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-div border-top">
+    <table id="ddmxTable" class="gradient-table"></table>
+</div>
+
+<!-- 修改模态框 -->
+<div class="modal fade" id="khxxModal" tabindex="-1" aria-labelledby="khxxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="khxxModalLabel">客户信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="khxx-form">
+                    <input type="hidden" id="editId" name="id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">客户名称</label>
+                                <input type="text" class="form-control" name="khcm" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">联系人</label>
+                                <input type="text" class="form-control" name="lxr">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">联系电话</label>
+                                <input type="text" class="form-control" name="lxdh">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">订单日期</label>
+                                <input type="date" class="form-control" name="ddrq">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">合计金额</label>
+                                <input type="number" class="form-control" name="hj" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">负责人</label>
+                                <input type="text" class="form-control" name="fzr">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">合同编号</label>
+                                <input type="text" class="form-control" name="htbh">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">状态</label>
+                                <select class="form-control" name="zt">
+                                    <option value="待处理">待处理</option>
+                                    <option value="下单">下单</option>
+                                    <option value="驳回">驳回</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">购方要求</label>
+                                <input type="text" class="form-control" name="yq" placeholder="请输入购方要求">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">开票状态</label>
+                                <select class="form-control" name="kpzt" id="kpztSelect">
+                                    <option value="未开票">未开票</option>
+                                    <option value="已开票">已开票</option>
+                                </select>
+                                <small id="kpztHelp" class="form-text text-muted" style="display: none;">
+                                    开票状态为"不开票"时不可修改
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">备注</label>
+                                <textarea class="form-control" name="zbz" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveKhxxBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- 订单明细使用说明弹窗 -->
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    订单明细使用说明
+                </h5>
+            </div>
+            <div class="modal-body">
+                <h6><i class="bi bi-1-circle me-2"></i>基本操作</h6>
+                <ul>
+                    <li>可根据订单号，客户名称，负责人，日期进行查询。</li>
+                    <li>表头中后两个日期框为付款时间日期框，用来查询付款日期。</li>
+                    <li>表头中前两个日期框为订单日期框，用来查询订单日期。</li>
+                    <li>可修改提成点，已付，开票状态，物流单号，折扣。</li>
+                    <li>上传文件文件名应保持没有相同的文件名</li>
+                    <li>表格拉到最后，点击上传PDF按钮，会生成PDF文件。</li>
+                    <li>表格拉到最后，点击撤回按钮，会把该条数据撤回到下单明细。</li>
+                    <li>表格拉到最后，点击详情按钮，进入订单详情。</li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="add-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg"> <!-- 改为 modal-lg 更大尺寸 -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">文件上传</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="">
+                    <form id="add-form">
+                        <div class="form-group">
+                            <label for="add-orderNumber">订单号</label>
+                            <input id="add-orderNumber" name="orderNumber" type="text"
+                                   class="form-control" autocomplete="off" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-fileName">文件名称</label>
+                            <input id="add-fileName" name="fileName" type="text"
+                                   class="form-control" autocomplete="off"
+                                   placeholder="请输入文件名称，如：合同、发票等">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fileInput1">选择文件</label>
+                            <input type="file" id="fileInput1" name="file"
+                                   accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+                        </div>
+
+                        <div class="form-group">
+                            <label>文件类型：</label>
+                            <span id="fileTypeInfo" class="text-muted">未选择文件</span>
+                        </div>
+
+                        <div class="border-top" style="padding: 15px;">
+                            <button id="add-submit-btn" type="button" class="btn btn-success">
+                                <i class="bi bi-upload icon"></i>
+                                上传
+                            </button>
+                            <button id="add-close-btn" type="button" class="btn btn-danger ml-2">
+                                <i class="bi bi-x-circle icon"></i>
+                                取消
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 详情模态框 -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">订单详情</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 上半部分：基础信息 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">基础信息</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="basicInfo">
+                            <!-- 基础信息将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下半部分：详细信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">详细信息</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="detailFormContainer">
+                            <!-- 详细信息将通过JavaScript生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    // 初始化时间显示
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('current-date').textContent =
+            `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+        document.getElementById('current-time').textContent =
+            `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    }
+    // 启动定时器
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    $(document).ready(function() {
+        // 点击页面指示器显示使用说明弹窗
+        $('#pageIndicator').on('click', function() {
+            $('#instructionsModal').modal('show');
+        });
+
+        // 已阅读按钮点击事件
+        $('#confirmReadBtn').on('click', function() {
+            $('#instructionsModal').modal('hide');
+            localStorage.setItem('workReportInstructionsRead', 'true');
+            console.log('用户已确认阅读使用说明');
+        });
+    });
+
+</script>
+</html>

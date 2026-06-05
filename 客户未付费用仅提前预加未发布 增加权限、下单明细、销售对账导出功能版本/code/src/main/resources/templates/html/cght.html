@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购合同</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <script type="text/javascript" src="../js/Jquery.js"></script>
+    <script type="text/javascript" src="../js/jquerysession.js"></script>
+
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/icons/bootstrap-icons.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
+
+    <!--bootstrap-table-->
+    <link rel="stylesheet" href="../bootstrap-4.5.0-dist/css/bootstrap-table.css">
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/colResizable-1.6.js"></script>
+    <script type="text/javascript" src="../bootstrap-4.5.0-dist/js/bootstrap-table-resizable.js"></script>
+
+    <link rel="stylesheet" href="../css/sweetalert.css">
+    <script type="text/javascript" src="../js/sweetalert-dev.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --primary-light: #4a76c4;
+            --secondary-color: #f8f9fa;
+            --accent-color: #ff6b35;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --text-color: #333;
+            --text-light: #6c757d;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 35px;
+        }
+
+        .invoice-container {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .invoice-container:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .invoice-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .invoice-info {
+            flex: 1;
+            text-align: right;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .client-info, .invoice-meta {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius);
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border-color);
+        }
+        .item-model {
+            width: 180px !important;
+        }
+        .items-table th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        .items-table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .items-table tr:hover {
+            background-color: rgba(44, 90, 160, 0.05);
+        }
+
+        .summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .summary-table {
+            width: 300px;
+            border-collapse: collapse;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border-color);
+        }
+
+        .summary-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .summary-table tr:last-child {
+            font-weight: bold;
+            background-color: #f1f8ff;
+        }
+
+        .notes {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .notes p {
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            /*padding: 10px 20px;*/
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: var(--transition);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(44, 90, 160, 0.3);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 5px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row .form-group {
+            flex: 1;
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .action-buttons, .header h1, .form-section {
+                display: none;
+            }
+
+            .invoice-header {
+                margin-bottom: 20px;
+            }
+        }
+
+        .form-section {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .form-section:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .form-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .form-section h4 {
+            margin: 20px 0 15px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            transition: var(--transition);
+        }
+
+        .item-row:hover {
+            background: #f0f4ff;
+        }
+
+        .item-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .item-row .form-group:first-child {
+            flex: 2;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .signature-table td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            height: 30px;
+        }
+
+        .contract-title {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .page-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 印章悬浮样式 */
+        .seal-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .seal-container {
+            position: relative;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .action-buttons, .header h1, .form-section {
+                display: none;
+            }
+
+            .invoice-header {
+                margin-bottom: 20px;
+            }
+
+            /* 确保在打印时分页 */
+            .invoice-container {
+                page-break-after: always;
+            }
+
+            .invoice-container:last-child {
+                page-break-after: avoid;
+            }
+
+            /* 打印时印章显示 */
+            .seal-overlay {
+                opacity: 1;
+            }
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-draft {
+            background-color: var(--warning-color);
+        }
+
+        .status-completed {
+            background-color: var(--success-color);
+        }
+
+        .status-pending {
+            background-color: var(--accent-color);
+        }
+
+        /* 紧急修复：确保内容可见 */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 5px !important;
+                overflow-x: hidden;
+            }
+
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            /* 强制表格水平滚动 */
+            .items-table {
+                display: block;
+                width: max-content;
+                min-width: 100%;
+                overflow-x: auto;
+            }
+
+            /* 确保输入框内容可见 */
+            input, select, textarea {
+                font-size: 16px !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            /* 产品行调整为垂直排列 */
+            .item-row {
+                display: block !important;
+            }
+
+            .item-row .form-group {
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* ==================== 表格响应式修复 ==================== */
+
+        /* 手机设备 (768px以下) */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px !important;
+                overflow-x: auto; /* 允许水平滚动 */
+                min-width: 100%;
+            }
+
+            .container {
+                width: 100% !important;
+                min-width: 100%;
+                overflow-x: visible;
+            }
+
+            /* 表格容器 - 关键修复 */
+            .table-container {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 15px 0;
+                position: relative;
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+            }
+
+            /* 表格本身 - 保持完整宽度 */
+            .items-table {
+                width: auto !important;
+                min-width: 800px !important; /* 确保所有列都能显示 */
+                table-layout: auto !important;
+                border-collapse: collapse;
+                margin: 0;
+            }
+
+            /* 优化表格列宽 */
+            .items-table th,
+            .items-table td {
+                min-width: 60px;
+                max-width: 150px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 8px 6px !important;
+                font-size: 12px !important;
+            }
+
+            /* 序号列 - 固定宽度 */
+            .items-table th:first-child,
+            .items-table td:first-child {
+                min-width: 40px;
+                max-width: 40px;
+                width: 40px !important;
+                text-align: center;
+                position: sticky;
+                left: 0;
+                background: white;
+                z-index: 2;
+            }
+
+            /* 产品名称列 - 较宽 */
+            .items-table th:nth-child(2),
+            .items-table td:nth-child(2) {
+                min-width: 120px;
+                max-width: 120px;
+            }
+
+            /* 产品型号列 */
+            .items-table th:nth-child(3),
+            .items-table td:nth-child(3) {
+                min-width: 100px;
+                max-width: 100px;
+            }
+
+            /* 数量列 */
+            .items-table th:nth-child(4),
+            .items-table td:nth-child(4) {
+                min-width: 60px;
+                max-width: 60px;
+            }
+
+            /* 单价列 */
+            .items-table th:nth-child(5),
+            .items-table td:nth-child(5) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            /* 合计列 */
+            .items-table th:nth-child(6),
+            .items-table td:nth-child(6) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            /* 备注列 - 可以稍宽 */
+            .items-table th:nth-child(7),
+            .items-table td:nth-child(7) {
+                min-width: 100px;
+                max-width: 100px;
+                white-space: normal; /* 备注可以换行 */
+            }
+
+            /* 货期列 */
+            .items-table th:nth-child(8),
+            .items-table td:nth-child(8) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            /* 品牌列 */
+            .items-table th:nth-child(9),
+            .items-table td:nth-child(9) {
+                min-width: 60px;
+                max-width: 60px;
+            }
+
+            /* 表格滚动提示 */
+            .table-container::after {
+                content: "→ 可左右滑动查看完整表格";
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(44, 90, 160, 0.9);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                animation: slideHint 2s ease-in-out infinite;
+                z-index: 10;
+                pointer-events: none;
+            }
+
+            @keyframes slideHint {
+                0%, 100% { transform: translateY(-50%) translateX(0); }
+                50% { transform: translateY(-50%) translateX(5px); }
+            }
+
+            /* 表头固定 */
+            .items-table thead {
+                position: sticky;
+                top: 0;
+                z-index: 3;
+            }
+
+            .items-table thead th {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+                border-bottom: 2px solid white;
+            }
+        }
+
+        /* 小屏幕手机 (576px以下) */
+        @media screen and (max-width: 576px) {
+            .table-container {
+                padding: 8px;
+            }
+
+            .items-table {
+                min-width: 700px !important;
+            }
+
+            .items-table th,
+            .items-table td {
+                padding: 6px 4px !important;
+                font-size: 11px !important;
+            }
+
+            /* 进一步调整列宽 */
+            .items-table th:nth-child(2),
+            .items-table td:nth-child(2) {
+                min-width: 100px;
+                max-width: 100px;
+            }
+
+            .items-table th:nth-child(3),
+            .items-table td:nth-child(3) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            .items-table th:nth-child(7),
+            .items-table td:nth-child(7) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+        }
+
+        /* 超小屏幕手机 (360px以下) */
+        @media screen and (max-width: 360px) {
+            .items-table {
+                min-width: 650px !important;
+            }
+
+            .items-table th,
+            .items-table td {
+                padding: 5px 3px !important;
+                font-size: 10px !important;
+            }
+
+            /* 进一步压缩列宽 */
+            .items-table th:first-child,
+            .items-table td:first-child {
+                min-width: 35px;
+                max-width: 35px;
+                width: 35px !important;
+            }
+
+            .items-table th:nth-child(2),
+            .items-table td:nth-child(2) {
+                min-width: 80px;
+                max-width: 80px;
+            }
+        }
+
+        /* 横屏模式优化 */
+        @media screen and (max-height: 600px) and (orientation: landscape) {
+            .items-table {
+                min-width: 600px !important;
+            }
+
+            .table-container {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .items-table th:first-child,
+            .items-table td:first-child {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>采购合同</h1>
+    </div>
+
+    <div class="form-section">
+        <h3><i class="bi bi-pencil-square"></i> 填写合同信息</h3>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label for="contractNumber">合同编号</label>
+                <input type="text" id="contractNumber" class="form-control" placeholder="请输入合同编号">
+            </div>
+            <div class="form-group">
+                <label for="contractDate">订单日期</label>
+                <input type="date" id="contractDate" class="form-control">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="form-group">
+                <label for="clientCompany">乙方公司名称</label>
+                <select id="clientCompany" class="form-control">
+                    <option value="">请选择乙方公司</option>
+                </select>
+                <input type="text" id="clientCompanyOther" class="form-control" placeholder="如选择其他，请在此填写" style="margin-top: 5px; display: none;">
+            </div>
+        </div>
+
+        <h4><i class="bi bi-box-seam"></i> 产品明细</h4>
+        <div id="itemsContainer">
+            <div class="item-row">
+                <div class="form-group">
+                    <label>产品名称</label>
+                    <input type="text" class="form-control item-name" placeholder="产品名称">
+                </div>
+                <div class="form-group">
+                    <label>产品型号</label>
+                    <input type="text" class="form-control item-model" placeholder="产品型号">
+                </div>
+                <div class="form-group">
+                    <label>订购数量</label>
+                    <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>单价 (元)</label>
+                    <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+                </div>
+                <div class="form-group">
+                    <label>单行总价 (元)</label>
+                    <div class="form-control line-total" style="background-color: #f8f9fa; font-weight: bold; border: 1px solid #ddd; padding: 5px 12px; border-radius: var(--radius); min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                        0.00
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <input type="text" class="form-control item-remark" placeholder="备注">
+                </div>
+
+                <div class="form-group">
+                    <label>操作</label>
+                    <button type="button" class="btn btn-danger remove-item">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="addItem" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 添加产品
+        </button>
+        <button id="saveData" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> 保存数据
+        </button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置默认日期为今天
+        const today = new Date();
+        document.getElementById('contractDate').value = today.toISOString().split('T')[0];
+
+        // 修改位置：设置合同编号默认值为当前日期
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const dateString = year + month + day;
+
+        // 添加商品行
+        document.getElementById('addItem').addEventListener('click', function() {
+            const itemsContainer = document.getElementById('itemsContainer');
+            const newItemRow = document.createElement('div');
+            newItemRow.className = 'item-row';
+
+            // 构建产品名称下拉框的HTML
+            let productNameHtml = '';
+
+            // 如果没有产品数据，保持原来的输入框
+            productNameHtml = `
+            <div class="form-group">
+                <label>产品名称</label>
+                <input type="text" class="form-control item-name" placeholder="产品名称">
+            </div>`;
+            newItemRow.innerHTML = `
+        ${productNameHtml}
+            <div class="form-group">
+                <label>产品型号</label>
+                <input type="text" class="form-control item-model" placeholder="产品型号">
+            </div>
+        <div class="form-group">
+            <label>订购数量</label>
+            <input type="number" class="form-control item-quantity" placeholder="数量" min="1" value="1">
+        </div>
+        <div class="form-group">
+            <label>单价 (元)</label>
+            <input type="number" class="form-control item-price" placeholder="单价" min="0" step="0.01" value="0">
+        </div>
+         <div class="form-group">
+            <label>单行总价 (元)</label>
+            <div class="form-control line-total" style="background-color: #f8f9fa; font-weight: bold; border: 1px solid #ddd; padding: 5px 12px; border-radius: var(--radius); min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                0.00
+            </div>
+        </div>
+        <div class="form-group">
+            <label>备注</label>
+            <input type="text" class="form-control item-remark" placeholder="备注">
+        </div>
+        <div class="form-group">
+            <label>操作</label>
+            <button type="button" class="btn btn-danger remove-item">
+                <i class="bi bi-trash"></i> 删除
+            </button>
+        </div>
+    `;
+            itemsContainer.appendChild(newItemRow);
+            // 为输入框添加事件监听
+            addInputListeners(newItemRow);
+
+            // 初始化计算
+            updateLineTotal(newItemRow);
+
+            // 添加删除事件
+            newItemRow.querySelector('.remove-item').addEventListener('click', function() {
+                itemsContainer.removeChild(newItemRow);
+                // 删除后重新计算合计
+                updateTotalDisplay();
+            });
+        });
+        document.querySelectorAll('.item-row').forEach(row => {
+            addInputListeners(row);
+            updateLineTotal(row);
+        });
+
+        // 初始商品行的删除事件
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemRow = this.closest('.item-row');
+                document.getElementById('itemsContainer').removeChild(itemRow);
+            });
+        });
+
+        // 保存数据按钮事件
+        document.getElementById('saveData').addEventListener('click', function() {
+            // 先验证必要数据
+            if (!validateSaveData()) {
+                return;
+            }
+
+            // 确认保存
+            if (confirm('确定要保存采购订单数据吗？')) {
+                saveDataToDatabase();
+            }
+        });
+
+        window.addEventListener('resize', updatePageInfo);
+    });
+
+    let productList = [];
+
+    // 全局变量存储客户数据
+    let customerList = [];
+
+    function getKH() {
+        $.ajax({
+            type: 'post',
+            url: '/caigou/getyifang',
+            contentType: 'application/json',
+            data: JSON.stringify({}),
+            dataType: 'json',
+            success: function(res) {
+                console.log("AJAX请求成功");
+                console.log("返回的乙方信息", res);
+
+                if (res.code == 200) {
+                    console.log("查询成功，数据:", res.data);
+                    fillCustomerCompanyDropdown(res.data);
+                }else if(res.code == 403){
+                    swal("权限不足，无法访问此功能！")
+                }
+                else {
+                    console.error("查询失败:", res.message);
+                    alert("查询失败: " + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("请求失败，请检查网络连接");
+            },
+            complete: function() {
+                console.log("AJAX请求完成");
+            }
+        });
+    }
+
+    // 填充乙方公司名称下拉框
+    function fillCustomerCompanyDropdown(data) {
+        const $dropdown = $('#clientCompany');
+
+        if ($dropdown.length === 0) {
+            console.error('下拉框元素未找到');
+            return;
+        }
+
+        // 清空并添加默认选项
+        $dropdown.empty().append('<option value="">请选择乙方公司</option>');
+
+        // 检查数据有效性
+        if (!data || !Array.isArray(data)) {
+            console.error('数据无效:', data);
+            return;
+        }
+
+        // 过滤掉null和undefined值
+        const validData = data.filter(item => item != null);
+        console.log('有效数据数量:', validData.length, '原始数据数量:', data.length);
+
+        if (validData.length === 0) {
+            console.warn('没有有效数据');
+            $dropdown.append('<option value="" disabled>暂无乙方信息</option>');
+            return;
+        }
+
+        // 安全地添加选项
+        let addedCount = 0;
+        $.each(validData, function(index, item) {
+            // 安全访问yifang属性
+            const yifangValue = item.cgyf;
+
+            if (yifangValue) {
+                $dropdown.append($('<option>', {
+                    value: yifangValue,
+                    text: yifangValue
+                }));
+                addedCount++;
+            } else {
+                console.warn('第' + index + '条数据缺少yifang属性:', item);
+            }
+        });
+
+        console.log(`成功添加 ${addedCount} 个乙方选项`);
+    }
+
+    // 保存数据到数据库
+    function saveDataToDatabase() {
+        // 收集表单数据
+        const formData = {
+            khcm: document.getElementById('clientCompany').value, // 客户名称
+            ddrq: document.getElementById('contractDate').value, // 订单日期
+            pp: getProductNames(), // 产品名称（多个用逗号分隔）
+            cpxh: getProductModels(), // 产品型号（多个用逗号分隔）
+            sl: getProductQuantities(), // 订购数量（多个用逗号分隔）
+            dj: getProductPrices(), // 含税单价（多个用逗号分隔）
+            hj: calculateTotalAmount(), // 合计总金额
+            htbh: document.getElementById('contractNumber').value, // 合同编号
+            bz: getRemarks() // 备注（多个用逗号分隔）
+        };
+
+        // 发送AJAX请求保存数据
+        $.ajax({
+            type: 'post',
+            url: '/caigou/saveCgmx', // 后端接口地址
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    alert('数据保存成功！');
+                    console.log('保存成功:', res);
+                } else {
+                    console.error("保存失败:", res.message);
+                    alert("保存失败: " + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX请求失败:", error);
+                alert("保存失败，请检查网络连接");
+            }
+        });
+    }
+//-----开始替换分隔符-----
+    // 获取所有产品名称（逗号分隔）
+    function getProductNames() {
+        const productNames = [];
+        document.querySelectorAll('.item-name').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                productNames.push(input.value.trim());
+            }
+        });
+        return productNames.join('|||');
+    }
+
+    // 获取所有产品型号（逗号分隔）
+    function getProductModels() {
+        const productModels = [];
+        document.querySelectorAll('.item-model').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                productModels.push(input.value.trim());
+            }
+        });
+        return productModels.join('|||');
+    }
+
+    // 获取所有订购数量（逗号分隔）
+    function getProductQuantities() {
+        const quantities = [];
+        document.querySelectorAll('.item-quantity').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                quantities.push(input.value.trim());
+            }
+        });
+        return quantities.join('|||');
+    }
+
+    // 获取所有含税单价（逗号分隔）
+    function getProductPrices() {
+        const prices = [];
+        document.querySelectorAll('.item-price').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                prices.push(input.value.trim());
+            }
+        });
+        return prices.join('|||');
+    }
+    // 获取所有单行总价（逗号分隔）
+    function getLineTotals() {
+        const lineTotals = [];
+        document.querySelectorAll('.line-total').forEach(div => {
+            const text = div.textContent.trim();
+            // 提取数字部分
+            const match = text.match(/([\d.]+)/);
+            if (match) {
+                lineTotals.push(match[1]);
+            } else {
+                lineTotals.push('0.00');
+            }
+        });
+        return lineTotals.join('|||');
+
+    }
+    // 计算合计总金额
+    function calculateTotalAmount() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            total += quantity * price;
+        });
+        return total.toFixed(2);
+    }
+
+    // 获取所有备注（逗号分隔）
+    function getRemarks() {
+        const remarks = [];
+        document.querySelectorAll('.item-remark').forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                remarks.push(input.value.trim());
+            }
+        });
+        return remarks.join('|||');
+    }
+
+    // 验证保存数据
+    function validateSaveData() {
+        const clientCompany = document.getElementById('clientCompany').value;
+        const contractNumber = document.getElementById('contractNumber').value;
+
+        if (!clientCompany || clientCompany === '') {
+            alert('请选择乙方公司名称');
+            return false;
+        }
+
+        if (!contractNumber || contractNumber === '') {
+            alert('请输入合同编号');
+            return false;
+        }
+
+        // 检查是否有产品信息
+        const hasProducts = document.querySelectorAll('.item-name').length > 0;
+        if (!hasProducts) {
+            alert('请至少添加一个产品');
+            return false;
+        }
+
+        return true;
+    }
+
+    $(document).ready(function() {
+        getKH();
+    });
+    // 计算单行总价
+    function calculateLineTotal(quantity, price) {
+        const qty = parseFloat(quantity) || 0;
+        const unitPrice = parseFloat(price) || 0;
+        return (qty * unitPrice).toFixed(2);
+    }
+
+    // 更新单行总价
+    function updateLineTotal(row) {
+        const quantityInput = row.querySelector('.item-quantity');
+        const priceInput = row.querySelector('.item-price');
+        const totalDiv = row.querySelector('.line-total');
+
+        if (quantityInput && priceInput && totalDiv) {
+            const total = calculateLineTotal(quantityInput.value, priceInput.value);
+            totalDiv.textContent = total;
+
+            // 更新合计总金额显示
+            updateTotalDisplay();
+        }
+    }
+
+    // 为输入框添加事件监听
+    function addInputListeners(row) {
+        const quantityInput = row.querySelector('.item-quantity');
+        const priceInput = row.querySelector('.item-price');
+
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => updateLineTotal(row));
+            quantityInput.addEventListener('change', () => updateLineTotal(row));
+        }
+
+        if (priceInput) {
+            priceInput.addEventListener('input', () => updateLineTotal(row));
+            priceInput.addEventListener('change', () => updateLineTotal(row));
+        }
+    }
+
+    // 更新合计总金额显示
+    function updateTotalDisplay() {
+        let grandTotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const totalDiv = row.querySelector('.line-total');
+            if (totalDiv) {
+                const totalValue = parseFloat(totalDiv.textContent) || 0;
+                grandTotal += totalValue;
+            }
+        });
+
+        // 可以在页面上显示合计金额，如果需要的话
+        console.log('合计总金额:', grandTotal.toFixed(2));
+
+        // 如果需要显示在页面上，可以添加一个合计显示区域
+        // 例如：document.getElementById('totalAmount').textContent = grandTotal.toFixed(2);
+    }
+
+    // 初始化已有商品行的计算和事件
+    function initializeExistingRows() {
+        document.querySelectorAll('.item-row').forEach(row => {
+            addInputListeners(row);
+            updateLineTotal(row);
+        });
+    }
+</script>
+</body>
+</html>
